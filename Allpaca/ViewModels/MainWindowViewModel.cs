@@ -14,6 +14,11 @@ public partial class MainWindowViewModel : ObservableObject
 
     private readonly PackageAggregator _aggregator;
     private readonly List<PackageItemViewModel> _all = new();
+    private readonly Dictionary<PackageSourceKind, IPackageSource> _sourceByKind;
+
+    /// <summary>Wird von der View beim Start gesetzt: oeffnet das LogWindow und faedelt
+    /// die Stream-Operation hindurch. ViewModel kennt damit weiterhin keine View-Typen.</summary>
+    public Func<string, Func<CancellationToken, IAsyncEnumerable<ProgressLine>>, Task>? RunOperation { get; set; }
 
     public ObservableCollection<PackageItemViewModel> Packages { get; } = new();
     public ObservableCollection<SourceFilterViewModel> Filters { get; } = new();
@@ -36,7 +41,10 @@ public partial class MainWindowViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(CountSummary))]
     private int _visibleCount;
 
-    [ObservableProperty] private PackageItemViewModel? _selected;
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(UninstallSelectedCommand))]
+    [NotifyCanExecuteChangedFor(nameof(UpdateSelectedCommand))]
+    private PackageItemViewModel? _selected;
 
     [ObservableProperty] private SortOption _selectedSortOption = null!;
 
@@ -61,6 +69,7 @@ public partial class MainWindowViewModel : ObservableObject
             new AppImageSource(),
         };
         _aggregator = new PackageAggregator(sources);
+        _sourceByKind = sources.ToDictionary(s => s.Kind);
 
         foreach (var s in sources)
         {
@@ -83,6 +92,49 @@ public partial class MainWindowViewModel : ObservableObject
 
     [RelayCommand]
     private void ToggleSortDirection() => SortDescending = !SortDescending;
+
+    /// <summary>v2 erster Schritt: Uninstall ist nur fuer Flatpak verdrahtet. Andere
+    /// Quellen brauchen pkexec (rpm-ostree), Drill-down (Distrobox) oder eigene Hooks
+    /// (Homebrew/AppImage) und folgen in spaeteren Commits.</summary>
+    private bool IsWiredForMutation(PackageItemViewModel? item) =>
+        item is not null && item.Model.Source == PackageSourceKind.Flatpak;
+
+    [RelayCommand(CanExecute = nameof(CanUninstallSelected))]
+    private async Task UninstallSelectedAsync()
+    {
+        if (Selected is null || RunOperation is null) return;
+        if (!_sourceByKind.TryGetValue(Selected.Model.Source, out var src)) return;
+
+        var id = Selected.Model.Id;
+        var name = Selected.Name;
+        var title = $"{src.DisplayName}: {name} deinstallieren";
+        Log.Info("Starte Uninstall: {0} ({1})", id, src.DisplayName);
+
+        await RunOperation(title, ct => src.UninstallAsync(id, ct));
+
+        // Liste nach der Operation neu laden, der Eintrag sollte verschwunden sein.
+        await RefreshAsync();
+    }
+
+    private bool CanUninstallSelected() => IsWiredForMutation(Selected);
+
+    [RelayCommand(CanExecute = nameof(CanUpdateSelected))]
+    private async Task UpdateSelectedAsync()
+    {
+        if (Selected is null || RunOperation is null) return;
+        if (!_sourceByKind.TryGetValue(Selected.Model.Source, out var src)) return;
+
+        var id = Selected.Model.Id;
+        var name = Selected.Name;
+        var title = $"{src.DisplayName}: {name} aktualisieren";
+        Log.Info("Starte Update: {0} ({1})", id, src.DisplayName);
+
+        await RunOperation(title, ct => src.UpdateAsync(id, ct));
+
+        await RefreshAsync();
+    }
+
+    private bool CanUpdateSelected() => IsWiredForMutation(Selected);
 
     [RelayCommand]
     private async Task RefreshAsync()

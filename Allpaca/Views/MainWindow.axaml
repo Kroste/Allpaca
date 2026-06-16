@@ -236,11 +236,14 @@
 
                             <Border Height="1" Background="#2A2E35" Margin="0,4"/>
 
-                            <TextBlock Text="Verwaltung folgt in v2" Foreground="#6E747C"
-                                       FontSize="12" FontStyle="Italic"/>
+                            <TextBlock Text="Aktuell nur für Flatpak verdrahtet — andere Quellen folgen."
+                                       Foreground="#6E747C" FontSize="12" FontStyle="Italic"
+                                       TextWrapping="Wrap"/>
                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                <Button Content="Aktualisieren" IsEnabled="False"/>
-                                <Button Classes="danger" Content="Deinstallieren" IsEnabled="False"/>
+                                <Button Content="Aktualisieren"
+                                        Command="{Binding UpdateSelectedCommand}"/>
+                                <Button Classes="danger" Content="Deinstallieren"
+                                        Command="{Binding UninstallSelectedCommand}"/>
                             </StackPanel>
                         </StackPanel>
                     </ScrollViewer>

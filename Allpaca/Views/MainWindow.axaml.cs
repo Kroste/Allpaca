@@ -15,8 +15,25 @@ public partial class MainWindow : ChromeWindow
     {
         base.OnOpened(e);
 
-        if (DataContext is MainWindowViewModel vm && vm.RefreshCommand.CanExecute(null))
-            vm.RefreshCommand.Execute(null);
+        if (DataContext is MainWindowViewModel vm)
+        {
+            // ViewModel kennt keine View-Typen - die "oeffne ein LogWindow"-Logik wird
+            // hier injiziert. DataContext steht erst in OnOpened sicher (siehe App.OnFrameworkInitializationCompleted).
+            vm.RunOperation ??= RunOperationAsync;
+
+            if (vm.RefreshCommand.CanExecute(null))
+                vm.RefreshCommand.Execute(null);
+        }
+    }
+
+    private async System.Threading.Tasks.Task RunOperationAsync(
+        string title,
+        Func<System.Threading.CancellationToken,
+             System.Collections.Generic.IAsyncEnumerable<Allpaca.Models.ProgressLine>> work)
+    {
+        var win = new LogWindow();
+        win.Show(this);
+        await win.RunAsync(title, work);
     }
 
     private void OnInfoClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
