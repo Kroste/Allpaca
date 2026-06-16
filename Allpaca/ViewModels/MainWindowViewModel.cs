@@ -66,6 +66,33 @@ public partial class MainWindowViewModel : ObservableObject
     [NotifyCanExecuteChangedFor(nameof(ShowContainerPackagesCommand))]
     private PackageItemViewModel? _selected;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SelectedCount))]
+    [NotifyPropertyChangedFor(nameof(HasMultiSelection))]
+    [NotifyPropertyChangedFor(nameof(CanBatchOperate))]
+    [NotifyPropertyChangedFor(nameof(BatchInfo))]
+    [NotifyCanExecuteChangedFor(nameof(BatchUpdateSelectedCommand))]
+    [NotifyCanExecuteChangedFor(nameof(BatchUninstallSelectedCommand))]
+    private IReadOnlyList<PackageItemViewModel> _selectedItems = Array.Empty<PackageItemViewModel>();
+
+    public int SelectedCount => SelectedItems.Count;
+    public bool HasMultiSelection => SelectedCount > 1;
+
+    /// <summary>Batch ist aktuell nur fuer Flatpak verdrahtet (siehe IsWiredForMutation).</summary>
+    public bool CanBatchOperate =>
+        HasMultiSelection
+        && SelectedItems.All(p => p.Model.Source == PackageSourceKind.Flatpak);
+
+    public string BatchInfo
+    {
+        get
+        {
+            if (!HasMultiSelection) return "";
+            if (CanBatchOperate) return $"{SelectedCount} Pakete markiert";
+            return $"{SelectedCount} Pakete markiert – Batch-Aktionen aktuell nur für Flatpak";
+        }
+    }
+
     [ObservableProperty] private SortOption _selectedSortOption = null!;
 
     [ObservableProperty]
@@ -226,6 +253,62 @@ public partial class MainWindowViewModel : ObservableObject
 
     [RelayCommand]
     private void DismissOsUpdate() => OsUpdateMessage = null;
+
+    [RelayCommand(CanExecute = nameof(CanBatchOperate))]
+    private async Task BatchUpdateSelectedAsync()
+    {
+        if (RunOperation is null) return;
+        if (!_sourceByKind.TryGetValue(PackageSourceKind.Flatpak, out var src)) return;
+
+        var items = SelectedItems.ToList();
+        if (items.Count == 0) return;
+        var ids = items.Select(p => p.Model.Id).ToList();
+
+        var title = $"Flatpak: {items.Count} Pakete aktualisieren";
+        Log.Info("Starte Batch-Update: {0} Pakete", items.Count);
+
+        await RunOperation(
+            new OperationContext(title, src.Capabilities.RequiresReboot),
+            ct => src.UpdateManyAsync(ids, ct));
+
+        await RefreshAsync();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanBatchOperate))]
+    private async Task BatchUninstallSelectedAsync()
+    {
+        if (RunOperation is null) return;
+        if (!_sourceByKind.TryGetValue(PackageSourceKind.Flatpak, out var src)) return;
+
+        var items = SelectedItems.ToList();
+        if (items.Count == 0) return;
+
+        if (ConfirmAsync is not null)
+        {
+            var bullets = string.Join("\n", items.Take(8).Select(p => $"• {p.Name}"));
+            if (items.Count > 8) bullets += $"\n• … und {items.Count - 8} weitere";
+            var ok = await ConfirmAsync(new ConfirmRequest(
+                Title: $"{items.Count} Pakete deinstallieren?",
+                Message: $"Folgende Einträge wirklich aus {src.DisplayName} entfernen?\n\n{bullets}\n\nDieser Schritt lässt sich nur durch erneutes Installieren rückgängig machen.",
+                ConfirmLabel: "Alle deinstallieren",
+                IsDestructive: true));
+            if (!ok)
+            {
+                Log.Info("Batch-Uninstall abgebrochen vom User: {0} Pakete", items.Count);
+                return;
+            }
+        }
+
+        var ids = items.Select(p => p.Model.Id).ToList();
+        var title = $"Flatpak: {items.Count} Pakete deinstallieren";
+        Log.Info("Starte Batch-Uninstall: {0} Pakete", items.Count);
+
+        await RunOperation(
+            new OperationContext(title, src.Capabilities.RequiresReboot),
+            ct => src.UninstallManyAsync(ids, ct));
+
+        await RefreshAsync();
+    }
 
     [RelayCommand]
     private async Task RefreshAsync()

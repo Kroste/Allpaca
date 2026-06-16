@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Allpaca.Chrome;
 using Allpaca.ViewModels;
+using Avalonia.Controls;
 
 namespace Allpaca.Views;
 
@@ -45,4 +48,18 @@ public partial class MainWindow : ChromeWindow
 
     private void OnInfoClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
         => new InfoWindow().ShowDialog(this);
+
+    private void OnPackagesSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        // ListBox.SelectedItems ist IList und nicht direkt bindbar - wir spiegeln
+        // den aktuellen Zustand auf das ViewModel, damit Batch-Buttons + Banner
+        // rechtzeitig aktualisieren.
+        if (DataContext is not MainWindowViewModel vm) return;
+        if (sender is not ListBox lb) return;
+
+        var items = lb.SelectedItems is { } sel
+            ? sel.Cast<PackageItemViewModel>().ToList()
+            : new List<PackageItemViewModel>();
+        vm.SelectedItems = items;
+    }
 }

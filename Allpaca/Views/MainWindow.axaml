@@ -130,12 +130,33 @@
             <!-- Paketliste -->
             <Border Grid.Column="1" Background="#202329" CornerRadius="10" Margin="0,0,10,0"
                     ClipToBounds="True">
-                <Grid>
-                    <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsLoading}"
-                                 VerticalAlignment="Top" Height="3" Background="Transparent"
-                                 Foreground="#2BB673" ZIndex="1"/>
-                    <ListBox ItemsSource="{Binding Packages}" SelectedItem="{Binding Selected}"
-                             Background="Transparent" BorderThickness="0" Padding="6">
+                <Grid RowDefinitions="Auto,*">
+                    <!-- Batch-Banner: erscheint, sobald 2+ Eintraege markiert sind -->
+                    <Border Grid.Row="0" Background="#262E36" CornerRadius="8"
+                            Padding="12,6" Margin="6,6,6,0"
+                            IsVisible="{Binding HasMultiSelection}">
+                        <Grid ColumnDefinitions="*,Auto,Auto" VerticalAlignment="Center">
+                            <TextBlock Grid.Column="0" Text="{Binding BatchInfo}"
+                                       Foreground="#C7CCD2" VerticalAlignment="Center"
+                                       TextWrapping="Wrap"/>
+                            <Button Grid.Column="1" Content="Aktualisieren"
+                                    Command="{Binding BatchUpdateSelectedCommand}"
+                                    Margin="8,0,0,0"/>
+                            <Button Grid.Column="2" Classes="danger" Content="Deinstallieren"
+                                    Command="{Binding BatchUninstallSelectedCommand}"
+                                    Margin="8,0,0,0"/>
+                        </Grid>
+                    </Border>
+
+                    <Grid Grid.Row="1">
+                        <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsLoading}"
+                                     VerticalAlignment="Top" Height="3" Background="Transparent"
+                                     Foreground="#2BB673" ZIndex="1"/>
+                        <ListBox x:Name="PackagesList"
+                                 ItemsSource="{Binding Packages}" SelectedItem="{Binding Selected}"
+                                 SelectionMode="Multiple"
+                                 SelectionChanged="OnPackagesSelectionChanged"
+                                 Background="Transparent" BorderThickness="0" Padding="6">
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="vm:PackageItemViewModel">
                                 <Grid ColumnDefinitions="4,*,Auto,Auto,Auto">
@@ -181,6 +202,7 @@
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
+                    </Grid>
                 </Grid>
             </Border>
 

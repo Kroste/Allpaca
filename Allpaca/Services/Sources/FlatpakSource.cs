@@ -133,4 +133,29 @@ public sealed class FlatpakSource : IPackageSource
         await foreach (var l in _runner.StreamAsync("flatpak", args, ct))
             yield return l;
     }
+
+    // --- Native Batching: flatpak nimmt mehrere IDs in einem Aufruf entgegen,
+    // das ist deutlich schneller als sequentielles Iterieren. ---
+
+    public async IAsyncEnumerable<ProgressLine> UninstallManyAsync(
+        IReadOnlyList<string> ids,
+        [EnumeratorCancellation] CancellationToken ct = default)
+    {
+        if (ids.Count == 0) yield break;
+        var args = new List<string> { "uninstall", "-y" };
+        args.AddRange(ids);
+        await foreach (var l in _runner.StreamAsync("flatpak", args, ct))
+            yield return l;
+    }
+
+    public async IAsyncEnumerable<ProgressLine> UpdateManyAsync(
+        IReadOnlyList<string> ids,
+        [EnumeratorCancellation] CancellationToken ct = default)
+    {
+        if (ids.Count == 0) yield break;
+        var args = new List<string> { "update", "-y" };
+        args.AddRange(ids);
+        await foreach (var l in _runner.StreamAsync("flatpak", args, ct))
+            yield return l;
+    }
 }
