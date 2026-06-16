@@ -118,7 +118,7 @@
                              Background="Transparent" BorderThickness="0" Padding="6">
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="vm:PackageItemViewModel">
-                                <Grid ColumnDefinitions="4,*,Auto,Auto">
+                                <Grid ColumnDefinitions="4,*,Auto,Auto,Auto">
                                     <Border Grid.Column="0" Width="4" CornerRadius="2"
                                             Background="{Binding SourceBrush}"/>
                                     <StackPanel Grid.Column="1" Margin="10,3">
@@ -130,7 +130,16 @@
                                     <TextBlock Grid.Column="2" Text="{Binding Version}"
                                                Foreground="#9AA0A8" VerticalAlignment="Center"
                                                Margin="8,0"/>
-                                    <Border Grid.Column="3" Background="#2A2E35" CornerRadius="6"
+                                    <Border Grid.Column="3"
+                                            Background="{Binding DistroboxStatusBackground}"
+                                            CornerRadius="6" Padding="7,2"
+                                            VerticalAlignment="Center" Margin="8,0,0,0"
+                                            IsVisible="{Binding DistroboxStatus, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}">
+                                        <TextBlock Text="{Binding DistroboxStatus}"
+                                                   Foreground="{Binding DistroboxStatusForeground}"
+                                                   FontSize="11"/>
+                                    </Border>
+                                    <Border Grid.Column="4" Background="#2A2E35" CornerRadius="6"
                                             Padding="7,2" VerticalAlignment="Center" Margin="8,0,4,0">
                                         <TextBlock Text="{Binding SourceLabel}"
                                                    Foreground="{Binding SourceBrush}" FontSize="11"/>

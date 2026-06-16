@@ -30,6 +30,37 @@ public sealed class PackageItemViewModel
 
     public IBrush SourceBrush => new SolidColorBrush(Color.Parse(ColorFor(Model.Source)));
 
+    /// <summary>Distrobox-Container-Status (z. B. "Up 2 hours", "Exited", "Created"). Leer fuer andere Quellen.</summary>
+    public string DistroboxStatus =>
+        Model.Source == PackageSourceKind.Distrobox &&
+        Model.Extra is { } x && x.TryGetValue("status", out var s)
+            ? s
+            : "";
+
+    public IBrush DistroboxStatusForeground =>
+        new SolidColorBrush(Color.Parse(StatusForegroundColor(DistroboxStatus)));
+
+    public IBrush DistroboxStatusBackground =>
+        new SolidColorBrush(Color.Parse(StatusBackgroundColor(DistroboxStatus)));
+
+    private static string StatusForegroundColor(string status)
+    {
+        var s = status.ToLowerInvariant();
+        if (s.StartsWith("up") || s.Contains("running")) return "#2BB673";   // gruen
+        if (s.StartsWith("created") || s.StartsWith("configured")) return "#F5A623"; // gelb
+        if (s.StartsWith("paused")) return "#4A90D9";                        // blau
+        return "#9AA0A8";                                                    // exited/stopped/dead/unknown -> grau
+    }
+
+    private static string StatusBackgroundColor(string status)
+    {
+        var s = status.ToLowerInvariant();
+        if (s.StartsWith("up") || s.Contains("running")) return "#1E3527";
+        if (s.StartsWith("created") || s.StartsWith("configured")) return "#3A2F1B";
+        if (s.StartsWith("paused")) return "#1F3046";
+        return "#2A2E35";
+    }
+
     public static string ColorFor(PackageSourceKind k) => k switch
     {
         PackageSourceKind.Flatpak => "#4A90D9",
