@@ -171,6 +171,18 @@
                             </Border>
 
                             <StackPanel Spacing="3"
+                                        IsVisible="{Binding Selected.DistroboxStatus, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}">
+                                <TextBlock Text="STATUS" Foreground="#6E747C" FontSize="11"/>
+                                <Border Background="{Binding Selected.DistroboxStatusBackground}"
+                                        CornerRadius="6" Padding="8,3"
+                                        HorizontalAlignment="Left">
+                                    <TextBlock Text="{Binding Selected.DistroboxStatus}"
+                                               Foreground="{Binding Selected.DistroboxStatusForeground}"
+                                               FontSize="13"/>
+                                </Border>
+                            </StackPanel>
+
+                            <StackPanel Spacing="3"
                                         IsVisible="{Binding Selected.Id, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}">
                                 <TextBlock Text="ID" Foreground="#6E747C" FontSize="11"/>
                                 <TextBlock Text="{Binding Selected.Id}" Foreground="#C7CCD2"
