@@ -200,14 +200,14 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     private void ToggleSortDirection() => SortDescending = !SortDescending;
 
-    /// <summary>Aktuell verdrahtet: Flatpak (rootless), rpm-ostree (laeuft via pkexec,
-    /// Reboot-Hinweis nach Erfolg) und Homebrew. Distrobox bekommt einen eigenen
-    /// Drill-down-Pfad, AppImage folgt.</summary>
+    /// <summary>Aktuell verdrahtet: Flatpak, rpm-ostree (pkexec, Reboot-Hinweis),
+    /// Homebrew und Distrobox (Container loeschen/upgraden). AppImage folgt.</summary>
     private bool IsWiredForMutation(PackageItemViewModel? item) => item?.Model.Source switch
     {
         PackageSourceKind.Flatpak => true,
         PackageSourceKind.RpmOstree => true,
         PackageSourceKind.Homebrew => true,
+        PackageSourceKind.Distrobox => true,
         _ => false,
     };
 
@@ -233,17 +233,7 @@ public partial class MainWindowViewModel : ObservableObject
         // Dialog eingehaengt hat (Headless-Tests koennen das weglassen).
         if (ConfirmAsync is not null)
         {
-            var msg = new System.Text.StringBuilder();
-            msg.Append($"„{name}\" wirklich aus {src.DisplayName} entfernen?");
-            if (src.Capabilities.RequiresReboot)
-                msg.Append(" Die Änderung wird erst nach einem Neustart vollständig wirksam.");
-            msg.Append(" Dieser Schritt lässt sich nur durch erneutes Installieren rückgängig machen.");
-
-            var ok = await ConfirmAsync(new ConfirmRequest(
-                Title: "Deinstallieren?",
-                Message: msg.ToString(),
-                ConfirmLabel: "Deinstallieren",
-                IsDestructive: true));
+            var ok = await ConfirmAsync(BuildUninstallConfirmRequest(src, name));
             if (!ok)
             {
                 Log.Info("Uninstall abgebrochen vom User: {0}", id);
@@ -263,6 +253,33 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     private bool CanUninstallSelected() => IsWiredForMutation(Selected);
+
+    /// <summary>Quellen-spezifischer Confirm-Text. Distrobox ist ein Sonderfall - das
+    /// "Uninstall" loescht den GESAMTEN Container inklusive aller Daten, deshalb
+    /// muss der Dialog das laut und deutlich sagen.</summary>
+    private static ConfirmRequest BuildUninstallConfirmRequest(IPackageSource src, string name)
+    {
+        if (src.Kind == PackageSourceKind.Distrobox)
+        {
+            return new ConfirmRequest(
+                Title: "Container löschen?",
+                Message: $"Den Distrobox-Container „{name}\" wirklich komplett löschen? Alle darin installierten Pakete und enthaltenen Daten gehen unwiederbringlich verloren. Dieser Schritt lässt sich NICHT rückgängig machen.",
+                ConfirmLabel: "Container löschen",
+                IsDestructive: true);
+        }
+
+        var msg = new System.Text.StringBuilder();
+        msg.Append($"„{name}\" wirklich aus {src.DisplayName} entfernen?");
+        if (src.Capabilities.RequiresReboot)
+            msg.Append(" Die Änderung wird erst nach einem Neustart vollständig wirksam.");
+        msg.Append(" Dieser Schritt lässt sich nur durch erneutes Installieren rückgängig machen.");
+
+        return new ConfirmRequest(
+            Title: "Deinstallieren?",
+            Message: msg.ToString(),
+            ConfirmLabel: "Deinstallieren",
+            IsDestructive: true);
+    }
 
     [RelayCommand(CanExecute = nameof(CanUpdateSelected))]
     private async Task UpdateSelectedAsync()
