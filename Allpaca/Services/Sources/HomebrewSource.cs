@@ -120,6 +120,22 @@ public sealed class HomebrewSource : IPackageSource
     public Task<IReadOnlyList<PackageInfo>> SearchAsync(string query, CancellationToken ct = default)
         => Task.FromResult<IReadOnlyList<PackageInfo>>(Array.Empty<PackageInfo>());
 
+    public async Task<IReadOnlySet<string>> CheckUpdatesAsync(CancellationToken ct = default)
+    {
+        var brew = await ResolveAsync(ct);
+        if (brew is null) return new HashSet<string>();
+
+        // brew outdated --json=v2 liefert ein Objekt mit "formulae" und "casks".
+        var r = await _runner.RunAsync(brew, new[] { "outdated", "--json=v2" }, ct);
+        if (!r.Success || string.IsNullOrWhiteSpace(r.StdOut))
+        {
+            Log.Warn("brew outdated fehlgeschlagen: {0}", r.StdErr);
+            return new HashSet<string>();
+        }
+
+        return HomebrewOutdatedParser.ParseIds(r.StdOut);
+    }
+
     public async IAsyncEnumerable<ProgressLine> InstallAsync(string id, [EnumeratorCancellation] CancellationToken ct = default)
     {
         var brew = await ResolveAsync(ct);

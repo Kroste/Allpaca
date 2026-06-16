@@ -24,6 +24,10 @@ public sealed class PackageItemViewModel
     /// (z. B. "Flatpak, AppImage"). Leer, wenn IsDuplicate=false.</summary>
     public string DuplicateInfo { get; internal set; } = "";
 
+    /// <summary>True, wenn fuer diesen Eintrag laut CheckUpdatesAsync der Quelle ein
+    /// Update bereitsteht. Wird vom MainWindowViewModel nach dem Refresh gesetzt.</summary>
+    public bool HasUpdate { get; internal set; }
+
     public string SizeText => Model.SizeBytes is { } b ? FormatSize(b) : "";
 
     public string SourceLabel => Model.Source switch

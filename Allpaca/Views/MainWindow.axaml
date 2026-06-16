@@ -129,6 +129,13 @@
                                                        FontSize="13" VerticalAlignment="Center"
                                                        IsVisible="{Binding IsDuplicate}"
                                                        ToolTip.Tip="{Binding DuplicateInfo, StringFormat='Auch verfügbar in: {0}'}"/>
+                                            <Border Background="#1E3527" CornerRadius="6"
+                                                    Padding="6,1" VerticalAlignment="Center"
+                                                    IsVisible="{Binding HasUpdate}"
+                                                    ToolTip.Tip="Update verfügbar">
+                                                <TextBlock Text="↑ Update" Foreground="#2BB673"
+                                                           FontSize="11"/>
+                                            </Border>
                                         </StackPanel>
                                         <TextBlock Text="{Binding Id}" Foreground="#6E747C"
                                                    FontSize="11" TextTrimming="CharacterEllipsis"/>
@@ -184,6 +191,15 @@
                                         HorizontalAlignment="Left">
                                     <TextBlock Text="{Binding Selected.DistroboxStatus}"
                                                Foreground="{Binding Selected.DistroboxStatusForeground}"
+                                               FontSize="13"/>
+                                </Border>
+                            </StackPanel>
+
+                            <StackPanel Spacing="3" IsVisible="{Binding Selected.HasUpdate}">
+                                <TextBlock Text="UPDATE" Foreground="#6E747C" FontSize="11"/>
+                                <Border Background="#1E3527" CornerRadius="6" Padding="8,3"
+                                        HorizontalAlignment="Left">
+                                    <TextBlock Text="↑ Update verfügbar" Foreground="#2BB673"
                                                FontSize="13"/>
                                 </Border>
                             </StackPanel>

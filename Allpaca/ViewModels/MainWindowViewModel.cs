@@ -15,6 +15,7 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly PackageAggregator _aggregator;
     private readonly List<PackageItemViewModel> _all = new();
     private readonly Dictionary<PackageSourceKind, IPackageSource> _sourceByKind;
+    private CancellationTokenSource? _updatesCheckCts;
 
     /// <summary>Wird von der View beim Start gesetzt: oeffnet das LogWindow und faedelt
     /// die Stream-Operation hindurch. ViewModel kennt damit weiterhin keine View-Typen.</summary>
@@ -237,6 +238,67 @@ public partial class MainWindowViewModel : ObservableObject
         finally
         {
             IsLoading = false;
+        }
+
+        // Update-Check laeuft im Hintergrund - Liste ist sofort sichtbar, Badges fliegen
+        // ein, sobald die Antworten der Quellen da sind. Bei erneutem Refresh canceln wir
+        // den vorherigen Check, damit kein stale Ergebnis dazwischenfunkt.
+        _updatesCheckCts?.Cancel();
+        _updatesCheckCts?.Dispose();
+        _updatesCheckCts = new CancellationTokenSource();
+        _ = CheckUpdatesInBackgroundAsync(_updatesCheckCts.Token);
+    }
+
+    private async Task CheckUpdatesInBackgroundAsync(CancellationToken ct)
+    {
+        try
+        {
+            var tasks = _aggregator.Sources
+                .Select(async s => (Source: s, Ids: await SafeCheckUpdatesAsync(s, ct)))
+                .ToArray();
+
+            var results = await Task.WhenAll(tasks);
+            if (ct.IsCancellationRequested) return;
+
+            // Reset zuerst, dann anhand der Ergebnisse markieren.
+            foreach (var p in _all) p.HasUpdate = false;
+
+            foreach (var (src, ids) in results)
+            {
+                if (ids.Count == 0) continue;
+                foreach (var p in _all)
+                    if (p.Model.Source == src.Kind && ids.Contains(p.Model.Id))
+                        p.HasUpdate = true;
+            }
+
+            Log.Info("Update-Check fertig: {0} Updates verfuegbar",
+                _all.Count(p => p.HasUpdate));
+
+            // ApplyFilter rebuildet die Packages-Collection, dadurch wird die UI
+            // neu gerendert und die HasUpdate-Badges erscheinen.
+            ApplyFilter();
+        }
+        catch (OperationCanceledException)
+        {
+            // Neuer Refresh hat uns abgeschossen - alles gut.
+        }
+        catch (Exception ex)
+        {
+            Log.Warn(ex, "Update-Check fehlgeschlagen");
+        }
+    }
+
+    private static async Task<IReadOnlySet<string>> SafeCheckUpdatesAsync(
+        IPackageSource s, CancellationToken ct)
+    {
+        try
+        {
+            return await s.CheckUpdatesAsync(ct);
+        }
+        catch (Exception ex)
+        {
+            Log.Warn(ex, "Update-Check Quelle '{0}'", s.DisplayName);
+            return new HashSet<string>();
         }
     }
 

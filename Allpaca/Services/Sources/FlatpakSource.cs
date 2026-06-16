@@ -92,6 +92,29 @@ public sealed class FlatpakSource : IPackageSource
     public Task<IReadOnlyList<PackageInfo>> SearchAsync(string query, CancellationToken ct = default)
         => Task.FromResult<IReadOnlyList<PackageInfo>>(Array.Empty<PackageInfo>());
 
+    public async Task<IReadOnlySet<string>> CheckUpdatesAsync(CancellationToken ct = default)
+    {
+        // "flatpak remote-ls --updates" listet alles, was an verfuegbaren Updates auf den
+        // konfigurierten Remotes vorliegt. --columns=application reduziert auf die App-ID
+        // (eine pro Zeile, ohne Header).
+        var r = await _runner.RunAsync("flatpak",
+            new[] { "remote-ls", "--updates", "--columns=application" }, ct);
+
+        if (!r.Success)
+        {
+            Log.Warn("flatpak remote-ls --updates fehlgeschlagen: {0}", r.StdErr);
+            return new HashSet<string>();
+        }
+
+        var set = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var raw in r.StdOut.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var id = raw.Trim();
+            if (id.Length > 0) set.Add(id);
+        }
+        return set;
+    }
+
     public async IAsyncEnumerable<ProgressLine> InstallAsync(string id, [EnumeratorCancellation] CancellationToken ct = default)
     {
         await foreach (var l in _runner.StreamAsync("flatpak", new[] { "install", "-y", id }, ct))

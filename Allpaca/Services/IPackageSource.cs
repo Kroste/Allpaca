@@ -24,4 +24,12 @@ public interface IPackageSource
     IAsyncEnumerable<ProgressLine> InstallAsync(string id, CancellationToken ct = default);
     IAsyncEnumerable<ProgressLine> UninstallAsync(string id, CancellationToken ct = default);
     IAsyncEnumerable<ProgressLine> UpdateAsync(string? id, CancellationToken ct = default);
+
+    /// <summary>
+    /// Liefert die IDs aller eigenen Eintraege, fuer die ein Update verfuegbar ist.
+    /// Default: leeres Set - Quellen, die das nicht unterstuetzen (z. B. AppImage,
+    /// Distrobox-Container), brauchen nichts zu ueberschreiben.
+    /// </summary>
+    Task<IReadOnlySet<string>> CheckUpdatesAsync(CancellationToken ct = default)
+        => Task.FromResult<IReadOnlySet<string>>(new HashSet<string>());
 }
