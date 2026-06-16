@@ -80,10 +80,18 @@ public partial class MainWindowViewModel : ObservableObject
     public int SelectedCount => SelectedItems.Count;
     public bool HasMultiSelection => SelectedCount > 1;
 
-    /// <summary>Batch ist aktuell nur fuer Flatpak verdrahtet (siehe IsWiredForMutation).</summary>
-    public bool CanBatchOperate =>
-        HasMultiSelection
-        && SelectedItems.All(p => p.Model.Source == PackageSourceKind.Flatpak);
+    /// <summary>Batch geht, wenn alle Markierten aus derselben Quelle kommen UND die
+    /// Quelle nativ Batching unterstuetzt (Flatpak, Homebrew).</summary>
+    public bool CanBatchOperate
+    {
+        get
+        {
+            if (!HasMultiSelection) return false;
+            var first = SelectedItems[0].Model.Source;
+            if (!SupportsBatch(first)) return false;
+            return SelectedItems.All(p => p.Model.Source == first);
+        }
+    }
 
     public string BatchInfo
     {
@@ -91,7 +99,7 @@ public partial class MainWindowViewModel : ObservableObject
         {
             if (!HasMultiSelection) return "";
             if (CanBatchOperate) return $"{SelectedCount} Pakete markiert";
-            return $"{SelectedCount} Pakete markiert – Batch-Aktionen aktuell nur für Flatpak";
+            return $"{SelectedCount} Pakete markiert – Batch-Aktionen brauchen gleiche Quelle (Flatpak oder Homebrew)";
         }
     }
 
@@ -192,13 +200,23 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     private void ToggleSortDirection() => SortDescending = !SortDescending;
 
-    /// <summary>Aktuell verdrahtet: Flatpak (rootless) und rpm-ostree (laeuft via
-    /// pkexec, Reboot-Hinweis nach Erfolg). Distrobox bekommt einen eigenen
-    /// Drill-down-Pfad, Homebrew/AppImage folgen in spaeteren Commits.</summary>
+    /// <summary>Aktuell verdrahtet: Flatpak (rootless), rpm-ostree (laeuft via pkexec,
+    /// Reboot-Hinweis nach Erfolg) und Homebrew. Distrobox bekommt einen eigenen
+    /// Drill-down-Pfad, AppImage folgt.</summary>
     private bool IsWiredForMutation(PackageItemViewModel? item) => item?.Model.Source switch
     {
         PackageSourceKind.Flatpak => true,
         PackageSourceKind.RpmOstree => true,
+        PackageSourceKind.Homebrew => true,
+        _ => false,
+    };
+
+    /// <summary>Batch-faehige Quellen: brauchen einen sinnvollen Multi-ID-CLI-Aufruf
+    /// und eigenes UninstallManyAsync/UpdateManyAsync-Override fuers native Batching.</summary>
+    private static bool SupportsBatch(PackageSourceKind kind) => kind switch
+    {
+        PackageSourceKind.Flatpak => true,
+        PackageSourceKind.Homebrew => true,
         _ => false,
     };
 
@@ -303,14 +321,16 @@ public partial class MainWindowViewModel : ObservableObject
     private async Task BatchUpdateSelectedAsync()
     {
         if (RunOperation is null) return;
-        if (!_sourceByKind.TryGetValue(PackageSourceKind.Flatpak, out var src)) return;
-
         var items = SelectedItems.ToList();
         if (items.Count == 0) return;
-        var ids = items.Select(p => p.Model.Id).ToList();
 
-        var title = $"Flatpak: {items.Count} Pakete aktualisieren";
-        Log.Info("Starte Batch-Update: {0} Pakete", items.Count);
+        // CanBatchOperate hat schon zugesichert: alle aus derselben (batch-faehigen) Quelle.
+        var srcKind = items[0].Model.Source;
+        if (!_sourceByKind.TryGetValue(srcKind, out var src)) return;
+
+        var ids = items.Select(p => p.Model.Id).ToList();
+        var title = $"{src.DisplayName}: {items.Count} Pakete aktualisieren";
+        Log.Info("Starte Batch-Update via {0}: {1} Pakete", src.DisplayName, items.Count);
 
         await RunOperation(
             new OperationContext(title, src.Capabilities.RequiresReboot),
@@ -323,10 +343,11 @@ public partial class MainWindowViewModel : ObservableObject
     private async Task BatchUninstallSelectedAsync()
     {
         if (RunOperation is null) return;
-        if (!_sourceByKind.TryGetValue(PackageSourceKind.Flatpak, out var src)) return;
-
         var items = SelectedItems.ToList();
         if (items.Count == 0) return;
+
+        var srcKind = items[0].Model.Source;
+        if (!_sourceByKind.TryGetValue(srcKind, out var src)) return;
 
         if (ConfirmAsync is not null)
         {
@@ -345,8 +366,8 @@ public partial class MainWindowViewModel : ObservableObject
         }
 
         var ids = items.Select(p => p.Model.Id).ToList();
-        var title = $"Flatpak: {items.Count} Pakete deinstallieren";
-        Log.Info("Starte Batch-Uninstall: {0} Pakete", items.Count);
+        var title = $"{src.DisplayName}: {items.Count} Pakete deinstallieren";
+        Log.Info("Starte Batch-Uninstall via {0}: {1} Pakete", src.DisplayName, items.Count);
 
         await RunOperation(
             new OperationContext(title, src.Capabilities.RequiresReboot),

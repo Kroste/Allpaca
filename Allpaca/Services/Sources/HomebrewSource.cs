@@ -157,4 +157,33 @@ public sealed class HomebrewSource : IPackageSource
         var args = id is null ? new[] { "upgrade" } : new[] { "upgrade", id };
         await foreach (var l in _runner.StreamAsync(brew, args, ct)) yield return l;
     }
+
+    // --- Native Batching: brew akzeptiert mehrere Tokens/Formulae in einem
+    // Aufruf, das spart pro-Eintrag-Setup-Overhead (taps neu auswerten etc.). ---
+
+    public async IAsyncEnumerable<ProgressLine> UninstallManyAsync(
+        IReadOnlyList<string> ids,
+        [EnumeratorCancellation] CancellationToken ct = default)
+    {
+        if (ids.Count == 0) yield break;
+        var brew = await ResolveAsync(ct);
+        if (brew is null) { yield return new ProgressLine("Homebrew nicht gefunden", true); yield break; }
+
+        var args = new List<string> { "uninstall" };
+        args.AddRange(ids);
+        await foreach (var l in _runner.StreamAsync(brew, args, ct)) yield return l;
+    }
+
+    public async IAsyncEnumerable<ProgressLine> UpdateManyAsync(
+        IReadOnlyList<string> ids,
+        [EnumeratorCancellation] CancellationToken ct = default)
+    {
+        if (ids.Count == 0) yield break;
+        var brew = await ResolveAsync(ct);
+        if (brew is null) { yield return new ProgressLine("Homebrew nicht gefunden", true); yield break; }
+
+        var args = new List<string> { "upgrade" };
+        args.AddRange(ids);
+        await foreach (var l in _runner.StreamAsync(brew, args, ct)) yield return l;
+    }
 }

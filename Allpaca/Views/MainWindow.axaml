@@ -294,7 +294,7 @@
 
                             <Border Height="1" Background="#2A2E35" Margin="0,4"/>
 
-                            <TextBlock Text="Aktuell nur für Flatpak und rpm-ostree verdrahtet — Homebrew/AppImage folgen."
+                            <TextBlock Text="Aktuell verdrahtet: Flatpak, rpm-ostree, Homebrew. AppImage folgt."
                                        Foreground="#6E747C" FontSize="12" FontStyle="Italic"
                                        TextWrapping="Wrap"/>
                             <StackPanel Orientation="Horizontal" Spacing="8">
