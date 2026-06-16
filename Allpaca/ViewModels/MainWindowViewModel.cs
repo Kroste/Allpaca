@@ -20,6 +20,10 @@ public partial class MainWindowViewModel : ObservableObject
     /// die Stream-Operation hindurch. ViewModel kennt damit weiterhin keine View-Typen.</summary>
     public Func<string, Func<CancellationToken, IAsyncEnumerable<ProgressLine>>, Task>? RunOperation { get; set; }
 
+    /// <summary>Wird von der View beim Start gesetzt: zeigt einen modalen Bestaetigungsdialog
+    /// und liefert true bei Bestaetigung, false bei Abbruch.</summary>
+    public Func<ConfirmRequest, Task<bool>>? ConfirmAsync { get; set; }
+
     public ObservableCollection<PackageItemViewModel> Packages { get; } = new();
     public ObservableCollection<SourceFilterViewModel> Filters { get; } = new();
 
@@ -107,6 +111,23 @@ public partial class MainWindowViewModel : ObservableObject
 
         var id = Selected.Model.Id;
         var name = Selected.Name;
+
+        // Destruktive Aktion - vor dem Start nachfragen, sofern die View einen
+        // Dialog eingehaengt hat (Headless-Tests koennen das weglassen).
+        if (ConfirmAsync is not null)
+        {
+            var ok = await ConfirmAsync(new ConfirmRequest(
+                Title: "Deinstallieren?",
+                Message: $"„{name}\" wirklich aus {src.DisplayName} entfernen? Dieser Schritt lässt sich nur durch erneutes Installieren rückgängig machen.",
+                ConfirmLabel: "Deinstallieren",
+                IsDestructive: true));
+            if (!ok)
+            {
+                Log.Info("Uninstall abgebrochen vom User: {0}", id);
+                return;
+            }
+        }
+
         var title = $"{src.DisplayName}: {name} deinstallieren";
         Log.Info("Starte Uninstall: {0} ({1})", id, src.DisplayName);
 

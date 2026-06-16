@@ -1,0 +1,44 @@
+<chrome:ChromeWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:chrome="clr-namespace:Allpaca.Chrome"
+        xmlns:vm="clr-namespace:Allpaca.ViewModels"
+        x:Class="Allpaca.Views.ConfirmWindow"
+        x:DataType="vm:ConfirmRequest"
+        Title="Bestätigen"
+        Width="460" Height="220"
+        MinWidth="380" MinHeight="200"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Background="#1B1D21">
+
+    <Grid RowDefinitions="40,*,Auto">
+
+        <!-- Titelleiste -->
+        <Grid Grid.Row="0" Background="#15171A" ColumnDefinitions="*,Auto"
+              PointerPressed="OnTitleBarPointerPressed">
+            <TextBlock Grid.Column="0" Text="{Binding Title}" Foreground="#EDEFF2"
+                       FontWeight="SemiBold" VerticalAlignment="Center" Margin="14,0"
+                       TextTrimming="CharacterEllipsis"/>
+            <Button Grid.Column="1" Classes="chrome close" Content="✕"
+                    Click="OnCancelClick"/>
+        </Grid>
+
+        <!-- Inhalt -->
+        <StackPanel Grid.Row="1" Margin="22,18" Spacing="12">
+            <TextBlock Text="{Binding Title}" Foreground="#EDEFF2"
+                       FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap"/>
+            <TextBlock Text="{Binding Message}" Foreground="#C7CCD2"
+                       FontSize="13" TextWrapping="Wrap"/>
+        </StackPanel>
+
+        <!-- Footer -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right"
+                    Spacing="8" Margin="14,0,14,14">
+            <Button Content="Abbrechen" Click="OnCancelClick"/>
+            <Button Classes.danger="{Binding IsDestructive}"
+                    Classes.accent="{Binding !IsDestructive}"
+                    Content="{Binding ConfirmLabel}"
+                    Click="OnConfirmClick"/>
+        </StackPanel>
+    </Grid>
+</chrome:ChromeWindow>

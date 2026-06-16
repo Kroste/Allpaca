@@ -17,9 +17,11 @@ public partial class MainWindow : ChromeWindow
 
         if (DataContext is MainWindowViewModel vm)
         {
-            // ViewModel kennt keine View-Typen - die "oeffne ein LogWindow"-Logik wird
-            // hier injiziert. DataContext steht erst in OnOpened sicher (siehe App.OnFrameworkInitializationCompleted).
+            // ViewModel kennt keine View-Typen - "oeffne ein LogWindow" und "frag den
+            // User per modalem Dialog" werden hier injiziert. DataContext steht erst in
+            // OnOpened sicher (siehe App.OnFrameworkInitializationCompleted).
             vm.RunOperation ??= RunOperationAsync;
+            vm.ConfirmAsync ??= req => ConfirmWindow.AskAsync(this, req);
 
             if (vm.RefreshCommand.CanExecute(null))
                 vm.RefreshCommand.Execute(null);
