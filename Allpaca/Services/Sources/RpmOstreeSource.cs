@@ -77,6 +77,27 @@ public sealed class RpmOstreeSource : IPackageSource
     public Task<IReadOnlyList<PackageInfo>> SearchAsync(string query, CancellationToken ct = default)
         => Task.FromResult<IReadOnlyList<PackageInfo>>(Array.Empty<PackageInfo>());
 
+    /// <summary>
+    /// Checkt, ob ein OS-Update auf der ostree-Remote bereitsteht. Liefert null, wenn
+    /// nichts da ist (Exit-Code 77 oder Fehler), und sonst eine kurze Versions-Info,
+    /// die der UI-Banner anzeigt. Unprivileged - braucht kein pkexec.
+    /// </summary>
+    public async Task<string?> CheckOsUpdateAsync(CancellationToken ct = default)
+    {
+        var r = await _runner.RunAsync("rpm-ostree", new[] { "upgrade", "--check" }, ct);
+
+        // Exit-Code 77 = "no upgrade available" - dokumentiertes rpm-ostree-Verhalten.
+        if (r.ExitCode == 77) return null;
+        if (!r.Success)
+        {
+            Log.Warn("rpm-ostree upgrade --check fehlgeschlagen (exit {0}): {1}", r.ExitCode, r.StdErr);
+            return null;
+        }
+
+        var version = RpmOstreeUpgradeCheckParser.ExtractAvailableVersion(r.StdOut);
+        return version ?? "verfügbar";
+    }
+
     // Mutationen brauchen pkexec; UI-Verdrahtung folgt in v2.
     public async IAsyncEnumerable<ProgressLine> InstallAsync(string id, [EnumeratorCancellation] CancellationToken ct = default)
     {

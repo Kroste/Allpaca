@@ -74,6 +74,13 @@ public partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty] private bool _showRuntimes;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasOsUpdate))]
+    [NotifyCanExecuteChangedFor(nameof(ApplyOsUpdateCommand))]
+    private string? _osUpdateMessage;
+
+    public bool HasOsUpdate => !string.IsNullOrEmpty(OsUpdateMessage);
+
     public string CountSummary => $"{VisibleCount} / {TotalCount} Pakete";
     public string SortDirectionGlyph => SortDescending ? "▼" : "▲";
 
@@ -198,6 +205,28 @@ public partial class MainWindowViewModel : ObservableObject
     private bool CanShowContainerPackages() =>
         Selected?.Model.Source == PackageSourceKind.Distrobox;
 
+    [RelayCommand(CanExecute = nameof(CanApplyOsUpdate))]
+    private async Task ApplyOsUpdateAsync()
+    {
+        if (RunOperation is null) return;
+        if (!_sourceByKind.TryGetValue(PackageSourceKind.RpmOstree, out var src)) return;
+
+        Log.Info("Starte rpm-ostree upgrade: {0}", OsUpdateMessage);
+        await RunOperation(
+            new OperationContext("rpm-ostree: System aktualisieren", RequiresReboot: true),
+            ct => src.UpdateAsync(null, ct));
+
+        // Nach erfolgreicher Anwendung sollte der Banner verschwinden - der naechste
+        // Refresh laeuft sowieso, der bringt einen frischen Check mit.
+        OsUpdateMessage = null;
+        await RefreshAsync();
+    }
+
+    private bool CanApplyOsUpdate() => HasOsUpdate;
+
+    [RelayCommand]
+    private void DismissOsUpdate() => OsUpdateMessage = null;
+
     [RelayCommand]
     private async Task RefreshAsync()
     {
@@ -247,6 +276,33 @@ public partial class MainWindowViewModel : ObservableObject
         _updatesCheckCts?.Dispose();
         _updatesCheckCts = new CancellationTokenSource();
         _ = CheckUpdatesInBackgroundAsync(_updatesCheckCts.Token);
+        _ = CheckOsUpdateInBackgroundAsync(_updatesCheckCts.Token);
+    }
+
+    private async Task CheckOsUpdateInBackgroundAsync(CancellationToken ct)
+    {
+        try
+        {
+            if (!_sourceByKind.TryGetValue(PackageSourceKind.RpmOstree, out var src))
+            {
+                OsUpdateMessage = null;
+                return;
+            }
+
+            if (src is not RpmOstreeSource rpm) return;
+            if (!await rpm.IsAvailableAsync(ct)) return;
+
+            var info = await rpm.CheckOsUpdateAsync(ct);
+            if (ct.IsCancellationRequested) return;
+
+            OsUpdateMessage = info;
+            Log.Info("rpm-ostree OS-Update: {0}", info ?? "keins");
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception ex)
+        {
+            Log.Warn(ex, "rpm-ostree OS-Update-Check fehlgeschlagen");
+        }
     }
 
     private async Task CheckUpdatesInBackgroundAsync(CancellationToken ct)
