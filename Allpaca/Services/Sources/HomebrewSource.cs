@@ -117,8 +117,21 @@ public sealed class HomebrewSource : IPackageSource
         return list;
     }
 
-    public Task<IReadOnlyList<PackageInfo>> SearchAsync(string query, CancellationToken ct = default)
-        => Task.FromResult<IReadOnlyList<PackageInfo>>(Array.Empty<PackageInfo>());
+    public async Task<IReadOnlyList<PackageInfo>> SearchAsync(string query, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(query)) return Array.Empty<PackageInfo>();
+        var brew = await ResolveAsync(ct);
+        if (brew is null) return Array.Empty<PackageInfo>();
+
+        var r = await _runner.RunAsync(brew, new[] { "search", query }, ct);
+        if (!r.Success)
+        {
+            Log.Warn("brew search '{0}' fehlgeschlagen: {1}", query, r.StdErr);
+            return Array.Empty<PackageInfo>();
+        }
+
+        return BrewSearchParser.Parse(r.StdOut);
+    }
 
     public async Task<IReadOnlySet<string>> CheckUpdatesAsync(CancellationToken ct = default)
     {

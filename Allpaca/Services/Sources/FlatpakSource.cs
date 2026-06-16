@@ -89,8 +89,21 @@ public sealed class FlatpakSource : IPackageSource
         return (long)(num * mult);
     }
 
-    public Task<IReadOnlyList<PackageInfo>> SearchAsync(string query, CancellationToken ct = default)
-        => Task.FromResult<IReadOnlyList<PackageInfo>>(Array.Empty<PackageInfo>());
+    public async Task<IReadOnlyList<PackageInfo>> SearchAsync(string query, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(query)) return Array.Empty<PackageInfo>();
+
+        var r = await _runner.RunAsync("flatpak",
+            new[] { "search", "--columns=application,name,description,branch,remotes", query }, ct);
+
+        if (!r.Success)
+        {
+            Log.Warn("flatpak search '{0}' fehlgeschlagen: {1}", query, r.StdErr);
+            return Array.Empty<PackageInfo>();
+        }
+
+        return FlatpakSearchParser.Parse(r.StdOut);
+    }
 
     public async Task<IReadOnlySet<string>> CheckUpdatesAsync(CancellationToken ct = default)
     {

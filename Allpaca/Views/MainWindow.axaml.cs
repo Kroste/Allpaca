@@ -30,6 +30,7 @@ public partial class MainWindow : ChromeWindow
                 var win = new ContainerInspectorWindow(vm.ProbeContainerPackagesAsync, name);
                 win.Show(this);
             };
+            vm.OpenInstallSearch ??= () => OpenSearchWindow(vm);
 
             if (vm.RefreshCommand.CanExecute(null))
                 vm.RefreshCommand.Execute(null);
@@ -44,6 +45,22 @@ public partial class MainWindow : ChromeWindow
         var win = new LogWindow();
         win.Show(this);
         await win.RunAsync(ctx, work);
+    }
+
+    private void OpenSearchWindow(MainWindowViewModel vm)
+    {
+        var searchVm = new SearchWindowViewModel(vm.SourcesByKind)
+        {
+            RunOperation = RunOperationAsync,
+            ConfirmAsync = req => ConfirmWindow.AskAsync(this, req),
+            AfterInstall = () =>
+            {
+                // Liste nach Install refreshen, damit der neue Eintrag sichtbar wird.
+                if (vm.RefreshCommand.CanExecute(null))
+                    vm.RefreshCommand.Execute(null);
+            },
+        };
+        new SearchWindow(searchVm).Show(this);
     }
 
     private void OnInfoClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)

@@ -56,6 +56,7 @@
                         VerticalAlignment="Center">
                 <TextBlock Text="{Binding CountSummary}" Foreground="#9AA0A8"
                            VerticalAlignment="Center"/>
+                <Button Content="+ Installieren …" Command="{Binding OpenInstallCommand}"/>
                 <Button Classes="accent" Content="Aktualisieren"
                         Command="{Binding RefreshCommand}"/>
                 <Button Content="ⓘ Info" Click="OnInfoClick"/>

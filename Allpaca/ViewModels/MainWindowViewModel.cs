@@ -31,6 +31,15 @@ public partial class MainWindowViewModel : ObservableObject
     /// fuer den angegebenen Distrobox-Container.</summary>
     public Action<string>? OpenContainerInspector { get; set; }
 
+    /// <summary>Wird von der View beim Start gesetzt: oeffnet das SearchWindow fuer den
+    /// Install-Flow. Die View baut die SearchWindowViewModel selbst, weil sie zusaetzlich
+    /// LogWindow + Confirm-Dialog faedeln muss.</summary>
+    public Action? OpenInstallSearch { get; set; }
+
+    /// <summary>Internal lookup, damit das MainWindow code-behind die SearchWindowViewModel
+    /// mit der richtigen Quellen-Map fuettern kann.</summary>
+    internal IReadOnlyDictionary<PackageSourceKind, IPackageSource> SourcesByKind => _sourceByKind;
+
     /// <summary>Liest die installierten Pakete *innerhalb* eines Distrobox-Containers.
     /// Wird vom ContainerInspectorWindow als Probe-Callback weitergereicht.</summary>
     public Task<IReadOnlyList<ContainerPackage>> ProbeContainerPackagesAsync(
@@ -348,6 +357,9 @@ public partial class MainWindowViewModel : ObservableObject
 
     [RelayCommand]
     private void DismissOsUpdate() => OsUpdateMessage = null;
+
+    [RelayCommand]
+    private void OpenInstall() => OpenInstallSearch?.Invoke();
 
     [RelayCommand(CanExecute = nameof(CanBatchUpdate))]
     private async Task BatchUpdateSelectedAsync()
