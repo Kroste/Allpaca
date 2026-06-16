@@ -22,6 +22,11 @@ public partial class MainWindow : ChromeWindow
             // OnOpened sicher (siehe App.OnFrameworkInitializationCompleted).
             vm.RunOperation ??= RunOperationAsync;
             vm.ConfirmAsync ??= req => ConfirmWindow.AskAsync(this, req);
+            vm.OpenContainerInspector ??= name =>
+            {
+                var win = new ContainerInspectorWindow(vm.ProbeContainerPackagesAsync, name);
+                win.Show(this);
+            };
 
             if (vm.RefreshCommand.CanExecute(null))
                 vm.RefreshCommand.Execute(null);

@@ -36,6 +36,9 @@ public sealed class PackageItemViewModel
         _ => "?",
     };
 
+    /// <summary>Bequemes Bool fuer XAML-Bindings (z. B. fuer den Drill-down-Button im Detailpanel).</summary>
+    public bool IsDistrobox => Model.Source == PackageSourceKind.Distrobox;
+
     public IBrush SourceBrush => new SolidColorBrush(Color.Parse(ColorFor(Model.Source)));
 
     /// <summary>Distrobox-Container-Status (z. B. "Up 2 hours", "Exited", "Created"). Leer fuer andere Quellen.</summary>

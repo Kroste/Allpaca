@@ -71,6 +71,44 @@ public sealed class DistroboxSource : IPackageSource
     public Task<IReadOnlyList<PackageInfo>> SearchAsync(string query, CancellationToken ct = default)
         => Task.FromResult<IReadOnlyList<PackageInfo>>(Array.Empty<PackageInfo>());
 
+    /// <summary>
+    /// Listet die Pakete *innerhalb* eines Containers. Probiert die ueblichen Package-
+    /// Manager der Reihe nach (dpkg/rpm/pacman/apk), damit wir uns das Erkennen des
+    /// Distro-Geschmacks im Voraus sparen. Ausgabeformat: pro Zeile "Name\tVersion".
+    /// </summary>
+    public async Task<IReadOnlyList<ContainerPackage>> ListContainerPackagesAsync(
+        string containerName, CancellationToken ct = default)
+    {
+        // Doppelte $ sind die normale Bash-Escape-Form fuer dpkg-querys Format-String
+        // (das Escapen passiert in der Shell, nicht in C#).
+        const string script =
+            "if command -v dpkg-query >/dev/null 2>&1; then " +
+                "dpkg-query -W -f='${Package}\\t${Version}\\n'; " +
+            "elif command -v rpm >/dev/null 2>&1; then " +
+                "rpm -qa --queryformat '%{NAME}\\t%{VERSION}-%{RELEASE}\\n'; " +
+            "elif command -v pacman >/dev/null 2>&1; then " +
+                "pacman -Q | awk '{print $1\"\\t\"$2}'; " +
+            "elif command -v apk >/dev/null 2>&1; then " +
+                "apk info -v; " +
+            "else " +
+                "echo 'no-supported-package-manager' >&2; exit 2; " +
+            "fi";
+
+        var r = await _runner.RunAsync(
+            "distrobox",
+            new[] { "enter", "--name", containerName, "--", "bash", "-c", script },
+            ct);
+
+        if (!r.Success)
+        {
+            Log.Warn("distrobox enter {0}: pm-list fehlgeschlagen (exit {1}): {2}",
+                containerName, r.ExitCode, r.StdErr);
+            return Array.Empty<ContainerPackage>();
+        }
+
+        return ContainerPackageParser.Parse(r.StdOut);
+    }
+
     public IAsyncEnumerable<ProgressLine> InstallAsync(string id, CancellationToken ct = default)
         => EmptyStream();
 

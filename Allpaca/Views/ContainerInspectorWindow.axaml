@@ -1,0 +1,69 @@
+<chrome:ChromeWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:chrome="clr-namespace:Allpaca.Chrome"
+        xmlns:vm="clr-namespace:Allpaca.ViewModels"
+        xmlns:m="clr-namespace:Allpaca.Models"
+        x:Class="Allpaca.Views.ContainerInspectorWindow"
+        x:DataType="vm:ContainerInspectorViewModel"
+        Title="Pakete im Container"
+        Width="640" Height="640"
+        MinWidth="420" MinHeight="360"
+        WindowStartupLocation="CenterOwner"
+        Background="#1B1D21">
+
+    <Grid RowDefinitions="40,Auto,*,Auto">
+
+        <!-- Titelleiste -->
+        <Grid Grid.Row="0" Background="#15171A" ColumnDefinitions="*,Auto"
+              PointerPressed="OnTitleBarPointerPressed">
+            <TextBlock Grid.Column="0" Text="{Binding Title}" Foreground="#EDEFF2"
+                       FontWeight="SemiBold" VerticalAlignment="Center" Margin="14,0"
+                       TextTrimming="CharacterEllipsis"/>
+            <Button Grid.Column="1" Classes="chrome close" Content="✕"
+                    Click="OnCloseClick"/>
+        </Grid>
+
+        <!-- Toolbar -->
+        <Grid Grid.Row="1" Margin="14,12" ColumnDefinitions="*,Auto">
+            <TextBox Grid.Column="0" Text="{Binding SearchText}"
+                     PlaceholderText="Pakete durchsuchen…"
+                     Width="320" HorizontalAlignment="Left"/>
+            <Button Grid.Column="1" Content="Neu laden" Click="OnRefreshClick"/>
+        </Grid>
+
+        <!-- Inhalt -->
+        <Border Grid.Row="2" Background="#202329" CornerRadius="10"
+                Margin="10,0,10,10" ClipToBounds="True">
+            <Grid>
+                <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsLoading}"
+                             VerticalAlignment="Top" Height="3" Background="Transparent"
+                             Foreground="#2BB673" ZIndex="1"/>
+
+                <TextBlock Text="{Binding ErrorMessage}" Foreground="#E25555"
+                           FontSize="13" TextWrapping="Wrap"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Margin="20" IsVisible="{Binding HasError}"/>
+
+                <ListBox ItemsSource="{Binding Packages}"
+                         Background="Transparent" BorderThickness="0" Padding="6"
+                         IsVisible="{Binding !HasError}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="m:ContainerPackage">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Grid.Column="0" Text="{Binding Name}"
+                                           Foreground="#EDEFF2" Margin="8,3"/>
+                                <TextBlock Grid.Column="1" Text="{Binding Version}"
+                                           Foreground="#9AA0A8" Margin="8,3"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+        </Border>
+
+        <!-- Statusleiste -->
+        <Border Grid.Row="3" Background="#15171A" Padding="14,8">
+            <TextBlock Text="{Binding StatusText}" Foreground="#9AA0A8" FontSize="12"/>
+        </Border>
+    </Grid>
+</chrome:ChromeWindow>

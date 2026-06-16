@@ -24,6 +24,20 @@ public partial class MainWindowViewModel : ObservableObject
     /// und liefert true bei Bestaetigung, false bei Abbruch.</summary>
     public Func<ConfirmRequest, Task<bool>>? ConfirmAsync { get; set; }
 
+    /// <summary>Wird von der View beim Start gesetzt: oeffnet ein Container-Inspector-Fenster
+    /// fuer den angegebenen Distrobox-Container.</summary>
+    public Action<string>? OpenContainerInspector { get; set; }
+
+    /// <summary>Liest die installierten Pakete *innerhalb* eines Distrobox-Containers.
+    /// Wird vom ContainerInspectorWindow als Probe-Callback weitergereicht.</summary>
+    public Task<IReadOnlyList<ContainerPackage>> ProbeContainerPackagesAsync(
+        string containerName, CancellationToken ct = default)
+    {
+        if (!_sourceByKind.TryGetValue(PackageSourceKind.Distrobox, out var src))
+            return Task.FromResult<IReadOnlyList<ContainerPackage>>(Array.Empty<ContainerPackage>());
+        return ((DistroboxSource)src).ListContainerPackagesAsync(containerName, ct);
+    }
+
     public ObservableCollection<PackageItemViewModel> Packages { get; } = new();
     public ObservableCollection<SourceFilterViewModel> Filters { get; } = new();
 
@@ -48,6 +62,7 @@ public partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(UninstallSelectedCommand))]
     [NotifyCanExecuteChangedFor(nameof(UpdateSelectedCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ShowContainerPackagesCommand))]
     private PackageItemViewModel? _selected;
 
     [ObservableProperty] private SortOption _selectedSortOption = null!;
@@ -170,6 +185,17 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     private bool CanUpdateSelected() => IsWiredForMutation(Selected);
+
+    [RelayCommand(CanExecute = nameof(CanShowContainerPackages))]
+    private void ShowContainerPackages()
+    {
+        if (Selected is null || OpenContainerInspector is null) return;
+        if (Selected.Model.Source != PackageSourceKind.Distrobox) return;
+        OpenContainerInspector(Selected.Model.Id);
+    }
+
+    private bool CanShowContainerPackages() =>
+        Selected?.Model.Source == PackageSourceKind.Distrobox;
 
     [RelayCommand]
     private async Task RefreshAsync()
