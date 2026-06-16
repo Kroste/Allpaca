@@ -151,6 +151,34 @@ Regeln:
 - Klassen via `Classes="accent danger"`. Pseudo: `:pointerover`, `:selected`, `:disabled`.
 - Template-Teile über `/template/ ContentPresenter` ansprechen.
 
+### 3.9b FluentTheme „klaut" Button.accent → Background über /template/ erzwingen
+FluentTheme bringt selbst einen `Button.accent`-Style mit eigenem ControlTemplate mit.
+Dessen ContentPresenter ist **nicht** per TemplateBinding an `Button.Background` gehängt
+— dein eigener `<Setter Property="Background" Value="#2BB673"/>` am Button-Element wird
+schlicht ignoriert, der Button bleibt Fluent-Blau. Genau diese Falle hat den
+„Aktualisieren"-Button in Allpaca v1.1.5 versteckt blau gerendert.
+
+Fix: Background für alle relevanten Zustände direkt am ContentPresenter im Template
+setzen, nicht am Button-Element:
+
+```xml
+<Style Selector="Button.accent /template/ ContentPresenter">
+    <Setter Property="Background" Value="#2BB673"/>
+</Style>
+<Style Selector="Button.accent:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#26A267"/>
+</Style>
+<Style Selector="Button.accent:pressed /template/ ContentPresenter">
+    <Setter Property="Background" Value="#1F8E5A"/>
+</Style>
+```
+
+`Foreground` / `Padding` / `CornerRadius` / `FontWeight` dürfen weiter direkt am Button
+stehen — die hängen im Fluent-Template via TemplateBinding. Dieselbe Falle gilt
+sinngemäß für jede eigene Button-Klasse, sobald FluentTheme einen gleichnamigen Style
+mitliefert. **Faustregel:** wenn deine `Background`-Setter wirkungslos sind, ist die
+Antwort fast immer `/template/ ContentPresenter`.
+
 ### 3.10 InitializeComponent / XAML-Loader
 - In **Views**: `public MyWindow() { InitializeComponent(); }` — die Methode wird vom
   Source-Generator erzeugt, **nicht** selbst definieren.
