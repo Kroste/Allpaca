@@ -54,7 +54,9 @@ public sealed class ProcessRunner
         return new Result(proc.ExitCode, so.ToString(), se.ToString());
     }
 
-    /// <summary>Streamt Ausgabe zeilenweise – fuer lange Operationen (v2).</summary>
+    /// <summary>Streamt Ausgabe zeilenweise und yieldet abschliessend eine Marker-Zeile
+    /// mit dem Exit-Code des Prozesses, damit der Consumer sauber zwischen Erfolg und
+    /// Fehler unterscheiden kann.</summary>
     public async IAsyncEnumerable<ProgressLine> StreamAsync(
         string file, IReadOnlyList<string> args,
         [EnumeratorCancellation] CancellationToken ct = default)
@@ -75,6 +77,9 @@ public sealed class ProcessRunner
             yield return line;
 
         await proc.WaitForExitAsync(ct).ConfigureAwait(false);
+
+        // Abschliessender Marker - leerer Text, nur ExitCode zaehlt.
+        yield return new ProgressLine("", false, ExitCode: proc.ExitCode);
     }
 
     private ProcessStartInfo BuildStartInfo(string file, IReadOnlyList<string> args)

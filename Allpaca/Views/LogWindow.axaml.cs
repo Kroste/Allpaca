@@ -40,6 +40,7 @@ public partial class LogWindow : ChromeWindow
         _vm.Title = title;
         Title = title;
         _vm.State = OperationState.Running;
+        _vm.ExitCode = null;
         _vm.Lines.Clear();
 
         var scroll = this.FindControl<ScrollViewer>("LogScroll");
@@ -48,11 +49,20 @@ public partial class LogWindow : ChromeWindow
         {
             await foreach (var line in work(_cts.Token).WithCancellation(_cts.Token))
             {
+                if (line.ExitCode is int code)
+                {
+                    // Marker-Zeile vom ProcessRunner: nicht anzeigen, nur State + ExitCode merken.
+                    _vm.ExitCode = code;
+                    continue;
+                }
                 _vm.Lines.Add(line);
                 scroll?.ScrollToEnd();
             }
-            _vm.State = OperationState.Succeeded;
-            Log.Info("Operation fertig: {0} ({1} Zeilen)", title, _vm.Lines.Count);
+            _vm.State = _vm.ExitCode is null or 0
+                ? OperationState.Succeeded
+                : OperationState.Failed;
+            Log.Info("Operation fertig: {0} (Exit={1}, {2} Zeilen)",
+                title, _vm.ExitCode?.ToString() ?? "?", _vm.Lines.Count);
         }
         catch (OperationCanceledException)
         {

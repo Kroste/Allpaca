@@ -1,4 +1,9 @@
 namespace Allpaca.Models;
 
-/// <summary>Eine Zeile Live-Ausgabe einer laufenden Operation (v2).</summary>
-public sealed record ProgressLine(string Text, bool IsError);
+/// <summary>
+/// Eine Zeile Live-Ausgabe einer laufenden Operation (v2). Wenn <see cref="ExitCode"/>
+/// gesetzt ist, handelt es sich um die abschliessende Marker-Zeile vom ProcessRunner -
+/// die enthaelt nur den Exit-Code und KEINEN sichtbaren Text. Der LogWindow filtert
+/// Marker-Zeilen aus der Anzeige raus und kippt den OperationState entsprechend.
+/// </summary>
+public sealed record ProgressLine(string Text, bool IsError, int? ExitCode = null);
