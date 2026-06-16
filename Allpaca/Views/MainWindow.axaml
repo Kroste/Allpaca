@@ -32,9 +32,26 @@
 
         <!-- ====== Werkzeugleiste ====== -->
         <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="14,12">
-            <TextBox Grid.Column="0" Text="{Binding SearchText}"
-                     PlaceholderText="Pakete durchsuchen…"
-                     Width="420" HorizontalAlignment="Left"/>
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="14"
+                        VerticalAlignment="Center">
+                <TextBox Text="{Binding SearchText}"
+                         PlaceholderText="Pakete durchsuchen…"
+                         Width="380"/>
+                <TextBlock Text="Sortieren:" Foreground="#9AA0A8" VerticalAlignment="Center"/>
+                <ComboBox ItemsSource="{Binding SortOptions}"
+                          SelectedItem="{Binding SelectedSortOption}"
+                          Width="130">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="vm:SortOption">
+                            <TextBlock Text="{Binding Label}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <Button Content="{Binding SortDirectionGlyph}"
+                        Command="{Binding ToggleSortDirectionCommand}"
+                        ToolTip.Tip="Sortierrichtung umschalten"
+                        Width="40"/>
+            </StackPanel>
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12"
                         VerticalAlignment="Center">
                 <TextBlock Text="{Binding CountSummary}" Foreground="#9AA0A8"

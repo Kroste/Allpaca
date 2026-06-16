@@ -18,6 +18,13 @@ public partial class MainWindowViewModel : ObservableObject
     public ObservableCollection<PackageItemViewModel> Packages { get; } = new();
     public ObservableCollection<SourceFilterViewModel> Filters { get; } = new();
 
+    public IReadOnlyList<SortOption> SortOptions { get; } = new[]
+    {
+        new SortOption(SortKey.Name, "Name"),
+        new SortOption(SortKey.Size, "Größe"),
+        new SortOption(SortKey.Source, "Quelle"),
+    };
+
     [ObservableProperty] private bool _isLoading;
     [ObservableProperty] private string _searchText = "";
 
@@ -31,7 +38,14 @@ public partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty] private PackageItemViewModel? _selected;
 
+    [ObservableProperty] private SortOption _selectedSortOption = null!;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SortDirectionGlyph))]
+    private bool _sortDescending;
+
     public string CountSummary => $"{VisibleCount} / {TotalCount} Pakete";
+    public string SortDirectionGlyph => SortDescending ? "▼" : "▲";
 
     public MainWindowViewModel()
     {
@@ -56,9 +70,16 @@ public partial class MainWindowViewModel : ObservableObject
             };
             Filters.Add(f);
         }
+
+        SelectedSortOption = SortOptions[0];
     }
 
     partial void OnSearchTextChanged(string value) => ApplyFilter();
+    partial void OnSelectedSortOptionChanged(SortOption value) => ApplyFilter();
+    partial void OnSortDescendingChanged(bool value) => ApplyFilter();
+
+    [RelayCommand]
+    private void ToggleSortDirection() => SortDescending = !SortDescending;
 
     [RelayCommand]
     private async Task RefreshAsync()
@@ -115,8 +136,8 @@ public partial class MainWindowViewModel : ObservableObject
                 p.Name.Contains(q, StringComparison.OrdinalIgnoreCase) ||
                 p.Id.Contains(q, StringComparison.OrdinalIgnoreCase));
 
-        var ordered = view
-            .OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
+        var ordered = PackageSorter
+            .Sort(view, SelectedSortOption?.Key ?? SortKey.Name, SortDescending)
             .ToList();
 
         Packages.Clear();
