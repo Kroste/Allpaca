@@ -54,7 +54,8 @@ public sealed class DistroboxSource : IPackageSource
                 Id = name,
                 Name = name,
                 Source = Kind,
-                Description = image,
+                // Description weglassen: Image steht bereits in Origin, sonst
+                // zeigt das Detailpanel HERKUNFT und BESCHREIBUNG identisch.
                 Origin = image,
                 Scope = "container",
                 Extra = new Dictionary<string, string>
