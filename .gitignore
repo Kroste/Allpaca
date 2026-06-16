@@ -1,0 +1,18 @@
+# .NET
+bin/
+obj/
+
+# Publish & Packaging
+publish/
+dist/
+*.AppImage
+appimagetool
+packaging/linux/Allpaca.AppDir/
+
+# IDE (.vscode bleibt bewusst im Repo: launch.json/tasks.json gehören dazu)
+.vs/
+.idea/
+*.user
+
+# Logs
+*.log

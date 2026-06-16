@@ -1,0 +1,61 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/Allpaca.sln",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "problemMatcher": "$msCompile",
+      "group": { "kind": "build", "isDefault": true }
+    },
+    {
+      "label": "test",
+      "command": "dotnet",
+      "type": "process",
+      "args": [ "test", "${workspaceFolder}/Allpaca.sln" ],
+      "problemMatcher": "$msCompile",
+      "group": { "kind": "test", "isDefault": true }
+    },
+    {
+      "label": "clean",
+      "command": "dotnet",
+      "type": "process",
+      "args": [ "clean", "${workspaceFolder}/Allpaca.sln" ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "rebuild",
+      "dependsOrder": "sequence",
+      "dependsOn": [ "clean-hard", "build" ],
+      "problemMatcher": []
+    },
+    {
+      "label": "clean-hard",
+      "type": "shell",
+      "detail": "Loescht ALLE bin/ und obj/ rekursiv vom Datentraeger (gegen haengenden Avalonia-XAML-Cache im obj/).",
+      "linux":  { "command": "find . -type d \\( -name bin -o -name obj \\) -exec rm -rf {} +" },
+      "osx":    { "command": "find . -type d \\( -name bin -o -name obj \\) -exec rm -rf {} +" },
+      "windows": {
+        "command": "Get-ChildItem -Path . -Recurse -Directory -Include bin,obj | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue",
+        "options": { "shell": { "executable": "powershell.exe", "args": ["-NoProfile","-Command"] } }
+      },
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "release (tag + push)",
+      "type": "shell",
+      "detail": "Liest <Version> aus der csproj, taggt vX.Y.Z und pusht -> loest den Release-Workflow aus.",
+      "command": "bash scripts/release.sh",
+      "windows": { "command": "bash scripts/release.sh" },
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    }
+  ]
+}

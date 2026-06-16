@@ -1,0 +1,66 @@
+<chrome:ChromeWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:chrome="clr-namespace:Allpaca.Chrome"
+        x:Class="Allpaca.Views.InfoWindow"
+        Title="Über Allpaca"
+        Width="460" Height="560"
+        MinWidth="380" MinHeight="420"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Background="#1B1D21">
+
+    <Grid RowDefinitions="40,*">
+
+        <!-- Titelleiste -->
+        <Grid Grid.Row="0" Background="#15171A" ColumnDefinitions="*,Auto"
+              PointerPressed="OnTitleBarPointerPressed">
+            <TextBlock Grid.Column="0" Text="Über Allpaca" Foreground="#EDEFF2"
+                       FontWeight="SemiBold" VerticalAlignment="Center" Margin="14,0"/>
+            <Button Grid.Column="1" Classes="chrome close" Content="✕" Click="OnCloseClick"/>
+        </Grid>
+
+        <!-- Inhalt -->
+        <ScrollViewer Grid.Row="1">
+            <StackPanel Margin="28,24" Spacing="14" HorizontalAlignment="Center">
+
+                <Border Width="84" Height="84" CornerRadius="20" Background="#2BB673"
+                        HorizontalAlignment="Center">
+                    <TextBlock Text="A" FontSize="52" FontWeight="Bold" Foreground="#15171A"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+
+                <TextBlock Text="Allpaca" FontSize="26" FontWeight="Bold" Foreground="#EDEFF2"
+                           HorizontalAlignment="Center"/>
+                <TextBlock x:Name="VersionText" Text="Version 1.0" Foreground="#9AA0A8"
+                           HorizontalAlignment="Center"/>
+
+                <TextBlock Text="Paketverwaltung für Bazzite – Flatpak, Homebrew, rpm-ostree, Distrobox und AppImage an einem Ort."
+                           Foreground="#C7CCD2" TextWrapping="Wrap" TextAlignment="Center"
+                           MaxWidth="360"/>
+
+                <TextBlock Text="© 2026 Lars Oste · MIT-Lizenz" Foreground="#6E747C"
+                           FontSize="12" HorizontalAlignment="Center"/>
+
+                <Border Height="1" Background="#2A2E35" Margin="0,6" Width="320"/>
+
+                <Button Content="GitHub-Projekt öffnen" Click="OnGithubClick"
+                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+
+                <!-- Buy me a coffee -->
+                <Button Click="OnCoffeeClick" HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
+                        Background="#FFDD00" Foreground="#000000"
+                        CornerRadius="8" Padding="14,10" FontWeight="Bold">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="☕" FontSize="16"/>
+                        <TextBlock Text="Buy me a coffee" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <TextBlock Text="Wenn dir Allpaca hilft, freue ich mich über einen Kaffee!"
+                           Foreground="#6E747C" FontSize="11" TextWrapping="Wrap"
+                           TextAlignment="Center" MaxWidth="320"/>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</chrome:ChromeWindow>

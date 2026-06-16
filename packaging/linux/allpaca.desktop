@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Allpaca
+Comment=Paketverwaltung für Bazzite
+Exec=Allpaca
+Icon=allpaca
+Categories=System;Utility;PackageManager;
+Terminal=false

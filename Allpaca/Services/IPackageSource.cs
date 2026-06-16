@@ -1,0 +1,27 @@
+using Allpaca.Models;
+
+namespace Allpaca.Services;
+
+/// <summary>
+/// Abstraktion ueber eine Installationsquelle. v1 nutzt nur die Lese-Pfade
+/// (IsAvailable + ListInstalled). Die Mutations-Signaturen sind bereits
+/// definiert, damit die UI in v2 ohne Architekturbruch andocken kann.
+/// </summary>
+public interface IPackageSource
+{
+    PackageSourceKind Kind { get; }
+    string DisplayName { get; }
+    PackageCapabilities Capabilities { get; }
+
+    /// <summary>Ist das zugehoerige Tool auf dem Host vorhanden/aufrufbar?</summary>
+    Task<bool> IsAvailableAsync(CancellationToken ct = default);
+
+    /// <summary>Alle installierten Eintraege dieser Quelle.</summary>
+    Task<IReadOnlyList<PackageInfo>> ListInstalledAsync(CancellationToken ct = default);
+
+    // --- v2 ---
+    Task<IReadOnlyList<PackageInfo>> SearchAsync(string query, CancellationToken ct = default);
+    IAsyncEnumerable<ProgressLine> InstallAsync(string id, CancellationToken ct = default);
+    IAsyncEnumerable<ProgressLine> UninstallAsync(string id, CancellationToken ct = default);
+    IAsyncEnumerable<ProgressLine> UpdateAsync(string? id, CancellationToken ct = default);
+}

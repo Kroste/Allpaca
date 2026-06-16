@@ -1,0 +1,22 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Allpaca (Debug)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/Allpaca/bin/Debug/net10.0/Allpaca.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Allpaca",
+      "console": "internalConsole",
+      "stopAtEntry": false,
+      "env": { "DOTNET_ENVIRONMENT": "Development" }
+    },
+    {
+      "name": ".NET: An laufenden Prozess anhaengen",
+      "type": "coreclr",
+      "request": "attach"
+    }
+  ]
+}
