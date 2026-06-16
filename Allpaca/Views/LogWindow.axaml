@@ -11,7 +11,7 @@
         WindowStartupLocation="CenterOwner"
         Background="#1B1D21">
 
-    <Grid RowDefinitions="40,Auto,*,Auto,Auto">
+    <Grid RowDefinitions="40,Auto,*,Auto,Auto,Auto">
 
         <!-- Titelleiste -->
         <Grid Grid.Row="0" Background="#15171A" ColumnDefinitions="*,Auto"
@@ -65,8 +65,23 @@
             </StackPanel>
         </Border>
 
+        <!-- Untrusted-Tap-Hinweis (Homebrew: Refusing to load ... from untrusted tap) -->
+        <Border Grid.Row="4" Background="#3A2F1B" CornerRadius="8"
+                Padding="14,10" Margin="10,10,10,0"
+                IsVisible="{Binding ShowUntrustedTapHint}">
+            <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+                <TextBlock Grid.Column="0" Text="🔒" Foreground="#F5A623"
+                           FontSize="16" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <TextBlock Grid.Column="1" Foreground="#F5A623" FontSize="13"
+                           VerticalAlignment="Center" TextWrapping="Wrap"
+                           Text="{Binding UntrustedTapName, StringFormat='Der Homebrew-Tap „{0}“ ist nicht als vertrauenswürdig markiert. Nach dem Vertrauen kannst du die ursprüngliche Aktion erneut versuchen.'}"/>
+                <Button Grid.Column="2" Classes="accent" Content="Tap vertrauen"
+                        Command="{Binding TrustTapCommand}" Margin="10,0,0,0"/>
+            </Grid>
+        </Border>
+
         <!-- Footer -->
-        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right"
+        <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right"
                     Spacing="8" Margin="10,12,10,12">
             <Button Classes="danger" Content="Abbrechen"
                     Command="{Binding CancelCommand}"/>

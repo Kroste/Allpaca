@@ -4,9 +4,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Allpaca.Chrome;
 using Allpaca.Models;
+using Allpaca.Services.Sources;
 using Allpaca.ViewModels;
 using Avalonia.Controls;
-using Avalonia.Interactivity;
 using NLog;
 
 namespace Allpaca.Views;
@@ -18,6 +18,10 @@ public partial class LogWindow : ChromeWindow
     private readonly LogWindowViewModel _vm = new();
     private CancellationTokenSource _cts = new();
 
+    /// <summary>Wird vom Aufrufer (MainWindow.RunOperationAsync) gesetzt, damit das
+    /// LogWindow auf "Tap vertrauen"-Klicks reagieren kann.</summary>
+    public Func<string, CancellationToken, IAsyncEnumerable<ProgressLine>>? TrustTapHandler { get; set; }
+
     public LogWindow()
     {
         InitializeComponent();
@@ -27,6 +31,7 @@ public partial class LogWindow : ChromeWindow
             if (!_cts.IsCancellationRequested) _cts.Cancel();
         };
         _vm.CloseRequested += Close;
+        _vm.TrustTapRequested += tap => _ = RunTrustAsync(tap);
     }
 
     /// <summary>
@@ -39,10 +44,37 @@ public partial class LogWindow : ChromeWindow
     {
         _vm.Title = context.Title;
         Title = context.Title;
-        _vm.State = OperationState.Running;
-        _vm.ExitCode = null;
         _vm.RequiresReboot = context.RequiresReboot;
         _vm.Lines.Clear();
+        _vm.UntrustedTapName = null;
+
+        await RunStreamAsync(work, context.Title);
+    }
+
+    /// <summary>
+    /// Sekundaerlauf im selben Fenster - "brew trust &lt;tap&gt;" als Folgeoperation
+    /// nach einem untrusted-tap-Fehler. Behaelt die bisherigen Log-Zeilen + setzt
+    /// einen Separator, damit der User sehen kann was er angestossen hat.
+    /// </summary>
+    private async Task RunTrustAsync(string tap)
+    {
+        if (TrustTapHandler is null) return;
+
+        _cts.Dispose();
+        _cts = new CancellationTokenSource();
+
+        _vm.UntrustedTapName = null;
+        _vm.Lines.Add(new ProgressLine($"--- brew trust {tap} ---", false));
+
+        await RunStreamAsync(ct => TrustTapHandler(tap, ct), $"brew trust {tap}");
+    }
+
+    private async Task RunStreamAsync(
+        Func<CancellationToken, IAsyncEnumerable<ProgressLine>> work,
+        string logTitle)
+    {
+        _vm.State = OperationState.Running;
+        _vm.ExitCode = null;
 
         var scroll = this.FindControl<ScrollViewer>("LogScroll");
 
@@ -52,29 +84,38 @@ public partial class LogWindow : ChromeWindow
             {
                 if (line.ExitCode is int code)
                 {
-                    // Marker-Zeile vom ProcessRunner: nicht anzeigen, nur State + ExitCode merken.
+                    // Marker-Zeile vom ProcessRunner: nicht anzeigen, nur ExitCode merken.
                     _vm.ExitCode = code;
                     continue;
                 }
                 _vm.Lines.Add(line);
+
+                // Homebrew-untrusted-tap-Muster scannen - sobald ein Treffer da ist,
+                // erscheint nach Fail der Hinweis-Banner mit "Tap vertrauen".
+                if (line.IsError && _vm.UntrustedTapName is null)
+                {
+                    var tap = UntrustedTapDetector.Extract(line.Text);
+                    if (tap is not null) _vm.UntrustedTapName = tap;
+                }
+
                 scroll?.ScrollToEnd();
             }
             _vm.State = _vm.ExitCode is null or 0
                 ? OperationState.Succeeded
                 : OperationState.Failed;
             Log.Info("Operation fertig: {0} (Exit={1}, {2} Zeilen)",
-                context.Title, _vm.ExitCode?.ToString() ?? "?", _vm.Lines.Count);
+                logTitle, _vm.ExitCode?.ToString() ?? "?", _vm.Lines.Count);
         }
         catch (OperationCanceledException)
         {
             _vm.State = OperationState.Cancelled;
-            Log.Info("Operation abgebrochen: {0}", context.Title);
+            Log.Info("Operation abgebrochen: {0}", logTitle);
         }
         catch (Exception ex)
         {
             _vm.Lines.Add(new ProgressLine($"[Exception] {ex.Message}", true));
             _vm.State = OperationState.Failed;
-            Log.Error(ex, "Operation fehlgeschlagen: {0}", context.Title);
+            Log.Error(ex, "Operation fehlgeschlagen: {0}", logTitle);
         }
     }
 

@@ -199,4 +199,20 @@ public sealed class HomebrewSource : IPackageSource
         args.AddRange(ids);
         await foreach (var l in _runner.StreamAsync(brew, args, ct)) yield return l;
     }
+
+    /// <summary>
+    /// Markiert einen Homebrew-Tap als vertrauenswuerdig. Auf Bazzite haeufig
+    /// ublue-os/tap - Casks aus untrusted Taps lassen sich sonst weder installieren
+    /// noch deinstallieren ("Refusing to load cask ... from untrusted tap").
+    /// </summary>
+    public async IAsyncEnumerable<ProgressLine> TrustTapAsync(
+        string tap,
+        [EnumeratorCancellation] CancellationToken ct = default)
+    {
+        var brew = await ResolveAsync(ct);
+        if (brew is null) { yield return new ProgressLine("Homebrew nicht gefunden", true); yield break; }
+
+        await foreach (var l in _runner.StreamAsync(brew, new[] { "trust", tap }, ct))
+            yield return l;
+    }
 }

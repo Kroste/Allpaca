@@ -43,8 +43,30 @@ public partial class MainWindow : ChromeWindow
              System.Collections.Generic.IAsyncEnumerable<Allpaca.Models.ProgressLine>> work)
     {
         var win = new LogWindow();
+        win.TrustTapHandler = TrustHomebrewTapAsync;
         win.Show(this);
         await win.RunAsync(ctx, work);
+    }
+
+    /// <summary>Bridge ins HomebrewSource, damit das LogWindow auf "Tap vertrauen"-Klicks
+    /// reagieren kann, ohne selber Sources zu kennen.</summary>
+    private System.Collections.Generic.IAsyncEnumerable<Allpaca.Models.ProgressLine> TrustHomebrewTapAsync(
+        string tap, System.Threading.CancellationToken ct)
+    {
+        if (DataContext is MainWindowViewModel vm
+            && vm.SourcesByKind.TryGetValue(Allpaca.Models.PackageSourceKind.Homebrew, out var src)
+            && src is Allpaca.Services.Sources.HomebrewSource brew)
+        {
+            return brew.TrustTapAsync(tap, ct);
+        }
+        return EmptyProgressStream();
+    }
+
+    private static async System.Collections.Generic.IAsyncEnumerable<Allpaca.Models.ProgressLine> EmptyProgressStream(
+        [System.Runtime.CompilerServices.EnumeratorCancellation] System.Threading.CancellationToken ct = default)
+    {
+        await System.Threading.Tasks.Task.CompletedTask;
+        yield return new Allpaca.Models.ProgressLine("Homebrew nicht verfügbar.", true);
     }
 
     private void OpenSearchWindow(MainWindowViewModel vm)

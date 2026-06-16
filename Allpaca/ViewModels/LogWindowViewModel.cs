@@ -17,8 +17,10 @@ public partial class LogWindowViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(StatusText))]
     [NotifyPropertyChangedFor(nameof(StatusBrush))]
     [NotifyPropertyChangedFor(nameof(ShowRebootHint))]
+    [NotifyPropertyChangedFor(nameof(ShowUntrustedTapHint))]
     [NotifyCanExecuteChangedFor(nameof(CancelCommand))]
     [NotifyCanExecuteChangedFor(nameof(CloseCommand))]
+    [NotifyCanExecuteChangedFor(nameof(TrustTapCommand))]
     private OperationState _state = OperationState.Running;
 
     [ObservableProperty]
@@ -34,6 +36,18 @@ public partial class LogWindowViewModel : ObservableObject
     /// <summary>Reboot-Hinweis ist nur dann sichtbar, wenn die Operation erfolgreich war
     /// UND der Context "RequiresReboot" signalisiert hatte.</summary>
     public bool ShowRebootHint => RequiresReboot && State == OperationState.Succeeded;
+
+    /// <summary>Wird vom Code-Behind gesetzt, sobald in einer Log-Zeile das
+    /// "untrusted tap"-Muster erkannt wurde. Triggert ShowUntrustedTapHint.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowUntrustedTapHint))]
+    [NotifyCanExecuteChangedFor(nameof(TrustTapCommand))]
+    private string? _untrustedTapName;
+
+    /// <summary>Hinweis-Banner erscheint, wenn ein untrusted-tap-Fehler vorliegt UND
+    /// die Operation gescheitert ist (nicht waehrend des Laufs).</summary>
+    public bool ShowUntrustedTapHint =>
+        !string.IsNullOrEmpty(UntrustedTapName) && State == OperationState.Failed;
 
     public string StatusText => State switch
     {
@@ -61,6 +75,10 @@ public partial class LogWindowViewModel : ObservableObject
     /// (egal ob success/fail/cancel) - das Fenster soll dann schliessbar sein.</summary>
     public event Action? CloseRequested;
 
+    /// <summary>Triggert vom Code-Behind aus den "brew trust &lt;tap&gt;"-Lauf im selben
+    /// Fenster.</summary>
+    public event Action<string>? TrustTapRequested;
+
     [RelayCommand(CanExecute = nameof(CanCancel))]
     private void Cancel() => CancelRequested?.Invoke();
     private bool CanCancel() => State == OperationState.Running;
@@ -68,6 +86,14 @@ public partial class LogWindowViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanClose))]
     private void Close() => CloseRequested?.Invoke();
     private bool CanClose() => State != OperationState.Running;
+
+    [RelayCommand(CanExecute = nameof(CanTrustTap))]
+    private void TrustTap()
+    {
+        if (UntrustedTapName is { Length: > 0 } tap)
+            TrustTapRequested?.Invoke(tap);
+    }
+    private bool CanTrustTap() => ShowUntrustedTapHint;
 }
 
 public enum OperationState
