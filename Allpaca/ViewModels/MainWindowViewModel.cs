@@ -129,6 +129,10 @@ public partial class MainWindowViewModel : ObservableObject
 
     private void ApplyFilter()
     {
+        // Duplikat-Status ueber die volle Liste recompute - mit jedem zusaetzlich
+        // geladenen Source-Result koennen neue Doppel auftauchen.
+        PackageDuplicateDetector.Annotate(_all);
+
         var active = Filters.Where(f => f.IsSelected).Select(f => f.Kind).ToHashSet();
         var q = SearchText.Trim();
 

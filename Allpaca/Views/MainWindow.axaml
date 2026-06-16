@@ -122,8 +122,14 @@
                                     <Border Grid.Column="0" Width="4" CornerRadius="2"
                                             Background="{Binding SourceBrush}"/>
                                     <StackPanel Grid.Column="1" Margin="10,3">
-                                        <TextBlock Text="{Binding Name}" Foreground="#EDEFF2"
-                                                   FontWeight="SemiBold"/>
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <TextBlock Text="{Binding Name}" Foreground="#EDEFF2"
+                                                       FontWeight="SemiBold"/>
+                                            <TextBlock Text="⚠" Foreground="#F5A623"
+                                                       FontSize="13" VerticalAlignment="Center"
+                                                       IsVisible="{Binding IsDuplicate}"
+                                                       ToolTip.Tip="{Binding DuplicateInfo, StringFormat='Auch verfügbar in: {0}'}"/>
+                                        </StackPanel>
                                         <TextBlock Text="{Binding Id}" Foreground="#6E747C"
                                                    FontSize="11" TextTrimming="CharacterEllipsis"/>
                                     </StackPanel>
@@ -179,6 +185,18 @@
                                     <TextBlock Text="{Binding Selected.DistroboxStatus}"
                                                Foreground="{Binding Selected.DistroboxStatusForeground}"
                                                FontSize="13"/>
+                                </Border>
+                            </StackPanel>
+
+                            <StackPanel Spacing="3" IsVisible="{Binding Selected.IsDuplicate}">
+                                <TextBlock Text="AUCH VERFÜGBAR IN" Foreground="#6E747C" FontSize="11"/>
+                                <Border Background="#3A2F1B" CornerRadius="6" Padding="8,3"
+                                        HorizontalAlignment="Left">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Text="⚠" Foreground="#F5A623" FontSize="13"/>
+                                        <TextBlock Text="{Binding Selected.DuplicateInfo}"
+                                                   Foreground="#F5A623" FontSize="13"/>
+                                    </StackPanel>
                                 </Border>
                             </StackPanel>
 

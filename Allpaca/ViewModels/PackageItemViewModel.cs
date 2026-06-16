@@ -16,6 +16,14 @@ public sealed class PackageItemViewModel
     public string Description => Model.Description ?? "";
     public string Origin => Model.Origin ?? "";
 
+    /// <summary>True, wenn derselbe Eintrag (nach Namens-Normalisierung) in mindestens
+    /// einer weiteren Quelle ebenfalls vorkommt. Wird vom PackageDuplicateDetector gesetzt.</summary>
+    public bool IsDuplicate { get; internal set; }
+
+    /// <summary>Komma-getrennte Liste der anderen Quellen, in denen der Eintrag ebenfalls existiert
+    /// (z. B. "Flatpak, AppImage"). Leer, wenn IsDuplicate=false.</summary>
+    public string DuplicateInfo { get; internal set; } = "";
+
     public string SizeText => Model.SizeBytes is { } b ? FormatSize(b) : "";
 
     public string SourceLabel => Model.Source switch
