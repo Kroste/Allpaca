@@ -16,6 +16,7 @@ public partial class LogWindowViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(StatusText))]
     [NotifyPropertyChangedFor(nameof(StatusBrush))]
+    [NotifyPropertyChangedFor(nameof(ShowRebootHint))]
     [NotifyCanExecuteChangedFor(nameof(CancelCommand))]
     [NotifyCanExecuteChangedFor(nameof(CloseCommand))]
     private OperationState _state = OperationState.Running;
@@ -23,6 +24,16 @@ public partial class LogWindowViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(StatusText))]
     private int? _exitCode;
+
+    /// <summary>Wird vom Code-Behind aus dem OperationContext gespeist - der ViewModel
+    /// reicht den Wert nur an die View durch (ShowRebootHint).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowRebootHint))]
+    private bool _requiresReboot;
+
+    /// <summary>Reboot-Hinweis ist nur dann sichtbar, wenn die Operation erfolgreich war
+    /// UND der Context "RequiresReboot" signalisiert hatte.</summary>
+    public bool ShowRebootHint => RequiresReboot && State == OperationState.Succeeded;
 
     public string StatusText => State switch
     {

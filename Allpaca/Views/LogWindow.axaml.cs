@@ -35,12 +35,13 @@ public partial class LogWindow : ChromeWindow
     /// Laeuft komplett auf dem UI-Thread (kein ConfigureAwait(false) - die Continuations
     /// muessen die ObservableCollection auf dem UI-Thread mutieren).
     /// </summary>
-    public async Task RunAsync(string title, Func<CancellationToken, IAsyncEnumerable<ProgressLine>> work)
+    public async Task RunAsync(OperationContext context, Func<CancellationToken, IAsyncEnumerable<ProgressLine>> work)
     {
-        _vm.Title = title;
-        Title = title;
+        _vm.Title = context.Title;
+        Title = context.Title;
         _vm.State = OperationState.Running;
         _vm.ExitCode = null;
+        _vm.RequiresReboot = context.RequiresReboot;
         _vm.Lines.Clear();
 
         var scroll = this.FindControl<ScrollViewer>("LogScroll");
@@ -62,18 +63,18 @@ public partial class LogWindow : ChromeWindow
                 ? OperationState.Succeeded
                 : OperationState.Failed;
             Log.Info("Operation fertig: {0} (Exit={1}, {2} Zeilen)",
-                title, _vm.ExitCode?.ToString() ?? "?", _vm.Lines.Count);
+                context.Title, _vm.ExitCode?.ToString() ?? "?", _vm.Lines.Count);
         }
         catch (OperationCanceledException)
         {
             _vm.State = OperationState.Cancelled;
-            Log.Info("Operation abgebrochen: {0}", title);
+            Log.Info("Operation abgebrochen: {0}", context.Title);
         }
         catch (Exception ex)
         {
             _vm.Lines.Add(new ProgressLine($"[Exception] {ex.Message}", true));
             _vm.State = OperationState.Failed;
-            Log.Error(ex, "Operation fehlgeschlagen: {0}", title);
+            Log.Error(ex, "Operation fehlgeschlagen: {0}", context.Title);
         }
     }
 

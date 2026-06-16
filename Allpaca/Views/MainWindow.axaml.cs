@@ -29,13 +29,13 @@ public partial class MainWindow : ChromeWindow
     }
 
     private async System.Threading.Tasks.Task RunOperationAsync(
-        string title,
+        OperationContext ctx,
         Func<System.Threading.CancellationToken,
              System.Collections.Generic.IAsyncEnumerable<Allpaca.Models.ProgressLine>> work)
     {
         var win = new LogWindow();
         win.Show(this);
-        await win.RunAsync(title, work);
+        await win.RunAsync(ctx, work);
     }
 
     private void OnInfoClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)

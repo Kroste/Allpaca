@@ -18,7 +18,7 @@ public partial class MainWindowViewModel : ObservableObject
 
     /// <summary>Wird von der View beim Start gesetzt: oeffnet das LogWindow und faedelt
     /// die Stream-Operation hindurch. ViewModel kennt damit weiterhin keine View-Typen.</summary>
-    public Func<string, Func<CancellationToken, IAsyncEnumerable<ProgressLine>>, Task>? RunOperation { get; set; }
+    public Func<OperationContext, Func<CancellationToken, IAsyncEnumerable<ProgressLine>>, Task>? RunOperation { get; set; }
 
     /// <summary>Wird von der View beim Start gesetzt: zeigt einen modalen Bestaetigungsdialog
     /// und liefert true bei Bestaetigung, false bei Abbruch.</summary>
@@ -97,11 +97,15 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     private void ToggleSortDirection() => SortDescending = !SortDescending;
 
-    /// <summary>v2 erster Schritt: Uninstall ist nur fuer Flatpak verdrahtet. Andere
-    /// Quellen brauchen pkexec (rpm-ostree), Drill-down (Distrobox) oder eigene Hooks
-    /// (Homebrew/AppImage) und folgen in spaeteren Commits.</summary>
-    private bool IsWiredForMutation(PackageItemViewModel? item) =>
-        item is not null && item.Model.Source == PackageSourceKind.Flatpak;
+    /// <summary>Aktuell verdrahtet: Flatpak (rootless) und rpm-ostree (laeuft via
+    /// pkexec, Reboot-Hinweis nach Erfolg). Distrobox bekommt einen eigenen
+    /// Drill-down-Pfad, Homebrew/AppImage folgen in spaeteren Commits.</summary>
+    private bool IsWiredForMutation(PackageItemViewModel? item) => item?.Model.Source switch
+    {
+        PackageSourceKind.Flatpak => true,
+        PackageSourceKind.RpmOstree => true,
+        _ => false,
+    };
 
     [RelayCommand(CanExecute = nameof(CanUninstallSelected))]
     private async Task UninstallSelectedAsync()
@@ -116,9 +120,15 @@ public partial class MainWindowViewModel : ObservableObject
         // Dialog eingehaengt hat (Headless-Tests koennen das weglassen).
         if (ConfirmAsync is not null)
         {
+            var msg = new System.Text.StringBuilder();
+            msg.Append($"„{name}\" wirklich aus {src.DisplayName} entfernen?");
+            if (src.Capabilities.RequiresReboot)
+                msg.Append(" Die Änderung wird erst nach einem Neustart vollständig wirksam.");
+            msg.Append(" Dieser Schritt lässt sich nur durch erneutes Installieren rückgängig machen.");
+
             var ok = await ConfirmAsync(new ConfirmRequest(
                 Title: "Deinstallieren?",
-                Message: $"„{name}\" wirklich aus {src.DisplayName} entfernen? Dieser Schritt lässt sich nur durch erneutes Installieren rückgängig machen.",
+                Message: msg.ToString(),
                 ConfirmLabel: "Deinstallieren",
                 IsDestructive: true));
             if (!ok)
@@ -131,7 +141,9 @@ public partial class MainWindowViewModel : ObservableObject
         var title = $"{src.DisplayName}: {name} deinstallieren";
         Log.Info("Starte Uninstall: {0} ({1})", id, src.DisplayName);
 
-        await RunOperation(title, ct => src.UninstallAsync(id, ct));
+        await RunOperation(
+            new OperationContext(title, src.Capabilities.RequiresReboot),
+            ct => src.UninstallAsync(id, ct));
 
         // Liste nach der Operation neu laden, der Eintrag sollte verschwunden sein.
         await RefreshAsync();
@@ -150,7 +162,9 @@ public partial class MainWindowViewModel : ObservableObject
         var title = $"{src.DisplayName}: {name} aktualisieren";
         Log.Info("Starte Update: {0} ({1})", id, src.DisplayName);
 
-        await RunOperation(title, ct => src.UpdateAsync(id, ct));
+        await RunOperation(
+            new OperationContext(title, src.Capabilities.RequiresReboot),
+            ct => src.UpdateAsync(id, ct));
 
         await RefreshAsync();
     }
