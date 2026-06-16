@@ -11,7 +11,7 @@ public sealed class PackageItemViewModel
 
     public string Name => Model.Name;
     public string Id => Model.Id;
-    public string Version => Model.Version ?? "—";
+    public string Version => Model.Version ?? "";
     public string Scope => Model.Scope ?? "";
     public string Description => Model.Description ?? "";
     public string Origin => Model.Origin ?? "";

@@ -136,29 +136,35 @@
                                            Foreground="{Binding Selected.SourceBrush}"/>
                             </Border>
 
-                            <StackPanel Spacing="3">
+                            <StackPanel Spacing="3"
+                                        IsVisible="{Binding Selected.Id, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}">
                                 <TextBlock Text="ID" Foreground="#6E747C" FontSize="11"/>
                                 <TextBlock Text="{Binding Selected.Id}" Foreground="#C7CCD2"
                                            TextWrapping="Wrap"/>
                             </StackPanel>
-                            <StackPanel Spacing="3">
+                            <StackPanel Spacing="3"
+                                        IsVisible="{Binding Selected.Version, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}">
                                 <TextBlock Text="VERSION" Foreground="#6E747C" FontSize="11"/>
                                 <TextBlock Text="{Binding Selected.Version}" Foreground="#C7CCD2"/>
                             </StackPanel>
-                            <StackPanel Spacing="3">
+                            <StackPanel Spacing="3"
+                                        IsVisible="{Binding Selected.Scope, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}">
                                 <TextBlock Text="ART / SCOPE" Foreground="#6E747C" FontSize="11"/>
                                 <TextBlock Text="{Binding Selected.Scope}" Foreground="#C7CCD2"/>
                             </StackPanel>
-                            <StackPanel Spacing="3">
+                            <StackPanel Spacing="3"
+                                        IsVisible="{Binding Selected.SizeText, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}">
                                 <TextBlock Text="GRÖSSE" Foreground="#6E747C" FontSize="11"/>
                                 <TextBlock Text="{Binding Selected.SizeText}" Foreground="#C7CCD2"/>
                             </StackPanel>
-                            <StackPanel Spacing="3">
+                            <StackPanel Spacing="3"
+                                        IsVisible="{Binding Selected.Origin, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}">
                                 <TextBlock Text="HERKUNFT" Foreground="#6E747C" FontSize="11"/>
                                 <TextBlock Text="{Binding Selected.Origin}" Foreground="#C7CCD2"
                                            TextWrapping="Wrap"/>
                             </StackPanel>
-                            <StackPanel Spacing="3">
+                            <StackPanel Spacing="3"
+                                        IsVisible="{Binding Selected.Description, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}">
                                 <TextBlock Text="BESCHREIBUNG" Foreground="#6E747C" FontSize="11"/>
                                 <TextBlock Text="{Binding Selected.Description}" Foreground="#C7CCD2"
                                            TextWrapping="Wrap"/>
