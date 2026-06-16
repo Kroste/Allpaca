@@ -15,7 +15,9 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly PackageAggregator _aggregator;
     private readonly List<PackageItemViewModel> _all = new();
     private readonly Dictionary<PackageSourceKind, IPackageSource> _sourceByKind;
+    private readonly SettingsService _settings;
     private CancellationTokenSource? _updatesCheckCts;
+    private bool _settingsReady;
 
     /// <summary>Wird von der View beim Start gesetzt: oeffnet das LogWindow und faedelt
     /// die Stream-Operation hindurch. ViewModel kennt damit weiterhin keine View-Typen.</summary>
@@ -111,8 +113,12 @@ public partial class MainWindowViewModel : ObservableObject
     public string CountSummary => $"{VisibleCount} / {TotalCount} Pakete";
     public string SortDirectionGlyph => SortDescending ? "▼" : "▲";
 
-    public MainWindowViewModel()
+    public MainWindowViewModel() : this(new SettingsService()) { }
+
+    public MainWindowViewModel(SettingsService settingsService)
     {
+        _settings = settingsService;
+
         var runner = new ProcessRunner(new SandboxDetector());
         var sources = new IPackageSource[]
         {
@@ -131,18 +137,57 @@ public partial class MainWindowViewModel : ObservableObject
             f.PropertyChanged += (_, e) =>
             {
                 if (e.PropertyName == nameof(SourceFilterViewModel.IsSelected))
+                {
                     ApplyFilter();
+                    SaveSettings();
+                }
             };
             Filters.Add(f);
         }
 
         SelectedSortOption = SortOptions[0];
+
+        // Settings aus dem User-Config-Pfad laden + anwenden. Wahrend Apply duerfen die
+        // partial-Method-Handler NICHT speichern, sonst speichern wir die geladenen
+        // Werte direkt wieder zurueck (egal, aber unsauber).
+        ApplySettings(_settings.Load());
+        _settingsReady = true;
+    }
+
+    private void ApplySettings(AppSettings s)
+    {
+        ShowRuntimes = s.ShowRuntimes;
+        SortDescending = s.SortDescending;
+
+        if (Enum.TryParse<SortKey>(s.SortKey, ignoreCase: true, out var key))
+        {
+            var opt = SortOptions.FirstOrDefault(o => o.Key == key);
+            if (opt is not null) SelectedSortOption = opt;
+        }
+
+        foreach (var f in Filters)
+        {
+            if (s.SourceFilters.TryGetValue(f.Kind.ToString(), out var enabled))
+                f.IsSelected = enabled;
+        }
+    }
+
+    private void SaveSettings()
+    {
+        if (!_settingsReady) return;
+        _settings.Save(new AppSettings
+        {
+            SortKey = SelectedSortOption?.Key.ToString() ?? nameof(SortKey.Name),
+            SortDescending = SortDescending,
+            ShowRuntimes = ShowRuntimes,
+            SourceFilters = Filters.ToDictionary(f => f.Kind.ToString(), f => f.IsSelected),
+        });
     }
 
     partial void OnSearchTextChanged(string value) => ApplyFilter();
-    partial void OnSelectedSortOptionChanged(SortOption value) => ApplyFilter();
-    partial void OnSortDescendingChanged(bool value) => ApplyFilter();
-    partial void OnShowRuntimesChanged(bool value) => ApplyFilter();
+    partial void OnSelectedSortOptionChanged(SortOption value) { ApplyFilter(); SaveSettings(); }
+    partial void OnSortDescendingChanged(bool value) { ApplyFilter(); SaveSettings(); }
+    partial void OnShowRuntimesChanged(bool value) { ApplyFilter(); SaveSettings(); }
 
     [RelayCommand]
     private void ToggleSortDirection() => SortDescending = !SortDescending;
