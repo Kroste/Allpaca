@@ -7,7 +7,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
     <!-- Bei jeder Aenderung erhoehen (deine Konvention) -->
-    <Version>1.1.10</Version>
+    <Version>1.1.11</Version>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
@@ -17,19 +17,15 @@
     Magnat/NetScanner verwendest. Hier als 12.0.0 vorbelegt.
   -->
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="12.0.0" />
-    <PackageReference Include="Avalonia.Desktop" Version="12.0.0" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.0" />
-    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.0.0" />
+    <PackageReference Include="Avalonia" Version="12.0.4" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.0.4" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.4" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.0.4" />
     <!-- DevTools (F12). In Avalonia 12 wurde Avalonia.Diagnostics ENTFERNT und durch
          AvaloniaUI.DiagnosticsSupport ersetzt. Nur im Debug-Build. -->
     <PackageReference Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.1" Condition="'$(Configuration)' == 'Debug'" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="NLog" Version="5.3.4" />
-    <!-- NU1903: Avalonia 12 zieht transitiv Tmds.DBus.Protocol 0.90.3 mit
-         hoher Sicherheitsanfaelligkeit (GHSA-xrw6-gwf8-vvr9). Wir pinnen
-         hier eine gepatchte Version, damit die Restore-Resolution greift. -->
-    <PackageReference Include="Tmds.DBus.Protocol" Version="0.94.1" />
   </ItemGroup>
 
   <ItemGroup>

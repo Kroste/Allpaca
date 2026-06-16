@@ -235,8 +235,9 @@ bash scripts/release.sh           # taggt vX.Y.Z + push → löst Release-Action
 
 VS-Code-Tasks: `build` (Default), `test`, `clean`, `clean-hard`, `rebuild`, `release (tag + push)`.
 
-- **Avalonia-Version** in `Allpaca.csproj` steht auf `12.0.0` — auf die exakte 12.x angleichen,
-  die Magnat/NetScanner nutzen, falls abweichend.
+- **Avalonia-Version** in `Allpaca.csproj` steht auf `12.0.4` (Bump von 12.0.0 wegen
+  NU1903 / GHSA-xrw6-gwf8-vvr9: 12.0.4 zieht das gepatchte Tmds.DBus.Protocol 0.92.0
+  statt 0.90.3 mit). Magnat/NetScanner ggf. mit angleichen.
 - **Zum echten Test auf dem Host starten** (oder `distrobox-host-exec`). In der Distrobox
   greift zwar der Host-Wrapper, aber das AppImage-Dateisystem-Scanning sieht dann nur das
   geteilte Home.
