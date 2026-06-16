@@ -71,6 +71,14 @@
                 <DockPanel>
                     <TextBlock DockPanel.Dock="Top" Text="QUELLEN" Foreground="#6E747C"
                                FontSize="11" FontWeight="SemiBold" Margin="8,6,8,10"/>
+                    <StackPanel DockPanel.Dock="Bottom" Margin="8,10,8,2">
+                        <Border Background="#2A2E35" Height="1" Margin="0,0,0,10"/>
+                        <TextBlock Text="OPTIONEN" Foreground="#6E747C" FontSize="11"
+                                   FontWeight="SemiBold" Margin="0,0,0,6"/>
+                        <CheckBox IsChecked="{Binding ShowRuntimes}"
+                                  Content="Flatpak-Runtimes anzeigen"
+                                  Foreground="#C7CCD2"/>
+                    </StackPanel>
                     <ItemsControl ItemsSource="{Binding Filters}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:SourceFilterViewModel">

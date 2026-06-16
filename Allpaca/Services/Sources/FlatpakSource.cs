@@ -25,15 +25,24 @@ public sealed class FlatpakSource : IPackageSource
 
     public async Task<IReadOnlyList<PackageInfo>> ListInstalledAsync(CancellationToken ct = default)
     {
+        // Apps und Runtimes getrennt holen - die UI blendet Runtimes per Default aus.
+        var apps = await ListAsync(asRuntime: false, ct).ConfigureAwait(false);
+        var runtimes = await ListAsync(asRuntime: true, ct).ConfigureAwait(false);
+        return apps.Concat(runtimes).ToList();
+    }
+
+    private async Task<List<PackageInfo>> ListAsync(bool asRuntime, CancellationToken ct)
+    {
         // Tab-getrennte, stabil parsbare Spalten.
         const string cols = "application,name,version,branch,origin,installation,size";
+        var modeArg = asRuntime ? "--runtime" : "--app";
         var r = await _runner.RunAsync("flatpak",
-            new[] { "list", "--app", "--columns=" + cols }, ct);
+            new[] { "list", modeArg, "--columns=" + cols }, ct);
 
         if (!r.Success)
         {
-            Log.Warn("flatpak list fehlgeschlagen: {0}", r.StdErr);
-            return Array.Empty<PackageInfo>();
+            Log.Warn("flatpak list {0} fehlgeschlagen: {1}", modeArg, r.StdErr);
+            return new List<PackageInfo>();
         }
 
         var list = new List<PackageInfo>();
@@ -52,6 +61,7 @@ public sealed class FlatpakSource : IPackageSource
                 Origin = p[4].Trim(),
                 Scope = p[5].Trim(),                 // user / system
                 SizeBytes = ParseSize(p[6].Trim()),
+                IsRuntime = asRuntime,
                 Extra = new Dictionary<string, string> { ["branch"] = p[3].Trim() },
             });
         }

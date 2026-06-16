@@ -44,6 +44,8 @@ public partial class MainWindowViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(SortDirectionGlyph))]
     private bool _sortDescending;
 
+    [ObservableProperty] private bool _showRuntimes;
+
     public string CountSummary => $"{VisibleCount} / {TotalCount} Pakete";
     public string SortDirectionGlyph => SortDescending ? "▼" : "▲";
 
@@ -77,6 +79,7 @@ public partial class MainWindowViewModel : ObservableObject
     partial void OnSearchTextChanged(string value) => ApplyFilter();
     partial void OnSelectedSortOptionChanged(SortOption value) => ApplyFilter();
     partial void OnSortDescendingChanged(bool value) => ApplyFilter();
+    partial void OnShowRuntimesChanged(bool value) => ApplyFilter();
 
     [RelayCommand]
     private void ToggleSortDirection() => SortDescending = !SortDescending;
@@ -130,6 +133,9 @@ public partial class MainWindowViewModel : ObservableObject
         var q = SearchText.Trim();
 
         IEnumerable<PackageItemViewModel> view = _all.Where(p => active.Contains(p.Model.Source));
+
+        if (!ShowRuntimes)
+            view = view.Where(p => !p.Model.IsRuntime);
 
         if (q.Length > 0)
             view = view.Where(p =>
