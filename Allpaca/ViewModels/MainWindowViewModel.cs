@@ -72,6 +72,8 @@ public partial class MainWindowViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(SelectedCount))]
     [NotifyPropertyChangedFor(nameof(HasMultiSelection))]
     [NotifyPropertyChangedFor(nameof(CanBatchOperate))]
+    [NotifyPropertyChangedFor(nameof(CanBatchUpdate))]
+    [NotifyPropertyChangedFor(nameof(CanBatchUninstall))]
     [NotifyPropertyChangedFor(nameof(BatchInfo))]
     [NotifyCanExecuteChangedFor(nameof(BatchUpdateSelectedCommand))]
     [NotifyCanExecuteChangedFor(nameof(BatchUninstallSelectedCommand))]
@@ -80,8 +82,9 @@ public partial class MainWindowViewModel : ObservableObject
     public int SelectedCount => SelectedItems.Count;
     public bool HasMultiSelection => SelectedCount > 1;
 
-    /// <summary>Batch geht, wenn alle Markierten aus derselben Quelle kommen UND die
-    /// Quelle nativ Batching unterstuetzt (Flatpak, Homebrew).</summary>
+    /// <summary>Batch geht, wenn alle Markierten aus derselben (batch-faehigen) Quelle
+    /// kommen. CanBatchUpdate/Uninstall verfeinern das pro Operation anhand der
+    /// Source-Capabilities (AppImage z. B. kann uninstall, aber kein update).</summary>
     public bool CanBatchOperate
     {
         get
@@ -93,13 +96,21 @@ public partial class MainWindowViewModel : ObservableObject
         }
     }
 
+    public bool CanBatchUpdate => CanBatchOperate
+        && _sourceByKind.TryGetValue(SelectedItems[0].Model.Source, out var src)
+        && src.Capabilities.CanUpdate;
+
+    public bool CanBatchUninstall => CanBatchOperate
+        && _sourceByKind.TryGetValue(SelectedItems[0].Model.Source, out var src)
+        && src.Capabilities.CanUninstall;
+
     public string BatchInfo
     {
         get
         {
             if (!HasMultiSelection) return "";
             if (CanBatchOperate) return $"{SelectedCount} Pakete markiert";
-            return $"{SelectedCount} Pakete markiert – Batch-Aktionen brauchen gleiche Quelle (Flatpak oder Homebrew)";
+            return $"{SelectedCount} Pakete markiert – Batch-Aktionen brauchen gleiche Quelle (Flatpak, Homebrew oder AppImage)";
         }
     }
 
@@ -200,23 +211,27 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     private void ToggleSortDirection() => SortDescending = !SortDescending;
 
-    /// <summary>Aktuell verdrahtet: Flatpak, rpm-ostree (pkexec, Reboot-Hinweis),
-    /// Homebrew und Distrobox (Container loeschen/upgraden). AppImage folgt.</summary>
+    /// <summary>Alle Mutations-faehigen Quellen sind jetzt verdrahtet: Flatpak,
+    /// rpm-ostree (pkexec, Reboot-Hinweis), Homebrew, Distrobox (Container
+    /// loeschen/upgraden) und AppImage (Datei + Waisen-.desktop loeschen).</summary>
     private bool IsWiredForMutation(PackageItemViewModel? item) => item?.Model.Source switch
     {
         PackageSourceKind.Flatpak => true,
         PackageSourceKind.RpmOstree => true,
         PackageSourceKind.Homebrew => true,
         PackageSourceKind.Distrobox => true,
+        PackageSourceKind.AppImage => true,
         _ => false,
     };
 
-    /// <summary>Batch-faehige Quellen: brauchen einen sinnvollen Multi-ID-CLI-Aufruf
-    /// und eigenes UninstallManyAsync/UpdateManyAsync-Override fuers native Batching.</summary>
+    /// <summary>Batch-faehige Quellen. Flatpak/Homebrew haben natives Multi-ID-CLI,
+    /// AppImage iteriert dateisystembasiert (Default UninstallManyAsync) - immer noch
+    /// schnell genug fuer Dutzende Eintraege.</summary>
     private static bool SupportsBatch(PackageSourceKind kind) => kind switch
     {
         PackageSourceKind.Flatpak => true,
         PackageSourceKind.Homebrew => true,
+        PackageSourceKind.AppImage => true,
         _ => false,
     };
 
@@ -334,7 +349,7 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     private void DismissOsUpdate() => OsUpdateMessage = null;
 
-    [RelayCommand(CanExecute = nameof(CanBatchOperate))]
+    [RelayCommand(CanExecute = nameof(CanBatchUpdate))]
     private async Task BatchUpdateSelectedAsync()
     {
         if (RunOperation is null) return;
@@ -356,7 +371,7 @@ public partial class MainWindowViewModel : ObservableObject
         await RefreshAsync();
     }
 
-    [RelayCommand(CanExecute = nameof(CanBatchOperate))]
+    [RelayCommand(CanExecute = nameof(CanBatchUninstall))]
     private async Task BatchUninstallSelectedAsync()
     {
         if (RunOperation is null) return;

@@ -138,19 +138,62 @@ public sealed class AppImageSource : IPackageSource
     public async IAsyncEnumerable<ProgressLine> UninstallAsync(string id, [EnumeratorCancellation] CancellationToken ct = default)
     {
         await Task.CompletedTask;
-        string msg;
-        bool err = false;
-        try
-        {
-            if (File.Exists(id)) { File.Delete(id); msg = "Entfernt: " + id; }
-            else { msg = "Datei nicht gefunden: " + id; err = true; }
-        }
-        catch (Exception ex) { msg = ex.Message; err = true; }
-        yield return new ProgressLine(msg, err);
+
+        // 1) AppImage-Datei selbst loeschen.
+        yield return DeleteFileSafe(id, "Entfernt", "Datei nicht gefunden", "Loeschen fehlgeschlagen");
+
+        // 2) Waisen-.desktop-Eintraege aufraeumen, sonst bleibt der Menueeintrag mit
+        //    totem Exec-Pfad stehen. Nur ~/.local/share/applications - systemweite
+        //    Eintraege (z. B. /usr/share/applications) ruehren wir bewusst nicht an.
+        foreach (var orphan in FindMatchingDesktopEntries(id))
+            yield return DeleteFileSafe(orphan, "Menüeintrag entfernt", "Menüeintrag fehlt", "Menüeintrag konnte nicht entfernt werden");
     }
 
     public IAsyncEnumerable<ProgressLine> UpdateAsync(string? id, CancellationToken ct = default)
         => EmptyStream();
+
+    /// <summary>Loescht eine Datei und liefert eine fertige ProgressLine zurueck -
+    /// kapselt das try/catch, damit der Aufrufer das in iterator-Methoden mit yield
+    /// kombinieren kann (yield in try/catch ist in C# nicht erlaubt).</summary>
+    private static ProgressLine DeleteFileSafe(string path, string okLabel, string notFoundLabel, string errLabel)
+    {
+        if (!File.Exists(path))
+            return new ProgressLine($"{notFoundLabel}: {path}", true);
+        try
+        {
+            File.Delete(path);
+            return new ProgressLine($"{okLabel}: {path}", false);
+        }
+        catch (Exception ex)
+        {
+            return new ProgressLine($"{errLabel}: {path} ({ex.Message})", true);
+        }
+    }
+
+    private static IEnumerable<string> FindMatchingDesktopEntries(string appImagePath)
+    {
+        var apps = Path.Combine(Home(), ".local/share/applications");
+        if (!Directory.Exists(apps)) yield break;
+
+        foreach (var desktop in Directory.EnumerateFiles(apps, "*.desktop"))
+        {
+            string? exec = null;
+            try { (_, exec, _) = ParseDesktop(desktop); }
+            catch (Exception ex) { Log.Debug(ex, "Desktop-Parse fehlgeschlagen: {0}", desktop); }
+
+            if (ExecMatchesAppImage(exec, appImagePath))
+                yield return desktop;
+        }
+    }
+
+    /// <summary>True, wenn der Exec-Wert auf den gegebenen AppImage-Pfad zeigt
+    /// (ein wenig tolerant gegen Quoting und %U-Argumente).</summary>
+    internal static bool ExecMatchesAppImage(string? execValue, string appImagePath)
+    {
+        if (execValue is null) return false;
+        var path = ExtractExecPath(execValue);
+        return string.Equals(path, appImagePath, StringComparison.Ordinal);
+    }
 
     private static async IAsyncEnumerable<ProgressLine> EmptyStream()
     {
