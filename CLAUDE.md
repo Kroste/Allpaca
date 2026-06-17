@@ -200,15 +200,34 @@ Antwort fast immer `/template/ ContentPresenter`.
 ```
 IPackageSource ── FlatpakSource     flatpak list --columns=…
               ├─ HomebrewSource     brew info --json=v2 --installed
-              ├─ RpmOstreeSource    rpm-ostree status --json
-              ├─ DistroboxSource    distrobox list --no-color
-              └─ AppImageSource     .desktop-Scan + Dateisystem
+              ├─ RpmOstreeSource    rpm-ostree status --json  (mutationen via pkexec)
+              ├─ DistroboxSource    distrobox list --no-color (+ drill-down pm-probe)
+              ├─ AppImageSource     .desktop-Scan + Dateisystem
+              └─ PipxSource         pipx list --json
 
 ProcessRunner   ── zentrale, sandbox-bewusste Prozessausführung
 SandboxDetector ── erkennt Flatpak/Container → flatpak-spawn --host
 PackageAggregator ── lädt jede Quelle parallel & fehlertolerant
-MainWindowViewModel ── Filter, Suche, Live-Befüllung
-ChromeWindow ── Fenster-Basis (Chrome + Auflösungs-Clamp)
+IconLookup      ── PNG/SVG-Suche in hicolor + Sandbox-Cache
+AppIcon         ── SkiaSharp-Renderer fürs Allpaca-Logo
+
+MainWindowViewModel ── Filter, Suche, Live-Befüllung, Sort, Batch, Cleanup-Trigger
+ChromeWindow ── Fenster-Basis (Chrome, Auflösungs-Clamp, Edge-Resize, Esc-to-Close)
+
+Sub-Fenster:
+- LogWindow              → Stream-Operation (Install/Uninstall/Update/Trust), KI-Diagnose
+- ConfirmWindow          → ShowDialog<bool> mit isDestructive-Toggle
+- SearchWindow           → flatpak/brew search + 🤖-KI-Suggestions
+- SettingsWindow         → AI-Provider/Endpoint/Model + Ollama-Modell-Liste + Pull
+- OllamaPullWindow       → POST /api/pull mit Fortschrittsanzeige
+- ContainerInspectorWindow → Distrobox-Drill-down (read-only)
+- CleanupAnalysisWindow  → KI bekommt Paketliste, schlägt Duplikate/Waisen vor
+- InfoWindow             → About + GitHub + BMC-Button
+
+Services/Ai:
+- IAiAssistant + Factory + 4 Provider (OpenAiCompatible für Ollama+OpenAI, Anthropic, Gemini)
+- *PromptBuilder/Parser pro Feature (Diagnose, Cleanup, Suggestion); pur statisch + testbar
+- OllamaModelService (/api/tags + /api/pull stream)
 ```
 
 **Leitplanken:**
@@ -247,36 +266,69 @@ VS-Code-Tasks: `build` (Default), `test`, `clean`, `clean-hard`, `rebuild`, `rel
 
 ## 6. Roadmap
 
-### v1.x — Inventar-Feinschliff
-- [ ] Leere Detailfelder ausblenden (Converter `StringConverters.IsNotNullOrEmpty`).
-- [ ] Spaltensortierung (Name / Größe / Quelle) + Sortier-Umschalter.
-- [ ] Flatpak-**Runtimes** optional einblenden (Toggle), aktuell nur `--app`.
-- [ ] Distrobox-**Status** farbig (running/created/exited).
-- [ ] Duplikat-Hinweis (gleiche App als Flatpak *und* AppImage).
+### v1.x — Inventar-Feinschliff  ✅ komplett
+- [x] Leere Detailfelder ausblenden (Converter `StringConverters.IsNotNullOrEmpty`).
+- [x] Spaltensortierung (Name / Größe / Quelle) + Sortier-Umschalter.
+- [x] Flatpak-**Runtimes** optional einblenden (Toggle), aktuell nur `--app`.
+- [x] Distrobox-**Status** farbig (running/created/exited).
+- [x] Duplikat-Hinweis (gleiche App als Flatpak *und* AppImage).
 
-### v2 — Verwaltung
-- [ ] Install/Uninstall/Update je Quelle mit **Live-Log-Fenster** (nutzt `StreamAsync` →
-      `IAsyncEnumerable<ProgressLine>`, schon vorhanden).
-- [ ] **`pkexec`-Flow** für rpm-ostree inkl. **Reboot-Hinweis** (Caps: `RequiresReboot`).
-- [ ] Bestätigungsdialog vor destruktiven Aktionen.
-- [ ] **Distrobox-Drill-down:** Pakete *innerhalb* eines Containers (enter + pm list).
-- [ ] Fehler-Handling: nicht-null Exit-Codes sauber im Log-Fenster zeigen.
+### v2 — Verwaltung  ✅ komplett
+- [x] Install/Uninstall/Update je Quelle mit **Live-Log-Fenster** (Flatpak, rpm-ostree,
+      Homebrew, Distrobox, AppImage, pipx).
+- [x] **`pkexec`-Flow** für rpm-ostree inkl. **Reboot-Hinweis** (Caps: `RequiresReboot`).
+- [x] Bestätigungsdialog vor destruktiven Aktionen (Distrobox-Sondertext, Batch-Liste).
+- [x] **Distrobox-Drill-down:** Pakete *innerhalb* eines Containers (enter + pm-Probe,
+      tolerant gegen dpkg/rpm/pacman/apk). Bisher read-only; install/uninstall in der
+      Container-Inspector-UI bleibt optional.
+- [x] Fehler-Handling: ProcessRunner yieldet abschliessende Marker-Zeile mit Exit-Code,
+      LogWindow kippt rot bei != 0.
 
-### v2.x — Komfort
-- [ ] **Update-Check:** `brew outdated --json`, `flatpak remote-ls --updates`,
-      `rpm-ostree upgrade --check`. Badge „Updates verfügbar".
-- [ ] **Mehrfachauswahl + Batch** (mehrere deinstallieren/aktualisieren).
-- [ ] Settings-Persistenz (Theme, Ollama-Endpoint, Quellen-Defaults).
+### v2.x — Komfort  ✅ komplett
+- [x] **Update-Check:** `brew outdated --json=v2`, `flatpak remote-ls --updates`,
+      `rpm-ostree upgrade --check` (OS-Banner). Badge „↑ Update" pro Eintrag.
+- [x] **Mehrfachauswahl + Batch** (Flatpak/Homebrew nativ, AppImage/pipx Default-Iteration).
+- [x] **Settings-Persistenz** unter `$XDG_CONFIG_HOME/Allpaca/settings.json` (Sort,
+      ShowRuntimes, Source-Filter, AI-Provider/Endpoint/Model).
 
-### v3 — KI-Unterstützung  (§7)
+### v3 — KI-Unterstützung (§7)  ✅ Kern-Trilogie durch
 - [x] Multi-Provider-Gerüst: `IAiAssistant` + Ollama/OpenAI/Claude/Gemini + Factory.
-- [ ] UI-Verdrahtung + Settings (Provider/Endpoint/Key) + Streaming.
-- [ ] Natürlichsprachige Suche/Empfehlung.
-- [ ] Aufräum-Analyse (Waisen/Duplikate/„brauchst du das noch?").
-- [ ] Fehlerdiagnose aus Operation-Logs.
+- [x] UI-Verdrahtung + Settings (Provider/Endpoint/Key) + Verbindungstest. Ollama-Modelle
+      dynamisch via `/api/tags`, Pull mit Live-Fortschritt (`POST /api/pull`), kuratierte
+      Empfehlungsliste.
+- [x] Natürlichsprachige Suche/Empfehlung (SearchWindow „🤖 Mit KI" mit striktem
+      PROVIDER|ID|REASON-Output-Format).
+- [x] Aufräum-Analyse (Waisen/Duplikate/„brauchst du das noch?") in eigenem Fenster.
+- [x] Fehlerdiagnose aus Operation-Logs (LogWindow „Analysieren"-Button).
+- [ ] **Streaming** statt Single-Shot — alle drei AI-Features warten aktuell 10–30 s
+      bis komplette Antwort da ist. Refactor von `CompleteAsync` zu
+      `IAsyncEnumerable<string> CompleteStreamAsync` in 4 Provider-Klassen + 3 UI-Stellen.
+- [ ] **libsecret-Persistenz für API-Keys** — aktuell in-memory only, CLAUDE.md verlangt es.
 
-### Später — weitere Quellen (optional)
-- [ ] `pipx`, `cargo install`, `npm -g`, `toolbx` (parallel zu Distrobox).
+### Spätere Quellen (optional)
+- [x] `pipx` (Python-CLI-Tools, rootless, `pipx list --json`).
+- [ ] `cargo install` (Rust-Tools, `cargo install --list`).
+- [ ] `npm -g` (globale Node-Pakete, `npm list -g --json`).
+- [ ] `toolbx` parallel zu Distrobox.
+
+### Polishing & QoL (laufend)
+- [x] App-Icon (Alpaca-Silhouette via SkiaSharp, einheitlich auf allen Fenstern).
+- [x] **Per-App-Icons** in der Liste (PNG aus hicolor + SVG via `Svg.Skia` für
+      KDE-Apps; Sandbox-Cache-Sync von `/var/lib/flatpak/.../hicolor` nach
+      `~/.cache/Allpaca/flatpak-system-icons/`).
+- [x] **Tastatur-Shortcuts**: Esc (Subfenster), Ctrl+R/F5 (Refresh), Ctrl+F (Suche),
+      Ctrl+I (Install), Ctrl+, (Settings).
+- [x] **Empty-State-Texte** in der Paketliste (Loading / nichts installiert / kein
+      Treffer / Filter zu).
+- [x] **„Untrusted-Tap"-Erkennung** im LogWindow (Bazzite ublue-os/tap) mit One-Click
+      `brew trust`-Button.
+- [x] Resizable für alle Fenster (manueller Edge-Resize in ChromeWindow, weil
+      KDE/Wayland-BorderOnly oft keinen treffbaren Griff hat).
+- [ ] Toast-/Tray-Notification wenn Hintergrund-Update-Check N Updates findet.
+- [ ] Auto-Refresh-Intervall (optional in Settings).
+- [ ] Fehler-Hinweis pro Quelle mit konkreter Lösung („pipx nicht gefunden →
+      `dnf install pipx`").
+- [ ] Drag-and-drop AppImages in MainWindow → wird nach `~/Applications/` integriert.
 
 ---
 
@@ -303,13 +355,17 @@ public interface IAiAssistant
 - **Niemals** das ganze System dumpen: nur Paketnamen/IDs als Kontext, keine personenbezogenen Pfade.
 - Streaming ist v3 (aktuell Single-Shot `CompleteAsync`).
 
-### 7.2 Features (von einfach nach komplex) — v3
-1. **NL-Suche/Empfehlung:** „Tool zum Videoschneiden" → Paket + passende Quelle (Flatpak vs.
-   Distrobox vs. brew) mit Begründung.
-2. **Paket erklären** (Kontext = installierte Liste).
-3. **Quelle empfehlen** für Tool X unter Bazzite (immutable beachten!).
-4. **Aufräum-Analyse:** Duplikate/Waisen über Quellen hinweg.
-5. **Fehlerdiagnose** aus v2-Operation-Logs.
+### 7.2 Features
+1. ✅ **NL-Suche/Empfehlung:** SearchWindow „🤖 Mit KI" — System-Prompt erzwingt
+   `PROVIDER|PAKET-ID|BEGRÜNDUNG`-Format, `AiSuggestionParser` mappt auf PackageInfo.
+2. ✅ **Aufräum-Analyse:** Eigener Button (🧹) in der MainWindow-Toolbar, CleanupAnalysis-
+   Window. `CleanupPromptBuilder` cappt pro Quelle bei 200 Einträgen, lässt Runtimes raus,
+   markiert Cross-Source-Duplikate vor. Antwortformat: DUPLIKATE / WAISEN-VERDACHT /
+   EVENTUELL ÜBERFLÜSSIG.
+3. ✅ **Fehlerdiagnose** aus LogWindow — bei `State=Failed` erscheint 🤖-Sektion mit
+   Analysieren-Button. `DiagnosisPromptBuilder` packt die letzten 50 Log-Zeilen (jede
+   bis 300 Zeichen), 120 s Hard-Timeout.
+4. Paket erklären / Quelle empfehlen für Tool X — folgt, sobald Bedarf da ist.
 
 ### 7.3 Architektur-Hinweise
 - KI ist **additiv**, nie im kritischen Pfad: fällt der Provider aus, läuft Allpaca normal.
