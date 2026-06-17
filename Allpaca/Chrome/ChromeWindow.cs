@@ -1,4 +1,5 @@
 using System;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -12,6 +13,11 @@ namespace Allpaca.Chrome;
 /// </summary>
 public class ChromeWindow : Window
 {
+    /// <summary>Breite des unsichtbaren Resize-Streifens an jeder Fensterkante (DIPs).
+    /// 6 ist ein guter Kompromiss zwischen Treffgenauigkeit und nicht-stoeren bei
+    /// Klicks knapp neben Buttons.</summary>
+    private const double EdgeMargin = 6;
+
     public ChromeWindow()
     {
         // Avalonia 12: ExtendClientAreaChromeHints ist ENTFALLEN. Custom-Chrome läuft
@@ -25,6 +31,14 @@ public class ChromeWindow : Window
         MinWidth = 900;
         MinHeight = 600;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
+
+        // Auf KDE/Wayland (Bazzite) liefert BorderOnly oft KEINE nutzbaren Resize-Griffe -
+        // der "Border" ist 1 px breit und praktisch nicht treffbar. Wir schieben deshalb
+        // eine Tunnel-Phase vor alle Child-Handler und mappen Klicks in der aeusseren
+        // EdgeMargin-Zone auf BeginResizeDrag. Tunnel laeuft VOR Bubble, damit z. B. der
+        // Titelleisten-Drag nicht zuerst zuschnappt.
+        AddHandler(PointerPressedEvent, OnEdgeResizePressed, RoutingStrategies.Tunnel);
+        AddHandler(PointerMovedEvent, OnEdgeCursorMoved, RoutingStrategies.Tunnel);
     }
 
     protected override void OnOpened(EventArgs e)
@@ -74,4 +88,57 @@ public class ChromeWindow : Window
         => WindowState = WindowState == WindowState.Maximized
             ? WindowState.Normal
             : WindowState.Maximized;
+
+    private void OnEdgeResizePressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (e.Handled) return;
+        if (WindowState == WindowState.Maximized) return;
+        var pp = e.GetCurrentPoint(this);
+        if (!pp.Properties.IsLeftButtonPressed) return;
+
+        var edge = DetectEdge(pp.Position, ClientSize);
+        if (edge is null) return;
+
+        BeginResizeDrag(edge.Value, e);
+        e.Handled = true;
+    }
+
+    private void OnEdgeCursorMoved(object? sender, PointerEventArgs e)
+    {
+        if (WindowState == WindowState.Maximized)
+        {
+            Cursor = Cursor.Default;
+            return;
+        }
+
+        var pos = e.GetCurrentPoint(this).Position;
+        var edge = DetectEdge(pos, ClientSize);
+        Cursor = edge switch
+        {
+            WindowEdge.North or WindowEdge.South => new Cursor(StandardCursorType.SizeNorthSouth),
+            WindowEdge.West or WindowEdge.East => new Cursor(StandardCursorType.SizeWestEast),
+            WindowEdge.NorthWest or WindowEdge.SouthEast => new Cursor(StandardCursorType.TopLeftCorner),
+            WindowEdge.NorthEast or WindowEdge.SouthWest => new Cursor(StandardCursorType.TopRightCorner),
+            _ => Cursor.Default,
+        };
+    }
+
+    private static WindowEdge? DetectEdge(Point pos, Size size)
+    {
+        var left = pos.X <= EdgeMargin;
+        var right = pos.X >= size.Width - EdgeMargin;
+        var top = pos.Y <= EdgeMargin;
+        var bottom = pos.Y >= size.Height - EdgeMargin;
+
+        // Ecken zuerst pruefen (haben Vorrang vor den Kanten).
+        if (top && left) return WindowEdge.NorthWest;
+        if (top && right) return WindowEdge.NorthEast;
+        if (bottom && left) return WindowEdge.SouthWest;
+        if (bottom && right) return WindowEdge.SouthEast;
+        if (top) return WindowEdge.North;
+        if (bottom) return WindowEdge.South;
+        if (left) return WindowEdge.West;
+        if (right) return WindowEdge.East;
+        return null;
+    }
 }
