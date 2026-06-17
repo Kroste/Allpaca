@@ -73,15 +73,24 @@ public partial class MainWindowViewModel : ObservableObject
         new SortOption(SortKey.Source, "Quelle"),
     };
 
-    [ObservableProperty] private bool _isLoading;
-    [ObservableProperty] private string _searchText = "";
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowEmptyState))]
+    [NotifyPropertyChangedFor(nameof(EmptyStateText))]
+    private bool _isLoading;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(EmptyStateText))]
+    private string _searchText = "";
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CountSummary))]
+    [NotifyPropertyChangedFor(nameof(EmptyStateText))]
     private int _totalCount;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CountSummary))]
+    [NotifyPropertyChangedFor(nameof(ShowEmptyState))]
+    [NotifyPropertyChangedFor(nameof(EmptyStateText))]
     private int _visibleCount;
 
     [ObservableProperty]
@@ -153,6 +162,26 @@ public partial class MainWindowViewModel : ObservableObject
 
     public string CountSummary => $"{VisibleCount} / {TotalCount} Pakete";
     public string SortDirectionGlyph => SortDescending ? "▼" : "▲";
+
+    /// <summary>Sichtbar, sobald die Trefferliste leer ist - signalisiert dem User,
+    /// warum gerade nichts da ist (Loading, gar nichts installiert, alle gefiltert,
+    /// Suche ohne Treffer). Waehrend Loading laeuft der ProgressBar parallel oben.</summary>
+    public bool ShowEmptyState => VisibleCount == 0;
+
+    public string EmptyStateText
+    {
+        get
+        {
+            if (IsLoading) return "Pakete werden geladen …";
+            if (TotalCount == 0)
+                return "Keine Pakete gefunden. Sind flatpak, brew & Co. installiert und im PATH?";
+            // Es gibt Eintraege, aber keiner ist gerade sichtbar.
+            var q = SearchText.Trim();
+            if (q.Length > 0)
+                return $"Keine Treffer für „{q}“. Versuche einen anderen Suchbegriff oder erweitere die Quellen-Auswahl links.";
+            return "Keine Einträge sichtbar – aktive Quellen-Filter oder „Runtimes anzeigen“ prüfen.";
+        }
+    }
 
     public MainWindowViewModel() : this(new SettingsService()) { }
 

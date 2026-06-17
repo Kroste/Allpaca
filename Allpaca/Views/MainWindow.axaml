@@ -159,6 +159,11 @@
                         <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsLoading}"
                                      VerticalAlignment="Top" Height="3" Background="Transparent"
                                      Foreground="#2BB673" ZIndex="1"/>
+                        <TextBlock Text="{Binding EmptyStateText}" Foreground="#6E747C"
+                                   FontSize="13" TextWrapping="Wrap" TextAlignment="Center"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   MaxWidth="420" Margin="20"
+                                   IsVisible="{Binding ShowEmptyState}"/>
                         <ListBox x:Name="PackagesList"
                                  ItemsSource="{Binding Packages}" SelectedItem="{Binding Selected}"
                                  SelectionMode="Multiple"
