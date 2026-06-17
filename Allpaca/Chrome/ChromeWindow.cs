@@ -1,4 +1,5 @@
 using System;
+using Allpaca.Services;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -31,6 +32,10 @@ public class ChromeWindow : Window
         MinWidth = 900;
         MinHeight = 600;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
+
+        // Einheitliches App-Icon fuer ALLE Fenster (Window-Manager-Taskbar, Alt+Tab,
+        // KDE-Activities etc.). Cached static - eine Bitmap fuer alle Fenster.
+        Icon = AppIcon.WindowIcon;
 
         // Auf KDE/Wayland (Bazzite) liefert BorderOnly oft KEINE nutzbaren Resize-Griffe -
         // der "Border" ist 1 px breit und praktisch nicht treffbar. Wir schieben deshalb

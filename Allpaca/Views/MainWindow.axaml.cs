@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Allpaca.Chrome;
+using Allpaca.Services;
 using Allpaca.ViewModels;
 using Avalonia.Controls;
 
@@ -12,6 +13,9 @@ public partial class MainWindow : ChromeWindow
     public MainWindow()
     {
         InitializeComponent();
+
+        if (this.FindControl<Image>("TitleLogo") is { } logo)
+            logo.Source = AppIcon.Bitmap;
     }
 
     protected override void OnOpened(EventArgs e)

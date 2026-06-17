@@ -1,7 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
-  <rect width="256" height="256" rx="56" fill="#1B1D21"/>
-  <rect x="56" y="56" width="144" height="144" rx="32" fill="#2BB673"/>
-  <text x="128" y="170" font-family="DejaVu Sans, sans-serif" font-size="120"
-        font-weight="bold" fill="#15171A" text-anchor="middle">A</text>
+  <!-- Hintergrund: grünes abgerundetes Quadrat in Markenfarbe -->
+  <rect width="256" height="256" rx="48" fill="#2BB673"/>
+
+  <!-- Subtile Body-Andeutung (dunkleres Grün hinter dem Kopf) -->
+  <ellipse cx="128" cy="220" rx="78" ry="20" fill="#1F8E5A"/>
+
+  <!-- Alpaca-Kopf in Off-White -->
+  <path d="M 78 145
+           C 78 100, 95 70, 128 70
+           C 161 70, 178 100, 178 145
+           L 178 175
+           C 178 200, 158 220, 128 220
+           C 98 220, 78 200, 78 175 Z"
+        fill="#F5F5F5"/>
+
+  <!-- Wolltufts auf dem Kopf (drei Locken) -->
+  <circle cx="115" cy="70" r="12" fill="#F5F5F5"/>
+  <circle cx="128" cy="60" r="14" fill="#F5F5F5"/>
+  <circle cx="141" cy="70" r="12" fill="#F5F5F5"/>
+
+  <!-- Ohren als kleine Dreiecke links und rechts -->
+  <path d="M 85 78 L 70 50 L 95 65 Z" fill="#F5F5F5"/>
+  <path d="M 171 78 L 186 50 L 161 65 Z" fill="#F5F5F5"/>
+
+  <!-- Augen -->
+  <ellipse cx="106" cy="130" rx="6" ry="9" fill="#15171A"/>
+  <ellipse cx="150" cy="130" rx="6" ry="9" fill="#15171A"/>
+
+  <!-- Nase -->
+  <ellipse cx="128" cy="170" rx="13" ry="9" fill="#15171A"/>
+
+  <!-- Mundkurve -->
+  <path d="M 120 185 Q 128 192 136 185"
+        stroke="#15171A" stroke-width="3" fill="none" stroke-linecap="round"/>
 </svg>

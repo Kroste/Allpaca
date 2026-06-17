@@ -22,11 +22,8 @@
         <ScrollViewer Grid.Row="1">
             <StackPanel Margin="28,24" Spacing="14" HorizontalAlignment="Center">
 
-                <Border Width="84" Height="84" CornerRadius="20" Background="#2BB673"
-                        HorizontalAlignment="Center">
-                    <TextBlock Text="A" FontSize="52" FontWeight="Bold" Foreground="#15171A"
-                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                </Border>
+                <Image x:Name="LogoImage" Width="96" Height="96"
+                       HorizontalAlignment="Center"/>
 
                 <TextBlock Text="Allpaca" FontSize="26" FontWeight="Bold" Foreground="#EDEFF2"
                            HorizontalAlignment="Center"/>

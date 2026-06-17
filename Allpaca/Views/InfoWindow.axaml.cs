@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Reflection;
 using Allpaca.Chrome;
+using Allpaca.Services;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 
@@ -20,6 +21,9 @@ public partial class InfoWindow : ChromeWindow
         var v = Assembly.GetExecutingAssembly().GetName().Version;
         if (this.FindControl<TextBlock>("VersionText") is { } vt)
             vt.Text = "Version " + (v?.ToString(3) ?? "1.0");
+
+        if (this.FindControl<Image>("LogoImage") is { } img)
+            img.Source = AppIcon.Bitmap;
     }
 
     private void OnGithubClick(object? sender, RoutedEventArgs e) => OpenUrl(GithubUrl);
