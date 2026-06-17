@@ -17,8 +17,14 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly List<PackageItemViewModel> _all = new();
     private readonly Dictionary<PackageSourceKind, IPackageSource> _sourceByKind;
     private readonly SettingsService _settings;
+    private readonly NotificationService _notifications;
     private CancellationTokenSource? _updatesCheckCts;
     private bool _settingsReady;
+
+    // Anti-Spam: Notifications nur, wenn sich die Update-Zahl seit dem letzten
+    // Hinweis aendert. -1 = noch nie benachrichtigt.
+    private int _lastNotifiedUpdateCount = -1;
+    private bool _lastOsUpdateNotified;
 
     /// <summary>Wird von der View beim Start gesetzt: oeffnet das LogWindow und faedelt
     /// die Stream-Operation hindurch. ViewModel kennt damit weiterhin keine View-Typen.</summary>
@@ -190,6 +196,7 @@ public partial class MainWindowViewModel : ObservableObject
         _settings = settingsService;
 
         var runner = new ProcessRunner(new SandboxDetector());
+        _notifications = new NotificationService(runner);
         var sources = new IPackageSource[]
         {
             new FlatpakSource(runner),
@@ -570,6 +577,17 @@ public partial class MainWindowViewModel : ObservableObject
 
             OsUpdateMessage = info;
             Log.Info("rpm-ostree OS-Update: {0}", info ?? "keins");
+
+            // Toast nur beim Uebergang nicht-vorhanden -> verfuegbar.
+            var hasUpdate = !string.IsNullOrEmpty(info);
+            if (hasUpdate && !_lastOsUpdateNotified)
+            {
+                _ = _notifications.NotifyAsync(
+                    title: "rpm-ostree: OS-Update verfügbar",
+                    body: $"Version {info} – Neustart erforderlich. Im Hauptfenster ist der Banner sichtbar.",
+                    ct: ct);
+            }
+            _lastOsUpdateNotified = hasUpdate;
         }
         catch (OperationCanceledException) { }
         catch (Exception ex)
@@ -600,12 +618,23 @@ public partial class MainWindowViewModel : ObservableObject
                         p.HasUpdate = true;
             }
 
-            Log.Info("Update-Check fertig: {0} Updates verfuegbar",
-                _all.Count(p => p.HasUpdate));
+            var updateCount = _all.Count(p => p.HasUpdate);
+            Log.Info("Update-Check fertig: {0} Updates verfuegbar", updateCount);
 
             // ApplyFilter rebuildet die Packages-Collection, dadurch wird die UI
             // neu gerendert und die HasUpdate-Badges erscheinen.
             ApplyFilter();
+
+            // Toast nur bei Aenderung gegenueber dem letzten Lauf - sonst wuerde
+            // jeder Refresh die gleichen N Updates erneut anzeigen.
+            if (updateCount > 0 && updateCount != _lastNotifiedUpdateCount)
+            {
+                _ = _notifications.NotifyAsync(
+                    title: $"{updateCount} Update{(updateCount == 1 ? "" : "s")} verfügbar",
+                    body: "Öffne Allpaca, um die betroffenen Pakete zu aktualisieren.",
+                    ct: ct);
+            }
+            _lastNotifiedUpdateCount = updateCount;
         }
         catch (OperationCanceledException)
         {
