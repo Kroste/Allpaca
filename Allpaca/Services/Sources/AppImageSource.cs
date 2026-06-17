@@ -120,15 +120,15 @@ public sealed class AppImageSource : IPackageSource
         return (name, exec, comment, icon);
     }
 
-    /// <summary>Icon= im .desktop kann ein absoluter PNG-Pfad sein oder ein Theme-Name -
-    /// dann via IconLookup in hicolor aufloesen.</summary>
+    /// <summary>Icon= im .desktop kann ein absoluter Pfad sein (PNG/SVG) oder ein
+    /// Theme-Name - dann via IconLookup aufloesen.</summary>
     internal static string? ResolveIcon(string? iconValue)
     {
         if (string.IsNullOrWhiteSpace(iconValue)) return null;
         var icon = iconValue.Trim();
         if (icon.Contains('/'))
             return File.Exists(icon) ? icon : null;
-        return IconLookup.FindPng(icon);
+        return IconLookup.FindIcon(icon);
     }
 
     internal static string? ExtractExecPath(string exec)

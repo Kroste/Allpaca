@@ -7,7 +7,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
     <!-- Bei jeder Aenderung erhoehen (deine Konvention) -->
-    <Version>1.4.4</Version>
+    <Version>1.4.5</Version>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
@@ -26,6 +26,10 @@
     <PackageReference Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.1" Condition="'$(Configuration)' == 'Debug'" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="NLog" Version="5.3.4" />
+    <!-- Svg.Skia rendert SVG-Icons (KDE/GNOME-Apps haben oft nur scalable/<id>.svg)
+         in Avalonia-Bitmaps. Nutzt dieselbe SkiaSharp-Linie wie Avalonia 12.0.4
+         (beide 3.119.x), keine Versionskonflikte. -->
+    <PackageReference Include="Svg.Skia" Version="5.1.1" />
   </ItemGroup>
 
   <ItemGroup>

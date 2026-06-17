@@ -104,7 +104,7 @@ public sealed class FlatpakSource : IPackageSource
                 // Flatpak exportiert seine App-Icons in hicolor unter dem App-ID-
                 // Schluessel. Runtimes haben keine Icons, deshalb spaaren wir uns die
                 // Disk-Suche dafuer.
-                IconPath = asRuntime ? null : IconLookup.FindPng(id),
+                IconPath = asRuntime ? null : IconLookup.FindIcon(id),
                 Extra = new Dictionary<string, string> { ["branch"] = p[3].Trim() },
             });
         }

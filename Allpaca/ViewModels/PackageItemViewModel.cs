@@ -1,7 +1,10 @@
+using System.IO;
 using Allpaca.Models;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using NLog;
+using SkiaSharp;
+using Svg.Skia;
 
 namespace Allpaca.ViewModels;
 
@@ -17,8 +20,9 @@ public sealed class PackageItemViewModel
     private bool _iconLoaded;
 
     /// <summary>Per-App-Icon (Flatpak hicolor, AppImage .desktop Icon=). Lazy beim
-    /// ersten Zugriff geladen, schlaegt fehl still und liefert null - dann blendet
-    /// die UI die Image-Spalte einfach leer.</summary>
+    /// ersten Zugriff geladen. PNG direkt via Avalonia.Bitmap, SVG via Svg.Skia
+    /// rastert auf 64x64 (ListBox zeigt 28x28 - leichte Skalierung haelt Antialiasing
+    /// sauber). Fehler werden silent in Debug geloggt und liefern null.</summary>
     public Bitmap? Icon
     {
         get
@@ -27,10 +31,46 @@ public sealed class PackageItemViewModel
             _iconLoaded = true;
 
             if (string.IsNullOrEmpty(Model.IconPath)) return null;
-            try { _icon = new Bitmap(Model.IconPath); }
-            catch (Exception ex) { Log.Debug(ex, "Icon-Load fehlgeschlagen: {0}", Model.IconPath); }
+            try
+            {
+                _icon = Model.IconPath.EndsWith(".svg", StringComparison.OrdinalIgnoreCase)
+                    ? RenderSvgToBitmap(Model.IconPath, 64)
+                    : new Bitmap(Model.IconPath);
+            }
+            catch (Exception ex)
+            {
+                Log.Debug(ex, "Icon-Load fehlgeschlagen: {0}", Model.IconPath);
+            }
             return _icon;
         }
+    }
+
+    private static Bitmap? RenderSvgToBitmap(string path, int size)
+    {
+        using var svg = new SKSvg();
+        svg.Load(path);
+        if (svg.Picture is null) return null;
+
+        var bounds = svg.Picture.CullRect;
+        var max = Math.Max(bounds.Width, bounds.Height);
+        if (max <= 0) return null;
+        var scale = size / max;
+
+        using var bmp = new SKBitmap(size, size, SKColorType.Bgra8888, SKAlphaType.Premul);
+        using (var canvas = new SKCanvas(bmp))
+        {
+            canvas.Clear(SKColors.Transparent);
+            canvas.Scale(scale, scale);
+            canvas.Translate(-bounds.Left, -bounds.Top);
+            canvas.DrawPicture(svg.Picture);
+        }
+
+        using var image = SKImage.FromBitmap(bmp);
+        using var pngData = image.Encode(SKEncodedImageFormat.Png, 100);
+        using var stream = new MemoryStream();
+        pngData.SaveTo(stream);
+        stream.Position = 0;
+        return new Bitmap(stream);
     }
 
     public string Name => Model.Name;

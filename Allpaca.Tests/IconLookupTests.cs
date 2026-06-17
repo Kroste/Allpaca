@@ -7,25 +7,22 @@ namespace Allpaca.Tests;
 public class IconLookupTests
 {
     [Fact]
-    public void FindPng_ReturnsNull_ForEmptyOrWhitespace()
+    public void FindIcon_ReturnsNull_ForEmptyOrWhitespace()
     {
-        Assert.Null(IconLookup.FindPng(""));
-        Assert.Null(IconLookup.FindPng("   "));
+        Assert.Null(IconLookup.FindIcon(""));
+        Assert.Null(IconLookup.FindIcon("   "));
     }
 
     [Fact]
-    public void FindPng_ReturnsNull_ForObviouslyMissingId()
+    public void FindIcon_ReturnsNull_ForObviouslyMissingId()
     {
-        // Eine ID, die garantiert in keinem hicolor-Pfad existiert.
-        var result = IconLookup.FindPng("definitely.not.a.real.app.guid-" + System.Guid.NewGuid().ToString("N"));
+        var result = IconLookup.FindIcon("definitely.not.a.real.app.guid-" + System.Guid.NewGuid().ToString("N"));
         Assert.Null(result);
     }
 
     [Fact]
-    public void FindPng_FindsIconInTempHicolorTree()
+    public void FindIcon_FindsPngInTempHicolorTree()
     {
-        // Wir bauen uns einen Mini-hicolor-Baum unter $XDG_DATA_HOME-aequivalent
-        // (~/.local/share/icons/hicolor) und pruefen, ob FindPng ihn findet.
         var home = System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile);
         var id = "allpaca-test-" + System.Guid.NewGuid().ToString("N");
         var dir = Path.Combine(home, ".local/share/icons/hicolor/128x128/apps");
@@ -34,15 +31,55 @@ public class IconLookupTests
         try
         {
             Directory.CreateDirectory(dir);
-            File.WriteAllBytes(iconFile, new byte[] { 0x89, 0x50, 0x4E, 0x47 }); // PNG-Magic, reicht als Test-Sentinel
+            File.WriteAllBytes(iconFile, new byte[] { 0x89, 0x50, 0x4E, 0x47 });
 
-            var result = IconLookup.FindPng(id);
+            Assert.Equal(iconFile, IconLookup.FindIcon(id));
+        }
+        finally { if (File.Exists(iconFile)) File.Delete(iconFile); }
+    }
 
-            Assert.Equal(iconFile, result);
+    [Fact]
+    public void FindIcon_FallsBackToScalableSvg_WhenNoPng()
+    {
+        // Brave/Bottles/Brief auf Bazzite haben nur scalable/<id>.svg.
+        var home = System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile);
+        var id = "allpaca-svg-test-" + System.Guid.NewGuid().ToString("N");
+        var dir = Path.Combine(home, ".local/share/icons/hicolor/scalable/apps");
+        var iconFile = Path.Combine(dir, id + ".svg");
+
+        try
+        {
+            Directory.CreateDirectory(dir);
+            File.WriteAllText(iconFile, "<svg/>");
+
+            Assert.Equal(iconFile, IconLookup.FindIcon(id));
+        }
+        finally { if (File.Exists(iconFile)) File.Delete(iconFile); }
+    }
+
+    [Fact]
+    public void FindIcon_PrefersPngOverSvg()
+    {
+        var home = System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile);
+        var id = "allpaca-pref-test-" + System.Guid.NewGuid().ToString("N");
+        var pngDir = Path.Combine(home, ".local/share/icons/hicolor/128x128/apps");
+        var svgDir = Path.Combine(home, ".local/share/icons/hicolor/scalable/apps");
+        var pngFile = Path.Combine(pngDir, id + ".png");
+        var svgFile = Path.Combine(svgDir, id + ".svg");
+
+        try
+        {
+            Directory.CreateDirectory(pngDir);
+            Directory.CreateDirectory(svgDir);
+            File.WriteAllBytes(pngFile, new byte[] { 0x89, 0x50, 0x4E, 0x47 });
+            File.WriteAllText(svgFile, "<svg/>");
+
+            Assert.Equal(pngFile, IconLookup.FindIcon(id));
         }
         finally
         {
-            if (File.Exists(iconFile)) File.Delete(iconFile);
+            if (File.Exists(pngFile)) File.Delete(pngFile);
+            if (File.Exists(svgFile)) File.Delete(svgFile);
         }
     }
 }
