@@ -5,7 +5,6 @@
         Title="Über Allpaca"
         Width="460" Height="560"
         MinWidth="380" MinHeight="420"
-        CanResize="False"
         WindowStartupLocation="CenterOwner"
         Background="#1B1D21">
 

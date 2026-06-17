@@ -7,7 +7,6 @@
         Title="Bestätigen"
         Width="460" Height="220"
         MinWidth="380" MinHeight="200"
-        CanResize="False"
         WindowStartupLocation="CenterOwner"
         Background="#1B1D21">
 
