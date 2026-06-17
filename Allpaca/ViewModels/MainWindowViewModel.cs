@@ -132,7 +132,7 @@ public partial class MainWindowViewModel : ObservableObject
         {
             if (!HasMultiSelection) return "";
             if (CanBatchOperate) return $"{SelectedCount} Pakete markiert";
-            return $"{SelectedCount} Pakete markiert – Batch-Aktionen brauchen gleiche Quelle (Flatpak, Homebrew oder AppImage)";
+            return $"{SelectedCount} Pakete markiert – Batch-Aktionen brauchen gleiche Quelle (Flatpak, Homebrew, AppImage oder pipx)";
         }
     }
 
@@ -168,6 +168,7 @@ public partial class MainWindowViewModel : ObservableObject
             new RpmOstreeSource(runner),
             new DistroboxSource(runner),
             new AppImageSource(),
+            new PipxSource(runner),
         };
         _aggregator = new PackageAggregator(sources);
         _sourceByKind = sources.ToDictionary(s => s.Kind);
@@ -247,9 +248,9 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     private void ToggleSortDirection() => SortDescending = !SortDescending;
 
-    /// <summary>Alle Mutations-faehigen Quellen sind jetzt verdrahtet: Flatpak,
-    /// rpm-ostree (pkexec, Reboot-Hinweis), Homebrew, Distrobox (Container
-    /// loeschen/upgraden) und AppImage (Datei + Waisen-.desktop loeschen).</summary>
+    /// <summary>Alle Mutations-faehigen Quellen sind verdrahtet: Flatpak, rpm-ostree
+    /// (pkexec, Reboot-Hinweis), Homebrew, Distrobox (Container loeschen/upgraden),
+    /// AppImage (Datei + Waisen-.desktop loeschen) und pipx (Python-CLI-Tools).</summary>
     private bool IsWiredForMutation(PackageItemViewModel? item) => item?.Model.Source switch
     {
         PackageSourceKind.Flatpak => true,
@@ -257,17 +258,19 @@ public partial class MainWindowViewModel : ObservableObject
         PackageSourceKind.Homebrew => true,
         PackageSourceKind.Distrobox => true,
         PackageSourceKind.AppImage => true,
+        PackageSourceKind.Pipx => true,
         _ => false,
     };
 
     /// <summary>Batch-faehige Quellen. Flatpak/Homebrew haben natives Multi-ID-CLI,
-    /// AppImage iteriert dateisystembasiert (Default UninstallManyAsync) - immer noch
-    /// schnell genug fuer Dutzende Eintraege.</summary>
+    /// AppImage und pipx iterieren ueber die Default-Implementierung von
+    /// UninstallManyAsync - schnell genug fuer Dutzende Eintraege.</summary>
     private static bool SupportsBatch(PackageSourceKind kind) => kind switch
     {
         PackageSourceKind.Flatpak => true,
         PackageSourceKind.Homebrew => true,
         PackageSourceKind.AppImage => true,
+        PackageSourceKind.Pipx => true,
         _ => false,
     };
 

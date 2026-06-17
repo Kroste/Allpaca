@@ -37,6 +37,7 @@ public sealed class PackageItemViewModel
         PackageSourceKind.RpmOstree => "rpm-ostree",
         PackageSourceKind.Distrobox => "Distrobox",
         PackageSourceKind.AppImage => "AppImage",
+        PackageSourceKind.Pipx => "pipx",
         _ => "?",
     };
 
@@ -83,6 +84,7 @@ public sealed class PackageItemViewModel
         PackageSourceKind.RpmOstree => "#E25555",
         PackageSourceKind.Distrobox => "#7B61FF",
         PackageSourceKind.AppImage => "#2BB673",
+        PackageSourceKind.Pipx => "#3776AB",  // Python-Blau
         _ => "#888888",
     };
 

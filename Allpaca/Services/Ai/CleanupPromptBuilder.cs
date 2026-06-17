@@ -74,6 +74,7 @@ public static class CleanupPromptBuilder
         PackageSourceKind.RpmOstree => "rpm-ostree (gelayert)",
         PackageSourceKind.Distrobox => "Distrobox-Container",
         PackageSourceKind.AppImage => "AppImage",
+        PackageSourceKind.Pipx => "pipx (Python-CLI)",
         _ => kind.ToString(),
     };
 }

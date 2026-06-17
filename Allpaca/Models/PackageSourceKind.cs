@@ -7,5 +7,6 @@ public enum PackageSourceKind
     Homebrew,
     RpmOstree,
     Distrobox,
-    AppImage
+    AppImage,
+    Pipx
 }
