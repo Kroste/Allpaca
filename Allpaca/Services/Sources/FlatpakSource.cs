@@ -13,6 +13,8 @@ public sealed class FlatpakSource : IPackageSource
 
     public FlatpakSource(ProcessRunner runner) => _runner = runner;
 
+    private bool _iconCacheReady;
+
     public PackageSourceKind Kind => PackageSourceKind.Flatpak;
     public string DisplayName => "Flatpak";
     public PackageCapabilities Capabilities => new()
@@ -26,10 +28,46 @@ public sealed class FlatpakSource : IPackageSource
 
     public async Task<IReadOnlyList<PackageInfo>> ListInstalledAsync(CancellationToken ct = default)
     {
+        // Einmal pro Session den System-Hicolor-Baum in den User-Cache mirroren -
+        // damit eine in Distrobox laufende Allpaca die System-Flatpak-Icons aus
+        // /var/lib/flatpak ueberhaupt zu Gesicht bekommt. ProcessRunner geht ueber
+        // flatpak-spawn --host, wenn er sandboxed laeuft.
+        await EnsureIconCacheAsync(ct).ConfigureAwait(false);
+
         // Apps und Runtimes getrennt holen - die UI blendet Runtimes per Default aus.
         var apps = await ListAsync(asRuntime: false, ct).ConfigureAwait(false);
         var runtimes = await ListAsync(asRuntime: true, ct).ConfigureAwait(false);
         return apps.Concat(runtimes).ToList();
+    }
+
+    private async Task EnsureIconCacheAsync(CancellationToken ct)
+    {
+        if (_iconCacheReady) return;
+        _iconCacheReady = true;  // auch bei Fehler nicht erneut versuchen
+
+        try
+        {
+            var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            var dest = Path.Combine(home, ".cache/Allpaca/flatpak-system-icons/hicolor");
+            Directory.CreateDirectory(dest);
+
+            // cp -ruL: recursive + update-only (newer wins) + Symlinks folgen.
+            // Flatpak's exports/-Dir ist ueberwiegend Symlinks ins app/<id>/.../export/.
+            // Ohne -L wuerden wir tote Verweise kopieren.
+            var r = await _runner.RunAsync("cp", new[]
+            {
+                "-ruL",
+                "/var/lib/flatpak/exports/share/icons/hicolor/.",
+                dest,
+            }, ct);
+
+            if (!r.Success)
+                Log.Debug("Icon-Cache-Sync (system-hicolor) Exit {0}: {1}", r.ExitCode, r.StdErr);
+        }
+        catch (Exception ex)
+        {
+            Log.Debug(ex, "Icon-Cache-Sync uebersprungen");
+        }
     }
 
     private async Task<List<PackageInfo>> ListAsync(bool asRuntime, CancellationToken ct)

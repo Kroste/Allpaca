@@ -24,7 +24,11 @@ public static class IconLookup
         {
             // User-installierte Flatpaks: ~/.local/share/flatpak/exports/share/icons/hicolor
             Path.Combine(home, ".local/share/flatpak/exports/share/icons/hicolor"),
-            // System-Flatpaks: /var/lib/flatpak/exports/share/icons/hicolor
+            // Sandbox-Cache: in der Distrobox/Allpaca-Sandbox ist /var/lib/flatpak NICHT
+            // sichtbar - deshalb mirrored FlatpakSource.EnsureIconCacheAsync den
+            // System-hicolor-Baum einmalig hierher (~/.cache liegt im geteilten Home).
+            Path.Combine(home, ".cache/Allpaca/flatpak-system-icons/hicolor"),
+            // System-Flatpaks direkt vom Host (greift, wenn Allpaca nativ laeuft)
             "/var/lib/flatpak/exports/share/icons/hicolor",
             // freedesktop Standard (App-Themes, kuratiert, rpm-Layer-Apps)
             Path.Combine(home, ".local/share/icons/hicolor"),
