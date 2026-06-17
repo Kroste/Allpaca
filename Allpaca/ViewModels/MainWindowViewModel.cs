@@ -93,6 +93,10 @@ public partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(EmptyStateText))]
+    private bool _isCheckingUpdates;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(EmptyStateText))]
     private string _searchText = "";
 
     [ObservableProperty]
@@ -166,7 +170,9 @@ public partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty] private bool _showRuntimes;
 
-    [ObservableProperty] private bool _showUpdatesOnly;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(EmptyStateText))]
+    private bool _showUpdatesOnly;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasOsUpdate))]
@@ -194,6 +200,10 @@ public partial class MainWindowViewModel : ObservableObject
             var q = SearchText.Trim();
             if (q.Length > 0)
                 return $"Keine Treffer für „{q}“. Versuche einen anderen Suchbegriff oder erweitere die Quellen-Auswahl links.";
+            if (ShowUpdatesOnly)
+                return IsCheckingUpdates
+                    ? "Update-Check läuft – die aktualisierbaren Pakete erscheinen gleich."
+                    : "Keine aktualisierbaren Pakete. Deaktiviere „Nur aktualisierbare anzeigen“ links, um wieder die volle Liste zu sehen.";
             return "Keine Einträge sichtbar – aktive Quellen-Filter oder „Runtimes anzeigen“ prüfen.";
         }
     }
@@ -557,7 +567,9 @@ public partial class MainWindowViewModel : ObservableObject
 
         _all.Clear();
         Packages.Clear();
-        foreach (var f in Filters) { f.Count = 0; f.Status = null; }
+        // UpdateCount mit zurueck auf 0 - sonst zeigt die Sidebar stale "↑N", waehrend
+        // die neuen PackageItemViewModels noch alle HasUpdate=false haben.
+        foreach (var f in Filters) { f.Count = 0; f.Status = null; f.UpdateCount = 0; }
         TotalCount = 0;
         VisibleCount = 0;
 
@@ -640,6 +652,7 @@ public partial class MainWindowViewModel : ObservableObject
 
     private async Task CheckUpdatesInBackgroundAsync(CancellationToken ct)
     {
+        IsCheckingUpdates = true;
         try
         {
             var tasks = _aggregator.Sources
@@ -690,6 +703,10 @@ public partial class MainWindowViewModel : ObservableObject
         catch (Exception ex)
         {
             Log.Warn(ex, "Update-Check fehlgeschlagen");
+        }
+        finally
+        {
+            IsCheckingUpdates = false;
         }
     }
 
