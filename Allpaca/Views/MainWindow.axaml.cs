@@ -32,6 +32,7 @@ public partial class MainWindow : ChromeWindow
             };
             vm.OpenInstallSearch ??= () => OpenSearchWindow(vm);
             vm.OpenSettings ??= current => OpenSettingsWindowAsync(current);
+            vm.OpenCleanupAnalysis ??= packages => OpenCleanupAnalysisWindow(packages);
 
             if (vm.RefreshCommand.CanExecute(null))
                 vm.RefreshCommand.Execute(null);
@@ -104,6 +105,16 @@ public partial class MainWindow : ChromeWindow
         win.Closed += (_, _) => tcs.TrySetResult(result);
         win.Show(this);
         return tcs.Task;
+    }
+
+    private void OpenCleanupAnalysisWindow(System.Collections.Generic.IReadOnlyList<PackageItemViewModel> packages)
+    {
+        var win = new CleanupAnalysisWindow
+        {
+            AnalyzeHandler = DiagnoseWithAiAsync,  // gleicher KI-Bridge wie LogWindow
+        };
+        win.Show(this);
+        _ = win.RunAsync(packages);
     }
 
     private void OpenSearchWindow(MainWindowViewModel vm)

@@ -41,6 +41,10 @@ public partial class MainWindowViewModel : ObservableObject
     /// mit den geaenderten AiSettings zurueck (oder null bei Abbruch).</summary>
     public Func<AiSettings, Task<AiSettings?>>? OpenSettings { get; set; }
 
+    /// <summary>Wird von der View gesetzt: oeffnet das Aufraeum-Analyse-Fenster mit
+    /// einem Snapshot der aktuellen Paketliste.</summary>
+    public Action<IReadOnlyList<PackageItemViewModel>>? OpenCleanupAnalysis { get; set; }
+
     /// <summary>Aktuelle KI-Konfiguration. Provider/Endpoint/Modell werden persistiert,
     /// ApiKey lebt absichtlich nur im Speicher (siehe AppSettings-Kommentar).</summary>
     public AiSettings CurrentAi { get; private set; } = new();
@@ -383,6 +387,14 @@ public partial class MainWindowViewModel : ObservableObject
 
     [RelayCommand]
     private void OpenInstall() => OpenInstallSearch?.Invoke();
+
+    [RelayCommand]
+    private void OpenCleanup()
+    {
+        // Snapshot kopieren - die Analyse soll auf dem aktuellen Stand laufen,
+        // auch wenn die Hauptliste danach refreshed wird.
+        OpenCleanupAnalysis?.Invoke(_all.ToList());
+    }
 
     [RelayCommand]
     private async Task OpenAiSettingsAsync()

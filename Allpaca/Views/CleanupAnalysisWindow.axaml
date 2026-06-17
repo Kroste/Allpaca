@@ -1,0 +1,56 @@
+<chrome:ChromeWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:chrome="clr-namespace:Allpaca.Chrome"
+        xmlns:vm="clr-namespace:Allpaca.ViewModels"
+        x:Class="Allpaca.Views.CleanupAnalysisWindow"
+        x:DataType="vm:CleanupAnalysisViewModel"
+        Title="KI-Aufräum-Analyse"
+        Width="780" Height="600"
+        MinWidth="540" MinHeight="380"
+        WindowStartupLocation="CenterOwner"
+        Background="#1B1D21">
+
+    <Grid RowDefinitions="40,Auto,*,Auto">
+
+        <!-- Titelleiste -->
+        <Grid Grid.Row="0" Background="#15171A" ColumnDefinitions="*,Auto"
+              PointerPressed="OnTitleBarPointerPressed">
+            <TextBlock Grid.Column="0" Text="{Binding Title}" Foreground="#EDEFF2"
+                       FontWeight="SemiBold" VerticalAlignment="Center" Margin="14,0"/>
+            <Button Grid.Column="1" Classes="chrome close" Content="✕" Click="OnCloseClick"/>
+        </Grid>
+
+        <!-- Statusleiste -->
+        <Border Grid.Row="1" Background="#202329" Padding="14,8" Margin="10,10,10,0"
+                CornerRadius="8">
+            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                <Border Width="10" Height="10" CornerRadius="5">
+                    <Border.Background>
+                        <SolidColorBrush Color="{Binding StatusBrushColor}"/>
+                    </Border.Background>
+                </Border>
+                <TextBlock Text="{Binding StatusText}" Foreground="#EDEFF2"
+                           FontWeight="SemiBold" VerticalAlignment="Center"/>
+                <ProgressBar IsIndeterminate="True" Height="3" Width="100"
+                             Foreground="#2BB673" VerticalAlignment="Center" Margin="6,0,0,0"
+                             IsVisible="{Binding IsAnalyzing}"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Inhalt -->
+        <Border Grid.Row="2" Background="#15171A" Margin="10,10,10,0"
+                CornerRadius="8" ClipToBounds="True">
+            <ScrollViewer Padding="14" VerticalScrollBarVisibility="Auto">
+                <TextBlock Text="{Binding AnalysisText}" Foreground="#C7CCD2"
+                           FontSize="13" TextWrapping="Wrap" FontFamily="monospace"/>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Footer -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right"
+                    Spacing="8" Margin="10,12,10,12">
+            <Button Content="Nochmal analysieren" Command="{Binding AnalyzeCommand}"/>
+            <Button Classes="accent" Content="Schließen" Command="{Binding CloseCommand}"/>
+        </StackPanel>
+    </Grid>
+</chrome:ChromeWindow>
