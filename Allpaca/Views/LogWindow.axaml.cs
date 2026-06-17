@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Linq;
 using Allpaca.Chrome;
 using Allpaca.Models;
+using Allpaca.Services.Ai;
 using Allpaca.Services.Sources;
 using Allpaca.ViewModels;
 using Avalonia.Controls;
@@ -22,6 +24,10 @@ public partial class LogWindow : ChromeWindow
     /// LogWindow auf "Tap vertrauen"-Klicks reagieren kann.</summary>
     public Func<string, CancellationToken, IAsyncEnumerable<ProgressLine>>? TrustTapHandler { get; set; }
 
+    /// <summary>Wird vom Aufrufer gesetzt: bekommt System+User-Prompt und liefert die
+    /// KI-Antwort zurueck. Wird beim Klick auf "Analysieren" im Failed-Banner aufgerufen.</summary>
+    public Func<string, string, CancellationToken, Task<string>>? DiagnoseHandler { get; set; }
+
     public LogWindow()
     {
         InitializeComponent();
@@ -32,6 +38,7 @@ public partial class LogWindow : ChromeWindow
         };
         _vm.CloseRequested += Close;
         _vm.TrustTapRequested += tap => _ = RunTrustAsync(tap);
+        _vm.DiagnoseRequested += () => _ = HandleDiagnoseAsync();
     }
 
     /// <summary>
@@ -47,8 +54,45 @@ public partial class LogWindow : ChromeWindow
         _vm.RequiresReboot = context.RequiresReboot;
         _vm.Lines.Clear();
         _vm.UntrustedTapName = null;
+        _vm.AiDiagnosis = null;
+        _vm.AiDiagnosisError = null;
 
         await RunStreamAsync(work, context.Title);
+    }
+
+    private async Task HandleDiagnoseAsync()
+    {
+        _vm.AiDiagnosisError = null;
+
+        if (DiagnoseHandler is null)
+        {
+            _vm.AiDiagnosisError = "KI nicht eingehängt – Allpaca-Bug, bitte melden.";
+            return;
+        }
+
+        _vm.IsAiDiagnosing = true;
+        try
+        {
+            var userPrompt = DiagnosisPromptBuilder.BuildUserPrompt(
+                _vm.Title, _vm.ExitCode, _vm.Lines.ToList());
+
+            var diagnosis = await DiagnoseHandler(
+                DiagnosisPromptBuilder.SystemPrompt, userPrompt, _cts.Token);
+
+            _vm.AiDiagnosis = diagnosis?.Trim();
+            if (string.IsNullOrWhiteSpace(_vm.AiDiagnosis))
+                _vm.AiDiagnosisError = "Leere Antwort vom Provider erhalten.";
+        }
+        catch (OperationCanceledException)
+        {
+            _vm.AiDiagnosisError = "Analyse abgebrochen.";
+        }
+        catch (Exception ex)
+        {
+            _vm.AiDiagnosisError = $"Fehler: {ex.Message}";
+            Log.Warn(ex, "AI-Diagnose fehlgeschlagen");
+        }
+        finally { _vm.IsAiDiagnosing = false; }
     }
 
     /// <summary>

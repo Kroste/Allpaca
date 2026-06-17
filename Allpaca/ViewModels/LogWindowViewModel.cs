@@ -18,9 +18,11 @@ public partial class LogWindowViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(StatusBrush))]
     [NotifyPropertyChangedFor(nameof(ShowRebootHint))]
     [NotifyPropertyChangedFor(nameof(ShowUntrustedTapHint))]
+    [NotifyPropertyChangedFor(nameof(ShowAiDiagnoseSection))]
     [NotifyCanExecuteChangedFor(nameof(CancelCommand))]
     [NotifyCanExecuteChangedFor(nameof(CloseCommand))]
     [NotifyCanExecuteChangedFor(nameof(TrustTapCommand))]
+    [NotifyCanExecuteChangedFor(nameof(DiagnoseAiCommand))]
     private OperationState _state = OperationState.Running;
 
     [ObservableProperty]
@@ -48,6 +50,37 @@ public partial class LogWindowViewModel : ObservableObject
     /// die Operation gescheitert ist (nicht waehrend des Laufs).</summary>
     public bool ShowUntrustedTapHint =>
         !string.IsNullOrEmpty(UntrustedTapName) && State == OperationState.Failed;
+
+    // --- KI-Fehlerdiagnose ---
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasAiDiagnosis))]
+    [NotifyPropertyChangedFor(nameof(AiDiagnoseButtonLabel))]
+    [NotifyCanExecuteChangedFor(nameof(DiagnoseAiCommand))]
+    private string? _aiDiagnosis;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(DiagnoseAiCommand))]
+    [NotifyPropertyChangedFor(nameof(AiDiagnoseButtonLabel))]
+    private bool _isAiDiagnosing;
+
+    [ObservableProperty] private string? _aiDiagnosisError;
+
+    public bool HasAiDiagnosis => !string.IsNullOrEmpty(AiDiagnosis);
+
+    /// <summary>Diagnose-Sektion ist nur sichtbar, wenn die Operation gescheitert ist.
+    /// Cancelled/Succeeded blenden sie aus, damit das Fenster ruhig bleibt.</summary>
+    public bool ShowAiDiagnoseSection => State == OperationState.Failed;
+
+    public string AiDiagnoseButtonLabel => IsAiDiagnosing
+        ? "Analysiere …"
+        : HasAiDiagnosis
+            ? "Nochmal analysieren"
+            : "Analysieren";
+
+    /// <summary>Wird vom Code-Behind gesetzt: ruft den KI-Provider mit Title + ExitCode +
+    /// Log-Tail und liefert die Diagnose-Antwort.</summary>
+    public event Action? DiagnoseRequested;
 
     public string StatusText => State switch
     {
@@ -94,6 +127,12 @@ public partial class LogWindowViewModel : ObservableObject
             TrustTapRequested?.Invoke(tap);
     }
     private bool CanTrustTap() => ShowUntrustedTapHint;
+
+    [RelayCommand(CanExecute = nameof(CanDiagnoseAi))]
+    private void DiagnoseAi() => DiagnoseRequested?.Invoke();
+
+    private bool CanDiagnoseAi() =>
+        State == OperationState.Failed && !IsAiDiagnosing;
 }
 
 public enum OperationState

@@ -45,8 +45,29 @@ public partial class MainWindow : ChromeWindow
     {
         var win = new LogWindow();
         win.TrustTapHandler = TrustHomebrewTapAsync;
+        win.DiagnoseHandler = DiagnoseWithAiAsync;
         win.Show(this);
         await win.RunAsync(ctx, work);
+    }
+
+    /// <summary>Bridge ins KI-Subsystem - LogWindow ruft das auf, wenn der User auf
+    /// "Analysieren" im Fehler-Banner klickt. Liest CurrentAi vom MainWindow-VM,
+    /// baut den Assistant ueber die Factory und schickt das Prompt-Paar durch.</summary>
+    private async System.Threading.Tasks.Task<string> DiagnoseWithAiAsync(
+        string systemPrompt, string userPrompt, System.Threading.CancellationToken ct)
+    {
+        if (DataContext is not MainWindowViewModel vm)
+            throw new InvalidOperationException("MainWindow ohne ViewModel - sollte nicht passieren.");
+
+        var assistant = Allpaca.Services.Ai.AiAssistantFactory.Create(vm.CurrentAi);
+        if (!assistant.IsConfigured)
+            throw new InvalidOperationException(
+                "KI ist noch nicht konfiguriert. Öffne die Einstellungen (⚙) und wähle Provider + Modell.");
+
+        // Hartes Timeout fuer die Diagnose - Ollama mit grossen Modellen kann zaeh sein.
+        using var linked = System.Threading.CancellationTokenSource.CreateLinkedTokenSource(ct);
+        linked.CancelAfter(TimeSpan.FromSeconds(120));
+        return await assistant.CompleteAsync(systemPrompt, userPrompt, linked.Token);
     }
 
     /// <summary>Bridge ins HomebrewSource, damit das LogWindow auf "Tap vertrauen"-Klicks

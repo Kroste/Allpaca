@@ -3,6 +3,7 @@
         xmlns:chrome="clr-namespace:Allpaca.Chrome"
         xmlns:vm="clr-namespace:Allpaca.ViewModels"
         xmlns:m="clr-namespace:Allpaca.Models"
+        xmlns:conv="clr-namespace:Avalonia.Data.Converters;assembly=Avalonia.Base"
         x:Class="Allpaca.Views.LogWindow"
         x:DataType="vm:LogWindowViewModel"
         Title="Operation"
@@ -11,7 +12,7 @@
         WindowStartupLocation="CenterOwner"
         Background="#1B1D21">
 
-    <Grid RowDefinitions="40,Auto,*,Auto,Auto,Auto">
+    <Grid RowDefinitions="40,Auto,*,Auto,Auto,Auto,Auto">
 
         <!-- Titelleiste -->
         <Grid Grid.Row="0" Background="#15171A" ColumnDefinitions="*,Auto"
@@ -80,8 +81,32 @@
             </Grid>
         </Border>
 
+        <!-- KI-Fehlerdiagnose: nur sichtbar bei State=Failed -->
+        <Border Grid.Row="5" Background="#202329" CornerRadius="8"
+                Padding="14,10" Margin="10,10,10,0"
+                IsVisible="{Binding ShowAiDiagnoseSection}">
+            <StackPanel Spacing="8">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <TextBlock Text="🤖" FontSize="16" VerticalAlignment="Center"/>
+                    <TextBlock Text="KI-Diagnose" Foreground="#EDEFF2"
+                               FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <Button Content="{Binding AiDiagnoseButtonLabel}"
+                            Command="{Binding DiagnoseAiCommand}"/>
+                    <ProgressBar IsIndeterminate="True" Height="3" Width="80"
+                                 Foreground="#2BB673" VerticalAlignment="Center"
+                                 IsVisible="{Binding IsAiDiagnosing}"/>
+                </StackPanel>
+                <TextBlock Text="{Binding AiDiagnosis}" Foreground="#C7CCD2"
+                           FontSize="13" TextWrapping="Wrap"
+                           IsVisible="{Binding HasAiDiagnosis}"/>
+                <TextBlock Text="{Binding AiDiagnosisError}" Foreground="#E25555"
+                           FontSize="12" TextWrapping="Wrap"
+                           IsVisible="{Binding AiDiagnosisError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
+            </StackPanel>
+        </Border>
+
         <!-- Footer -->
-        <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right"
+        <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Right"
                     Spacing="8" Margin="10,12,10,12">
             <Button Classes="danger" Content="Abbrechen"
                     Command="{Binding CancelCommand}"/>
