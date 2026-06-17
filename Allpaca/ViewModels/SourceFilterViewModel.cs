@@ -15,6 +15,14 @@ public partial class SourceFilterViewModel : ObservableObject
     [ObservableProperty] private bool _isAvailable = true;
     [ObservableProperty] private string? _status;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasUpdates))]
+    private int _updateCount;
+
+    /// <summary>True, sobald in dieser Quelle mindestens ein Eintrag ein verfuegbares
+    /// Update hat - treibt das gruene "↑ N"-Badge im Sidebar-Item.</summary>
+    public bool HasUpdates => UpdateCount > 0;
+
     public SourceFilterViewModel(PackageSourceKind kind, string label, string color)
     {
         Kind = kind;

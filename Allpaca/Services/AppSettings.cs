@@ -11,6 +11,9 @@ public sealed class AppSettings
     public bool SortDescending { get; set; }
     public bool ShowRuntimes { get; set; }
 
+    /// <summary>"Nur aktualisierbare anzeigen"-Toggle aus der OPTIONEN-Sektion.</summary>
+    public bool ShowUpdatesOnly { get; set; }
+
     /// <summary>Pro Quelle (Kind als String): true = im Filter aktiv (Default).</summary>
     public Dictionary<string, bool> SourceFilters { get; set; } = new();
 

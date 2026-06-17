@@ -166,6 +166,8 @@ public partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty] private bool _showRuntimes;
 
+    [ObservableProperty] private bool _showUpdatesOnly;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasOsUpdate))]
     [NotifyCanExecuteChangedFor(nameof(ApplyOsUpdateCommand))]
@@ -242,6 +244,7 @@ public partial class MainWindowViewModel : ObservableObject
     private void ApplySettings(AppSettings s)
     {
         ShowRuntimes = s.ShowRuntimes;
+        ShowUpdatesOnly = s.ShowUpdatesOnly;
         SortDescending = s.SortDescending;
 
         if (Enum.TryParse<SortKey>(s.SortKey, ignoreCase: true, out var key))
@@ -279,6 +282,7 @@ public partial class MainWindowViewModel : ObservableObject
             SortKey = SelectedSortOption?.Key.ToString() ?? nameof(SortKey.Name),
             SortDescending = SortDescending,
             ShowRuntimes = ShowRuntimes,
+            ShowUpdatesOnly = ShowUpdatesOnly,
             SourceFilters = Filters.ToDictionary(f => f.Kind.ToString(), f => f.IsSelected),
             AiProvider = CurrentAi.Provider.ToString(),
             AiEndpoint = CurrentAi.Endpoint,
@@ -291,6 +295,7 @@ public partial class MainWindowViewModel : ObservableObject
     partial void OnSelectedSortOptionChanged(SortOption value) { ApplyFilter(); SaveSettings(); }
     partial void OnSortDescendingChanged(bool value) { ApplyFilter(); SaveSettings(); }
     partial void OnShowRuntimesChanged(bool value) { ApplyFilter(); SaveSettings(); }
+    partial void OnShowUpdatesOnlyChanged(bool value) { ApplyFilter(); SaveSettings(); }
 
     [RelayCommand]
     private void ToggleSortDirection() => SortDescending = !SortDescending;
@@ -658,6 +663,11 @@ public partial class MainWindowViewModel : ObservableObject
             var updateCount = _all.Count(p => p.HasUpdate);
             Log.Info("Update-Check fertig: {0} Updates verfuegbar", updateCount);
 
+            // Per-Source-Counter nachziehen, damit das gruene "↑ N"-Badge in der
+            // Sidebar passt.
+            foreach (var f in Filters)
+                f.UpdateCount = _all.Count(p => p.Model.Source == f.Kind && p.HasUpdate);
+
             // ApplyFilter rebuildet die Packages-Collection, dadurch wird die UI
             // neu gerendert und die HasUpdate-Badges erscheinen.
             ApplyFilter();
@@ -710,6 +720,9 @@ public partial class MainWindowViewModel : ObservableObject
 
         if (!ShowRuntimes)
             view = view.Where(p => !p.Model.IsRuntime);
+
+        if (ShowUpdatesOnly)
+            view = view.Where(p => p.HasUpdate);
 
         if (q.Length > 0)
             view = view.Where(p =>
