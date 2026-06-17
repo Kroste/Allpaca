@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using Allpaca.Models;
 using Allpaca.Services;
+using Allpaca.Services.Ai;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NLog;
@@ -54,6 +55,10 @@ public partial class SearchWindowViewModel : ObservableObject
     /// <summary>Callback nach erfolgreicher Installation - die MainWindow nutzt das,
     /// um seine Liste zu refreshen.</summary>
     public Action? AfterInstall { get; set; }
+
+    /// <summary>Wird von der View beim Start gesetzt: System+User-Prompt -> KI-Antwort.
+    /// Wird ausschliesslich von SuggestWithAiAsync benutzt.</summary>
+    public Func<string, string, CancellationToken, Task<string>>? AiCompletion { get; set; }
 
     public SearchWindowViewModel(IReadOnlyDictionary<PackageSourceKind, IPackageSource> sources)
     {
@@ -130,6 +135,53 @@ public partial class SearchWindowViewModel : ObservableObject
             Log.Warn(ex, "SearchAsync '{0}' fuer Quelle {1}", query, src.DisplayName);
             return Array.Empty<PackageInfo>();
         }
+    }
+
+    [RelayCommand]
+    private async Task SuggestWithAiAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Query)) return;
+        if (AiCompletion is null)
+        {
+            ErrorText = "KI noch nicht eingehängt – Allpaca-Bug.";
+            return;
+        }
+
+        _searchCts?.Cancel();
+        _searchCts?.Dispose();
+        _searchCts = new CancellationTokenSource();
+        var ct = _searchCts.Token;
+
+        Results.Clear();
+        ResultCount = 0;
+        ErrorText = null;
+        IsSearching = true;
+
+        try
+        {
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            linked.CancelAfter(TimeSpan.FromSeconds(60));
+            var answer = await AiCompletion(
+                AiSuggestionPromptBuilder.SystemPrompt,
+                AiSuggestionPromptBuilder.BuildUserPrompt(Query),
+                linked.Token);
+
+            var suggestions = AiSuggestionParser.Parse(answer);
+
+            foreach (var p in suggestions) Results.Add(p);
+            ResultCount = suggestions.Count;
+            Log.Info("KI-Suche '{0}': {1} Vorschläge", Query, suggestions.Count);
+
+            if (suggestions.Count == 0)
+                ErrorText = "Die KI hat keinen verwertbaren Vorschlag im erwarteten Format geliefert.";
+        }
+        catch (OperationCanceledException) { /* abgebrochen */ }
+        catch (Exception ex)
+        {
+            ErrorText = $"KI-Fehler: {ex.Message}";
+            Log.Warn(ex, "KI-Suche fehlgeschlagen");
+        }
+        finally { IsSearching = false; }
     }
 
     [RelayCommand(CanExecute = nameof(CanInstall))]

@@ -123,6 +123,7 @@ public partial class MainWindow : ChromeWindow
         {
             RunOperation = RunOperationAsync,
             ConfirmAsync = req => ConfirmWindow.AskAsync(this, req),
+            AiCompletion = DiagnoseWithAiAsync,
             AfterInstall = () =>
             {
                 // Liste nach Install refreshen, damit der neue Eintrag sichtbar wird.

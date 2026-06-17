@@ -22,12 +22,15 @@
         </Grid>
 
         <!-- Suchleiste -->
-        <Grid Grid.Row="1" Margin="14,12" ColumnDefinitions="*,Auto">
+        <Grid Grid.Row="1" Margin="14,12" ColumnDefinitions="*,Auto,Auto">
             <TextBox Grid.Column="0" Text="{Binding Query}"
                      PlaceholderText="Was möchtest du installieren?"
                      KeyDown="OnQueryKeyDown"/>
             <Button Grid.Column="1" Classes="accent" Content="Suchen"
                     Command="{Binding SearchCommand}" Margin="10,0,0,0"/>
+            <Button Grid.Column="2" Content="🤖 Mit KI"
+                    Command="{Binding SuggestWithAiCommand}" Margin="8,0,0,0"
+                    ToolTip.Tip="Frag die KI nach passenden Paketen für den Suchbegriff"/>
         </Grid>
 
         <!-- Quellen-Filter -->
