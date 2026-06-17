@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using Allpaca.Services.Ai;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -9,20 +10,33 @@ public partial class SettingsWindowViewModel : ObservableObject
 {
     private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
+    private readonly OllamaModelService _ollamaModels;
+
     public IReadOnlyList<AiProvider> Providers { get; } = new[]
     {
         AiProvider.Ollama, AiProvider.OpenAi, AiProvider.Anthropic, AiProvider.Gemini,
     };
 
+    /// <summary>Lokal installierte Ollama-Modelle, via /api/tags geladen. Leer fuer
+    /// andere Provider.</summary>
+    public ObservableCollection<string> LocalOllamaModels { get; } = new();
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(EndpointPlaceholder))]
     [NotifyPropertyChangedFor(nameof(ModelPlaceholder))]
     [NotifyPropertyChangedFor(nameof(NeedsApiKey))]
+    [NotifyPropertyChangedFor(nameof(IsOllama))]
+    [NotifyCanExecuteChangedFor(nameof(LoadLocalModelsCommand))]
     private AiProvider _selectedProvider;
 
     [ObservableProperty] private string _endpointText = "";
     [ObservableProperty] private string _modelText = "";
     [ObservableProperty] private string _apiKeyText = "";
+
+    [ObservableProperty] private string _modelsStatus = "";
+
+    /// <summary>Bei Klick auf einen Eintrag in der Modell-Liste landet er als ModelText.</summary>
+    [ObservableProperty] private string? _selectedLocalModel;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(TestBrush))]
@@ -36,6 +50,7 @@ public partial class SettingsWindowViewModel : ObservableObject
     public string EndpointPlaceholder => $"Default: {AiDefaults.Endpoint(SelectedProvider)}";
     public string ModelPlaceholder => $"Default: {AiDefaults.Model(SelectedProvider)}";
     public bool NeedsApiKey => SelectedProvider != AiProvider.Ollama;
+    public bool IsOllama => SelectedProvider == AiProvider.Ollama;
 
     /// <summary>Grün = OK, rot = Fehler, sonst Default-Grau.</summary>
     public string TestBrush => TestStatus.StartsWith("✓") ? "#2BB673"
@@ -50,12 +65,22 @@ public partial class SettingsWindowViewModel : ObservableObject
     public event Action? CloseRequested;
 
     public SettingsWindowViewModel(AiSettings current)
+        : this(current, new OllamaModelService()) { }
+
+    public SettingsWindowViewModel(AiSettings current, OllamaModelService ollamaModels)
     {
         // Initial-Belegung aus aktuellen Settings - leere Strings statt null fuer TextBox-Bindings.
         _selectedProvider = current.Provider;
         _endpointText = current.Endpoint ?? "";
         _modelText = current.Model ?? "";
         _apiKeyText = current.ApiKey ?? "";
+        _ollamaModels = ollamaModels;
+    }
+
+    partial void OnSelectedLocalModelChanged(string? value)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+            ModelText = value;
     }
 
     private AiSettings BuildSettings() => new()
@@ -112,6 +137,34 @@ public partial class SettingsWindowViewModel : ObservableObject
 
     [RelayCommand]
     private void Cancel() => CloseRequested?.Invoke();
+
+    [RelayCommand(CanExecute = nameof(CanLoadModels))]
+    private async Task LoadLocalModelsAsync()
+    {
+        IsBusy = true;
+        ModelsStatus = "Lade …";
+        LocalOllamaModels.Clear();
+        try
+        {
+            var endpoint = string.IsNullOrWhiteSpace(EndpointText)
+                ? AiDefaults.Endpoint(AiProvider.Ollama)
+                : EndpointText.Trim();
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+            var names = await _ollamaModels.ListLocalAsync(endpoint, cts.Token);
+            foreach (var n in names) LocalOllamaModels.Add(n);
+            ModelsStatus = names.Count == 0
+                ? "Keine Modelle gefunden. „ollama pull“ läuft im Terminal."
+                : $"{names.Count} Modelle gefunden – Eintrag klicken übernimmt ihn.";
+        }
+        catch (Exception ex)
+        {
+            ModelsStatus = $"Fehler: {ex.Message}";
+            Log.Warn(ex, "Ollama /api/tags");
+        }
+        finally { IsBusy = false; }
+    }
+
+    private bool CanLoadModels() => !IsBusy && IsOllama;
 
     private bool CanRun() => !IsBusy;
 

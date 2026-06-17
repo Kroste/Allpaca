@@ -43,6 +43,22 @@
                 <TextBox Text="{Binding ModelText}"
                          PlaceholderText="{Binding ModelPlaceholder}"/>
 
+                <!-- Ollama: lokale Modelle dynamisch listen, Eintrag klicken übernimmt ihn -->
+                <StackPanel Spacing="6" IsVisible="{Binding IsOllama}">
+                    <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                        <Button Content="Lokale Modelle laden"
+                                Command="{Binding LoadLocalModelsCommand}"/>
+                        <TextBlock Text="{Binding ModelsStatus}" Foreground="#9AA0A8"
+                                   FontSize="11" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                    </StackPanel>
+                    <Border Background="#15171A" CornerRadius="6">
+                        <ListBox ItemsSource="{Binding LocalOllamaModels}"
+                                 SelectedItem="{Binding SelectedLocalModel}"
+                                 Background="Transparent" BorderThickness="0"
+                                 MaxHeight="140" Padding="4"/>
+                    </Border>
+                </StackPanel>
+
                 <StackPanel Spacing="6" IsVisible="{Binding NeedsApiKey}">
                     <TextBlock Text="API-Key (nur in dieser Sitzung gespeichert)"
                                Foreground="#6E747C" FontSize="11"/>
