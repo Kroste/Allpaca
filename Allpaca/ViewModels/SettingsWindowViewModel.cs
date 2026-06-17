@@ -21,6 +21,8 @@ public partial class SettingsWindowViewModel : ObservableObject
     /// andere Provider.</summary>
     public ObservableCollection<string> LocalOllamaModels { get; } = new();
 
+    public IReadOnlyList<OllamaCuratedModel> CuratedOllamaModels { get; } = OllamaCuratedModels.All;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(EndpointPlaceholder))]
     [NotifyPropertyChangedFor(nameof(ModelPlaceholder))]
@@ -37,6 +39,10 @@ public partial class SettingsWindowViewModel : ObservableObject
 
     /// <summary>Bei Klick auf einen Eintrag in der Modell-Liste landet er als ModelText.</summary>
     [ObservableProperty] private string? _selectedLocalModel;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(PullCuratedCommand))]
+    private OllamaCuratedModel? _selectedCuratedModel;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(TestBrush))]
@@ -63,6 +69,10 @@ public partial class SettingsWindowViewModel : ObservableObject
 
     /// <summary>Wird vom Code-Behind als Fenster-zu-Lebenszyklus genutzt.</summary>
     public event Action? CloseRequested;
+
+    /// <summary>Wird vom Code-Behind gesetzt: oeffnet ein OllamaPullWindow fuer das
+    /// uebergebene Modell und liefert true zurueck, wenn der Pull erfolgreich war.</summary>
+    public Func<string, Task<bool>>? PullModelAsync { get; set; }
 
     public SettingsWindowViewModel(AiSettings current)
         : this(current, new OllamaModelService()) { }
@@ -165,6 +175,23 @@ public partial class SettingsWindowViewModel : ObservableObject
     }
 
     private bool CanLoadModels() => !IsBusy && IsOllama;
+
+    [RelayCommand(CanExecute = nameof(CanPullCurated))]
+    private async Task PullCuratedAsync()
+    {
+        if (PullModelAsync is null || SelectedCuratedModel is null) return;
+
+        var ok = await PullModelAsync(SelectedCuratedModel.Name);
+        if (ok)
+        {
+            // Erfolgreich gezogen -> Modell direkt als aktives Modell uebernehmen
+            // und die lokale Liste neu laden, damit das neue Modell auftaucht.
+            ModelText = SelectedCuratedModel.Name;
+            await LoadLocalModelsAsync();
+        }
+    }
+
+    private bool CanPullCurated() => IsOllama && SelectedCuratedModel is not null;
 
     private bool CanRun() => !IsBusy;
 

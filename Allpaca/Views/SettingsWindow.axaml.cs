@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Allpaca.Chrome;
 using Allpaca.Services.Ai;
 using Allpaca.ViewModels;
@@ -8,6 +9,7 @@ namespace Allpaca.Views;
 public partial class SettingsWindow : ChromeWindow
 {
     private readonly SettingsWindowViewModel _vm;
+    private readonly OllamaModelService _ollama = new();
 
     public SettingsWindow(SettingsWindowViewModel viewModel)
     {
@@ -15,10 +17,27 @@ public partial class SettingsWindow : ChromeWindow
         _vm = viewModel;
         DataContext = _vm;
         _vm.CloseRequested += Close;
+        _vm.PullModelAsync = PullAsync;
     }
 
     // Parameterloser ctor nur fuer den XAML-Loader (Preview), default-Settings.
     public SettingsWindow() : this(new SettingsWindowViewModel(new AiSettings()))
     {
+    }
+
+    private async Task<bool> PullAsync(string model)
+    {
+        var endpoint = string.IsNullOrWhiteSpace(_vm.EndpointText)
+            ? AiDefaults.Endpoint(AiProvider.Ollama)
+            : _vm.EndpointText.Trim();
+
+        var win = new OllamaPullWindow();
+        win.Show(this);
+        await win.PullAsync(_ollama, endpoint, model);
+
+        // win.DataContext ist die OllamaPullViewModel - State pruefen.
+        if (win.DataContext is OllamaPullViewModel pvm)
+            return pvm.State == OperationState.Succeeded;
+        return false;
     }
 }
