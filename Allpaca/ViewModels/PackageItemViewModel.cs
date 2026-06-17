@@ -1,13 +1,37 @@
 using Allpaca.Models;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
+using NLog;
 
 namespace Allpaca.ViewModels;
 
 public sealed class PackageItemViewModel
 {
+    private static readonly Logger Log = LogManager.GetCurrentClassLogger();
+
     public PackageInfo Model { get; }
 
     public PackageItemViewModel(PackageInfo model) => Model = model;
+
+    private Bitmap? _icon;
+    private bool _iconLoaded;
+
+    /// <summary>Per-App-Icon (Flatpak hicolor, AppImage .desktop Icon=). Lazy beim
+    /// ersten Zugriff geladen, schlaegt fehl still und liefert null - dann blendet
+    /// die UI die Image-Spalte einfach leer.</summary>
+    public Bitmap? Icon
+    {
+        get
+        {
+            if (_iconLoaded) return _icon;
+            _iconLoaded = true;
+
+            if (string.IsNullOrEmpty(Model.IconPath)) return null;
+            try { _icon = new Bitmap(Model.IconPath); }
+            catch (Exception ex) { Log.Debug(ex, "Icon-Load fehlgeschlagen: {0}", Model.IconPath); }
+            return _icon;
+        }
+    }
 
     public string Name => Model.Name;
     public string Id => Model.Id;

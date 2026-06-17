@@ -30,6 +30,10 @@ public sealed record PackageInfo
     /// <summary>Flatpak-Runtime statt App.</summary>
     public bool IsRuntime { get; init; }
 
+    /// <summary>Absoluter Dateipfad zu einem PNG-Icon (oder null, wenn die Quelle
+    /// keins liefert). Wird vom PackageItemViewModel lazy in Bitmap konvertiert.</summary>
+    public string? IconPath { get; init; }
+
     /// <summary>Quellspezifische Zusatzfelder.</summary>
     public IReadOnlyDictionary<string, string>? Extra { get; init; }
 }

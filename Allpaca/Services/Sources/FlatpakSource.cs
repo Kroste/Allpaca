@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using Allpaca.Models;
+using Allpaca.Services;
 using NLog;
 
 namespace Allpaca.Services.Sources;
@@ -62,6 +63,10 @@ public sealed class FlatpakSource : IPackageSource
                 Scope = p[5].Trim(),                 // user / system
                 SizeBytes = ParseSize(p[6].Trim()),
                 IsRuntime = asRuntime,
+                // Flatpak exportiert seine App-Icons in hicolor unter dem App-ID-
+                // Schluessel. Runtimes haben keine Icons, deshalb spaaren wir uns die
+                // Disk-Suche dafuer.
+                IconPath = asRuntime ? null : IconLookup.FindPng(id),
                 Extra = new Dictionary<string, string> { ["branch"] = p[3].Trim() },
             });
         }

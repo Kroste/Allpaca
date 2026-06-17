@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using Allpaca.Models;
+using Allpaca.Services;
 using NLog;
 
 namespace Allpaca.Services.Sources;
@@ -43,7 +44,7 @@ public sealed class AppImageSource : IPackageSource
             {
                 try
                 {
-                    var (name, exec, comment) = ParseDesktop(file);
+                    var (name, exec, comment, icon) = ParseDesktop(file);
                     if (exec is null || !exec.Contains(".appimage", StringComparison.OrdinalIgnoreCase))
                         continue;
 
@@ -58,6 +59,7 @@ public sealed class AppImageSource : IPackageSource
                         Origin = path,
                         Scope = "integriert",
                         SizeBytes = SafeSize(path),
+                        IconPath = ResolveIcon(icon),
                     };
                 }
                 catch (Exception ex)
@@ -104,17 +106,29 @@ public sealed class AppImageSource : IPackageSource
         catch { return null; }
     }
 
-    private static (string? name, string? exec, string? comment) ParseDesktop(string file)
+    private static (string? name, string? exec, string? comment, string? icon) ParseDesktop(string file)
     {
-        string? name = null, exec = null, comment = null;
+        string? name = null, exec = null, comment = null, icon = null;
         foreach (var raw in File.ReadLines(file))
         {
             var l = raw.Trim();
             if (name is null && l.StartsWith("Name=", StringComparison.Ordinal)) name = l[5..];
             else if (exec is null && l.StartsWith("Exec=", StringComparison.Ordinal)) exec = l[5..];
             else if (comment is null && l.StartsWith("Comment=", StringComparison.Ordinal)) comment = l[8..];
+            else if (icon is null && l.StartsWith("Icon=", StringComparison.Ordinal)) icon = l[5..];
         }
-        return (name, exec, comment);
+        return (name, exec, comment, icon);
+    }
+
+    /// <summary>Icon= im .desktop kann ein absoluter PNG-Pfad sein oder ein Theme-Name -
+    /// dann via IconLookup in hicolor aufloesen.</summary>
+    internal static string? ResolveIcon(string? iconValue)
+    {
+        if (string.IsNullOrWhiteSpace(iconValue)) return null;
+        var icon = iconValue.Trim();
+        if (icon.Contains('/'))
+            return File.Exists(icon) ? icon : null;
+        return IconLookup.FindPng(icon);
     }
 
     internal static string? ExtractExecPath(string exec)
@@ -178,7 +192,7 @@ public sealed class AppImageSource : IPackageSource
         foreach (var desktop in Directory.EnumerateFiles(apps, "*.desktop"))
         {
             string? exec = null;
-            try { (_, exec, _) = ParseDesktop(desktop); }
+            try { (_, exec, _, _) = ParseDesktop(desktop); }
             catch (Exception ex) { Log.Debug(ex, "Desktop-Parse fehlgeschlagen: {0}", desktop); }
 
             if (ExecMatchesAppImage(exec, appImagePath))
