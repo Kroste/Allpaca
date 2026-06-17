@@ -13,9 +13,6 @@ public partial class MainWindow : ChromeWindow
     public MainWindow()
     {
         InitializeComponent();
-
-        if (this.FindControl<Image>("TitleLogo") is { } logo)
-            logo.Source = AppIcon.Bitmap;
     }
 
     protected override void OnOpened(EventArgs e)

@@ -1,6 +1,7 @@
 <chrome:ChromeWindow xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:chrome="clr-namespace:Allpaca.Chrome"
+        xmlns:services="clr-namespace:Allpaca.Services"
         x:Class="Allpaca.Views.InfoWindow"
         Title="Über Allpaca"
         Width="460" Height="560"
@@ -22,8 +23,8 @@
         <ScrollViewer Grid.Row="1">
             <StackPanel Margin="28,24" Spacing="14" HorizontalAlignment="Center">
 
-                <Image x:Name="LogoImage" Width="96" Height="96"
-                       HorizontalAlignment="Center"/>
+                <Image Width="120" Height="120" HorizontalAlignment="Center"
+                       Source="{x:Static services:AppIcon.Bitmap}"/>
 
                 <TextBlock Text="Allpaca" FontSize="26" FontWeight="Bold" Foreground="#EDEFF2"
                            HorizontalAlignment="Center"/>
