@@ -1,0 +1,78 @@
+<chrome:ChromeWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:chrome="clr-namespace:Allpaca.Chrome"
+        xmlns:vm="clr-namespace:Allpaca.ViewModels"
+        xmlns:ai="clr-namespace:Allpaca.Services.Ai"
+        x:Class="Allpaca.Views.SettingsWindow"
+        x:DataType="vm:SettingsWindowViewModel"
+        Title="Einstellungen"
+        Width="560" Height="540"
+        MinWidth="460" MinHeight="420"
+        WindowStartupLocation="CenterOwner"
+        Background="#1B1D21">
+
+    <Grid RowDefinitions="40,*,Auto">
+
+        <!-- Titelleiste -->
+        <Grid Grid.Row="0" Background="#15171A" ColumnDefinitions="*,Auto"
+              PointerPressed="OnTitleBarPointerPressed">
+            <TextBlock Grid.Column="0" Text="KI-Einstellungen" Foreground="#EDEFF2"
+                       FontWeight="SemiBold" VerticalAlignment="Center" Margin="14,0"/>
+            <Button Grid.Column="1" Classes="chrome close" Content="✕" Click="OnCloseClick"/>
+        </Grid>
+
+        <!-- Inhalt -->
+        <ScrollViewer Grid.Row="1">
+            <StackPanel Margin="22,18" Spacing="14">
+
+                <TextBlock Text="Provider" Foreground="#6E747C" FontSize="11"/>
+                <ComboBox ItemsSource="{Binding Providers}" SelectedItem="{Binding SelectedProvider}"
+                          HorizontalAlignment="Stretch">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="ai:AiProvider">
+                            <TextBlock Text="{Binding}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+
+                <TextBlock Text="Endpoint" Foreground="#6E747C" FontSize="11"/>
+                <TextBox Text="{Binding EndpointText}"
+                         PlaceholderText="{Binding EndpointPlaceholder}"/>
+
+                <TextBlock Text="Modell" Foreground="#6E747C" FontSize="11"/>
+                <TextBox Text="{Binding ModelText}"
+                         PlaceholderText="{Binding ModelPlaceholder}"/>
+
+                <StackPanel Spacing="6" IsVisible="{Binding NeedsApiKey}">
+                    <TextBlock Text="API-Key (nur in dieser Sitzung gespeichert)"
+                               Foreground="#6E747C" FontSize="11"/>
+                    <TextBox Text="{Binding ApiKeyText}" PasswordChar="•"
+                             PlaceholderText="sk-…"/>
+                    <TextBlock Foreground="#6E747C" FontSize="11" TextWrapping="Wrap"
+                               Text="Wird bewusst noch nicht persistiert – sichere Ablage via libsecret folgt. Bis dahin nach jedem App-Start neu eintragen."/>
+                </StackPanel>
+
+                <Border Background="#202329" CornerRadius="8" Padding="12,10" Margin="0,6,0,0">
+                    <StackPanel Spacing="8">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Button Content="Verbindung testen"
+                                    Command="{Binding TestConnectionCommand}"/>
+                            <TextBlock Text="{Binding TestStatus}" VerticalAlignment="Center"
+                                       Foreground="{Binding TestBrush}" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <TextBlock Foreground="#6E747C" FontSize="11" TextWrapping="Wrap"
+                                   Text="„Test“ sendet ein kurzes Prompt an den Provider und erwartet eine Antwort."/>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Footer -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right"
+                    Spacing="8" Margin="14,8,14,14">
+            <Button Content="Abbrechen" Command="{Binding CancelCommand}"/>
+            <Button Classes="accent" Content="Speichern" Command="{Binding SaveCommand}"/>
+        </StackPanel>
+    </Grid>
+</chrome:ChromeWindow>

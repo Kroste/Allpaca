@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using Allpaca.Models;
 using Allpaca.Services;
+using Allpaca.Services.Ai;
 using Allpaca.Services.Sources;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -35,6 +36,14 @@ public partial class MainWindowViewModel : ObservableObject
     /// Install-Flow. Die View baut die SearchWindowViewModel selbst, weil sie zusaetzlich
     /// LogWindow + Confirm-Dialog faedeln muss.</summary>
     public Action? OpenInstallSearch { get; set; }
+
+    /// <summary>Wird von der View gesetzt: oeffnet das KI-Settings-Fenster und kommt
+    /// mit den geaenderten AiSettings zurueck (oder null bei Abbruch).</summary>
+    public Func<AiSettings, Task<AiSettings?>>? OpenSettings { get; set; }
+
+    /// <summary>Aktuelle KI-Konfiguration. Provider/Endpoint/Modell werden persistiert,
+    /// ApiKey lebt absichtlich nur im Speicher (siehe AppSettings-Kommentar).</summary>
+    public AiSettings CurrentAi { get; private set; } = new();
 
     /// <summary>Internal lookup, damit das MainWindow code-behind die SearchWindowViewModel
     /// mit der richtigen Quellen-Map fuettern kann.</summary>
@@ -198,6 +207,17 @@ public partial class MainWindowViewModel : ObservableObject
             if (s.SourceFilters.TryGetValue(f.Kind.ToString(), out var enabled))
                 f.IsSelected = enabled;
         }
+
+        // KI: Enum-Parse mit Fallback auf Ollama (Default), Endpoint/Modell nullbar.
+        var provider = Enum.TryParse<AiProvider>(s.AiProvider, ignoreCase: true, out var p)
+            ? p : AiProvider.Ollama;
+        CurrentAi = new AiSettings
+        {
+            Provider = provider,
+            Endpoint = string.IsNullOrWhiteSpace(s.AiEndpoint) ? null : s.AiEndpoint,
+            Model = string.IsNullOrWhiteSpace(s.AiModel) ? null : s.AiModel,
+            // ApiKey nicht aus Settings - in-memory only.
+        };
     }
 
     private void SaveSettings()
@@ -209,6 +229,9 @@ public partial class MainWindowViewModel : ObservableObject
             SortDescending = SortDescending,
             ShowRuntimes = ShowRuntimes,
             SourceFilters = Filters.ToDictionary(f => f.Kind.ToString(), f => f.IsSelected),
+            AiProvider = CurrentAi.Provider.ToString(),
+            AiEndpoint = CurrentAi.Endpoint,
+            AiModel = CurrentAi.Model,
         });
     }
 
@@ -360,6 +383,19 @@ public partial class MainWindowViewModel : ObservableObject
 
     [RelayCommand]
     private void OpenInstall() => OpenInstallSearch?.Invoke();
+
+    [RelayCommand]
+    private async Task OpenAiSettingsAsync()
+    {
+        if (OpenSettings is null) return;
+        var updated = await OpenSettings(CurrentAi);
+        if (updated is null) return;  // Abbruch
+
+        CurrentAi = updated;
+        SaveSettings();
+        Log.Info("KI-Settings aktualisiert: Provider={0}, Modell={1}",
+            CurrentAi.Provider, CurrentAi.ResolvedModel);
+    }
 
     [RelayCommand(CanExecute = nameof(CanBatchUpdate))]
     private async Task BatchUpdateSelectedAsync()

@@ -31,6 +31,7 @@ public partial class MainWindow : ChromeWindow
                 win.Show(this);
             };
             vm.OpenInstallSearch ??= () => OpenSearchWindow(vm);
+            vm.OpenSettings ??= current => OpenSettingsWindowAsync(current);
 
             if (vm.RefreshCommand.CanExecute(null))
                 vm.RefreshCommand.Execute(null);
@@ -67,6 +68,21 @@ public partial class MainWindow : ChromeWindow
     {
         await System.Threading.Tasks.Task.CompletedTask;
         yield return new Allpaca.Models.ProgressLine("Homebrew nicht verfügbar.", true);
+    }
+
+    private System.Threading.Tasks.Task<Allpaca.Services.Ai.AiSettings?> OpenSettingsWindowAsync(
+        Allpaca.Services.Ai.AiSettings current)
+    {
+        var tcs = new System.Threading.Tasks.TaskCompletionSource<Allpaca.Services.Ai.AiSettings?>();
+        var settingsVm = new SettingsWindowViewModel(current);
+
+        Allpaca.Services.Ai.AiSettings? result = null;
+        settingsVm.Saved += s => result = s;
+
+        var win = new SettingsWindow(settingsVm);
+        win.Closed += (_, _) => tcs.TrySetResult(result);
+        win.Show(this);
+        return tcs.Task;
     }
 
     private void OpenSearchWindow(MainWindowViewModel vm)

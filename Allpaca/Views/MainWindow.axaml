@@ -59,6 +59,8 @@
                 <Button Content="+ Installieren …" Command="{Binding OpenInstallCommand}"/>
                 <Button Classes="accent" Content="Aktualisieren"
                         Command="{Binding RefreshCommand}"/>
+                <Button Content="⚙" Command="{Binding OpenAiSettingsCommand}"
+                        ToolTip.Tip="KI-Einstellungen"/>
                 <Button Content="ⓘ Info" Click="OnInfoClick"/>
             </StackPanel>
         </Grid>
