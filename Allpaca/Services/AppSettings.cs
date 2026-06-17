@@ -21,4 +21,7 @@ public sealed class AppSettings
     public string AiProvider { get; set; } = "Ollama";
     public string? AiEndpoint { get; set; }
     public string? AiModel { get; set; }
+
+    /// <summary>Auto-Refresh-Intervall in Minuten. 0 = aus (Default).</summary>
+    public int AutoRefreshMinutes { get; set; }
 }

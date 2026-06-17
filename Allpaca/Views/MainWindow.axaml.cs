@@ -143,13 +143,13 @@ public partial class MainWindow : ChromeWindow
         yield return new Allpaca.Models.ProgressLine("Homebrew nicht verfügbar.", true);
     }
 
-    private System.Threading.Tasks.Task<Allpaca.Services.Ai.AiSettings?> OpenSettingsWindowAsync(
-        Allpaca.Services.Ai.AiSettings current)
+    private System.Threading.Tasks.Task<AppPreferences?> OpenSettingsWindowAsync(
+        AppPreferences current)
     {
-        var tcs = new System.Threading.Tasks.TaskCompletionSource<Allpaca.Services.Ai.AiSettings?>();
+        var tcs = new System.Threading.Tasks.TaskCompletionSource<AppPreferences?>();
         var settingsVm = new SettingsWindowViewModel(current);
 
-        Allpaca.Services.Ai.AiSettings? result = null;
+        AppPreferences? result = null;
         settingsVm.Saved += s => result = s;
 
         var win = new SettingsWindow(settingsVm);

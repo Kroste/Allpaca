@@ -23,6 +23,15 @@ public partial class SettingsWindowViewModel : ObservableObject
 
     public IReadOnlyList<OllamaCuratedModel> CuratedOllamaModels { get; } = OllamaCuratedModels.All;
 
+    public IReadOnlyList<AutoRefreshPreset> AutoRefreshPresets { get; } = new[]
+    {
+        new AutoRefreshPreset(0,  "Aus"),
+        new AutoRefreshPreset(5,  "alle 5 Min"),
+        new AutoRefreshPreset(15, "alle 15 Min"),
+        new AutoRefreshPreset(30, "alle 30 Min"),
+        new AutoRefreshPreset(60, "alle 60 Min"),
+    };
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(EndpointPlaceholder))]
     [NotifyPropertyChangedFor(nameof(ModelPlaceholder))]
@@ -43,6 +52,8 @@ public partial class SettingsWindowViewModel : ObservableObject
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(PullCuratedCommand))]
     private OllamaCuratedModel? _selectedCuratedModel;
+
+    [ObservableProperty] private AutoRefreshPreset? _selectedAutoRefresh;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(TestBrush))]
@@ -65,7 +76,7 @@ public partial class SettingsWindowViewModel : ObservableObject
 
     /// <summary>Wird vom Code-Behind beim Klick auf Speichern aufgerufen, damit das
     /// MainWindow die neuen Einstellungen anwendet + persistiert.</summary>
-    public event Action<AiSettings>? Saved;
+    public event Action<AppPreferences>? Saved;
 
     /// <summary>Wird vom Code-Behind als Fenster-zu-Lebenszyklus genutzt.</summary>
     public event Action? CloseRequested;
@@ -74,17 +85,22 @@ public partial class SettingsWindowViewModel : ObservableObject
     /// uebergebene Modell und liefert true zurueck, wenn der Pull erfolgreich war.</summary>
     public Func<string, Task<bool>>? PullModelAsync { get; set; }
 
-    public SettingsWindowViewModel(AiSettings current)
+    public SettingsWindowViewModel(AppPreferences current)
         : this(current, new OllamaModelService()) { }
 
-    public SettingsWindowViewModel(AiSettings current, OllamaModelService ollamaModels)
+    public SettingsWindowViewModel(AppPreferences current, OllamaModelService ollamaModels)
     {
         // Initial-Belegung aus aktuellen Settings - leere Strings statt null fuer TextBox-Bindings.
-        _selectedProvider = current.Provider;
-        _endpointText = current.Endpoint ?? "";
-        _modelText = current.Model ?? "";
-        _apiKeyText = current.ApiKey ?? "";
+        var ai = current.Ai;
+        _selectedProvider = ai.Provider;
+        _endpointText = ai.Endpoint ?? "";
+        _modelText = ai.Model ?? "";
+        _apiKeyText = ai.ApiKey ?? "";
         _ollamaModels = ollamaModels;
+
+        // Auto-Refresh-Preset finden, das zum aktuellen Wert passt; Fallback "Aus".
+        _selectedAutoRefresh = AutoRefreshPresets.FirstOrDefault(p => p.Minutes == current.AutoRefreshMinutes)
+            ?? AutoRefreshPresets[0];
     }
 
     partial void OnSelectedLocalModelChanged(string? value)
@@ -93,13 +109,17 @@ public partial class SettingsWindowViewModel : ObservableObject
             ModelText = value;
     }
 
-    private AiSettings BuildSettings() => new()
+    private AiSettings BuildAiSettings() => new()
     {
         Provider = SelectedProvider,
         Endpoint = string.IsNullOrWhiteSpace(EndpointText) ? null : EndpointText.Trim(),
         Model = string.IsNullOrWhiteSpace(ModelText) ? null : ModelText.Trim(),
         ApiKey = string.IsNullOrWhiteSpace(ApiKeyText) ? null : ApiKeyText,
     };
+
+    private AppPreferences BuildPreferences() => new(
+        Ai: BuildAiSettings(),
+        AutoRefreshMinutes: SelectedAutoRefresh?.Minutes ?? 0);
 
     [RelayCommand(CanExecute = nameof(CanRun))]
     private async Task TestConnectionAsync()
@@ -108,7 +128,7 @@ public partial class SettingsWindowViewModel : ObservableObject
         TestStatus = "Teste …";
         try
         {
-            var settings = BuildSettings();
+            var settings = BuildAiSettings();
             var assistant = AiAssistantFactory.Create(settings);
             if (!assistant.IsConfigured)
             {
@@ -141,7 +161,7 @@ public partial class SettingsWindowViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanRun))]
     private void Save()
     {
-        Saved?.Invoke(BuildSettings());
+        Saved?.Invoke(BuildPreferences());
         CloseRequested?.Invoke();
     }
 

@@ -21,7 +21,7 @@ public partial class SettingsWindow : ChromeWindow
     }
 
     // Parameterloser ctor nur fuer den XAML-Loader (Preview), default-Settings.
-    public SettingsWindow() : this(new SettingsWindowViewModel(new AiSettings()))
+    public SettingsWindow() : this(new SettingsWindowViewModel(new AppPreferences(new AiSettings(), 0)))
     {
     }
 

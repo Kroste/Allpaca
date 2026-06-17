@@ -3,6 +3,7 @@ using Allpaca.Models;
 using Allpaca.Services;
 using Allpaca.Services.Ai;
 using Allpaca.Services.Sources;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NLog;
@@ -43,9 +44,9 @@ public partial class MainWindowViewModel : ObservableObject
     /// LogWindow + Confirm-Dialog faedeln muss.</summary>
     public Action? OpenInstallSearch { get; set; }
 
-    /// <summary>Wird von der View gesetzt: oeffnet das KI-Settings-Fenster und kommt
-    /// mit den geaenderten AiSettings zurueck (oder null bei Abbruch).</summary>
-    public Func<AiSettings, Task<AiSettings?>>? OpenSettings { get; set; }
+    /// <summary>Wird von der View gesetzt: oeffnet das Settings-Fenster und kommt mit
+    /// den geaenderten AppPreferences zurueck (oder null bei Abbruch).</summary>
+    public Func<AppPreferences, Task<AppPreferences?>>? OpenSettings { get; set; }
 
     /// <summary>Wird von der View gesetzt: oeffnet das Aufraeum-Analyse-Fenster mit
     /// einem Snapshot der aktuellen Paketliste.</summary>
@@ -54,6 +55,12 @@ public partial class MainWindowViewModel : ObservableObject
     /// <summary>Aktuelle KI-Konfiguration. Provider/Endpoint/Modell werden persistiert,
     /// ApiKey lebt absichtlich nur im Speicher (siehe AppSettings-Kommentar).</summary>
     public AiSettings CurrentAi { get; private set; } = new();
+
+    /// <summary>Aktuelles Auto-Refresh-Intervall in Minuten (0 = aus). Persistiert in
+    /// settings.json. Treibt den DispatcherTimer in StartAutoRefresh.</summary>
+    public int CurrentAutoRefreshMinutes { get; private set; }
+
+    private DispatcherTimer? _autoRefreshTimer;
 
     /// <summary>Internal lookup, damit das MainWindow code-behind die SearchWindowViewModel
     /// mit der richtigen Quellen-Map fuettern kann.</summary>
@@ -259,6 +266,9 @@ public partial class MainWindowViewModel : ObservableObject
             Model = string.IsNullOrWhiteSpace(s.AiModel) ? null : s.AiModel,
             // ApiKey nicht aus Settings - in-memory only.
         };
+
+        CurrentAutoRefreshMinutes = Math.Max(0, s.AutoRefreshMinutes);
+        ApplyAutoRefresh();
     }
 
     private void SaveSettings()
@@ -273,6 +283,7 @@ public partial class MainWindowViewModel : ObservableObject
             AiProvider = CurrentAi.Provider.ToString(),
             AiEndpoint = CurrentAi.Endpoint,
             AiModel = CurrentAi.Model,
+            AutoRefreshMinutes = CurrentAutoRefreshMinutes,
         });
     }
 
@@ -439,13 +450,39 @@ public partial class MainWindowViewModel : ObservableObject
     private async Task OpenAiSettingsAsync()
     {
         if (OpenSettings is null) return;
-        var updated = await OpenSettings(CurrentAi);
+        var updated = await OpenSettings(new AppPreferences(CurrentAi, CurrentAutoRefreshMinutes));
         if (updated is null) return;  // Abbruch
 
-        CurrentAi = updated;
+        CurrentAi = updated.Ai;
+        if (updated.AutoRefreshMinutes != CurrentAutoRefreshMinutes)
+        {
+            CurrentAutoRefreshMinutes = updated.AutoRefreshMinutes;
+            ApplyAutoRefresh();
+        }
         SaveSettings();
-        Log.Info("KI-Settings aktualisiert: Provider={0}, Modell={1}",
-            CurrentAi.Provider, CurrentAi.ResolvedModel);
+        Log.Info("Settings aktualisiert: Provider={0}, Modell={1}, AutoRefresh={2}min",
+            CurrentAi.Provider, CurrentAi.ResolvedModel, CurrentAutoRefreshMinutes);
+    }
+
+    private void ApplyAutoRefresh()
+    {
+        _autoRefreshTimer?.Stop();
+        _autoRefreshTimer = null;
+
+        if (CurrentAutoRefreshMinutes <= 0) return;
+
+        _autoRefreshTimer = new DispatcherTimer(DispatcherPriority.Background)
+        {
+            Interval = TimeSpan.FromMinutes(CurrentAutoRefreshMinutes),
+        };
+        _autoRefreshTimer.Tick += (_, _) =>
+        {
+            // Nicht parallel starten, wenn schon was laeuft.
+            if (!IsLoading && RefreshCommand.CanExecute(null))
+                RefreshCommand.Execute(null);
+        };
+        _autoRefreshTimer.Start();
+        Log.Info("Auto-Refresh aktiv: alle {0} Minuten", CurrentAutoRefreshMinutes);
     }
 
     [RelayCommand(CanExecute = nameof(CanBatchUpdate))]

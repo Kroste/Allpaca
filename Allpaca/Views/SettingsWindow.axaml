@@ -16,7 +16,7 @@
         <!-- Titelleiste -->
         <Grid Grid.Row="0" Background="#15171A" ColumnDefinitions="*,Auto"
               PointerPressed="OnTitleBarPointerPressed">
-            <TextBlock Grid.Column="0" Text="KI-Einstellungen" Foreground="#EDEFF2"
+            <TextBlock Grid.Column="0" Text="Einstellungen" Foreground="#EDEFF2"
                        FontWeight="SemiBold" VerticalAlignment="Center" Margin="14,0"/>
             <Button Grid.Column="1" Classes="chrome close" Content="✕" Click="OnCloseClick"/>
         </Grid>
@@ -24,6 +24,28 @@
         <!-- Inhalt -->
         <ScrollViewer Grid.Row="1">
             <StackPanel Margin="22,18" Spacing="14">
+
+                <TextBlock Text="AKTUALISIERUNG" Foreground="#6E747C" FontSize="11"
+                           FontWeight="SemiBold"/>
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Liste automatisch aktualisieren" Foreground="#C7CCD2"
+                               FontSize="13"/>
+                    <ComboBox ItemsSource="{Binding AutoRefreshPresets}"
+                              SelectedItem="{Binding SelectedAutoRefresh}"
+                              HorizontalAlignment="Stretch">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:AutoRefreshPreset">
+                                <TextBlock Text="{Binding Label}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <TextBlock Text="Bei aktiviertem Intervall läuft der Refresh im Hintergrund weiter; Toast-Notifications melden neue Updates."
+                               Foreground="#6E747C" FontSize="11" TextWrapping="Wrap"/>
+                </StackPanel>
+
+                <Border Background="#2A2E35" Height="1" Margin="0,4"/>
+
+                <TextBlock Text="KI" Foreground="#6E747C" FontSize="11" FontWeight="SemiBold"/>
 
                 <TextBlock Text="Provider" Foreground="#6E747C" FontSize="11"/>
                 <ComboBox ItemsSource="{Binding Providers}" SelectedItem="{Binding SelectedProvider}"
