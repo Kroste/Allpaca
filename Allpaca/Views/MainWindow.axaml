@@ -36,7 +36,7 @@
         <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="14,12">
             <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="14"
                         VerticalAlignment="Center">
-                <TextBox Text="{Binding SearchText}"
+                <TextBox x:Name="SearchBox" Text="{Binding SearchText}"
                          PlaceholderText="Pakete durchsuchen…"
                          Width="380"/>
                 <TextBlock Text="Sortieren:" Foreground="#9AA0A8" VerticalAlignment="Center"/>

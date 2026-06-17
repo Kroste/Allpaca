@@ -5,6 +5,7 @@ using Allpaca.Chrome;
 using Allpaca.Services;
 using Allpaca.ViewModels;
 using Avalonia.Controls;
+using Avalonia.Input;
 
 namespace Allpaca.Views;
 
@@ -13,6 +14,55 @@ public partial class MainWindow : ChromeWindow
     public MainWindow()
     {
         InitializeComponent();
+    }
+
+    /// <summary>Hauptfenster soll NICHT auf Esc zugehen - sonst killt der User
+    /// versehentlich die ganze App. Subfenster bleiben beim ChromeWindow-Default.</summary>
+    protected override bool CloseOnEscape => false;
+
+    protected override void OnKeyDown(KeyEventArgs e)
+    {
+        // Reihenfolge: Tastenkuerzel zuerst, dann an die Basis fuer Esc-Logik etc.
+        if (!e.Handled && DataContext is MainWindowViewModel vm)
+        {
+            if (e.KeyModifiers == KeyModifiers.Control)
+            {
+                switch (e.Key)
+                {
+                    case Key.R:
+                        if (vm.RefreshCommand.CanExecute(null))
+                            vm.RefreshCommand.Execute(null);
+                        e.Handled = true;
+                        break;
+                    case Key.I:
+                        if (vm.OpenInstallCommand.CanExecute(null))
+                            vm.OpenInstallCommand.Execute(null);
+                        e.Handled = true;
+                        break;
+                    case Key.F:
+                        if (this.FindControl<TextBox>("SearchBox") is { } sb)
+                        {
+                            sb.Focus();
+                            sb.SelectAll();
+                        }
+                        e.Handled = true;
+                        break;
+                    case Key.OemComma:
+                        if (vm.OpenAiSettingsCommand.CanExecute(null))
+                            vm.OpenAiSettingsCommand.Execute(null);
+                        e.Handled = true;
+                        break;
+                }
+            }
+            else if (e.KeyModifiers == KeyModifiers.None && e.Key == Key.F5)
+            {
+                if (vm.RefreshCommand.CanExecute(null))
+                    vm.RefreshCommand.Execute(null);
+                e.Handled = true;
+            }
+        }
+
+        base.OnKeyDown(e);
     }
 
     protected override void OnOpened(EventArgs e)

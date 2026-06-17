@@ -14,6 +14,11 @@ namespace Allpaca.Chrome;
 /// </summary>
 public class ChromeWindow : Window
 {
+    /// <summary>Esc schliesst das Fenster. MainWindow setzt das auf false, damit
+    /// der App-Hauptframe nicht versehentlich zugeht; alle Subfenster (Confirm/
+    /// Settings/Info/Search/Log/...) profitieren vom Default.</summary>
+    protected virtual bool CloseOnEscape => true;
+
     /// <summary>Breite des unsichtbaren Resize-Streifens an jeder Fensterkante (DIPs).
     /// 6 ist ein guter Kompromiss zwischen Treffgenauigkeit und nicht-stoeren bei
     /// Klicks knapp neben Buttons.</summary>
@@ -50,6 +55,18 @@ public class ChromeWindow : Window
     {
         base.OnOpened(e);
         ClampToWorkingArea();
+    }
+
+    protected override void OnKeyDown(KeyEventArgs e)
+    {
+        base.OnKeyDown(e);
+        if (e.Handled) return;
+
+        if (CloseOnEscape && e.Key == Key.Escape && e.KeyModifiers == KeyModifiers.None)
+        {
+            Close();
+            e.Handled = true;
+        }
     }
 
     /// <summary>
