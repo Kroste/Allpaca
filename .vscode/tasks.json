@@ -39,6 +39,15 @@
       "group": { "kind": "test", "isDefault": true }
     },
     {
+      "label": "run (no debug)",
+      "type": "shell",
+      "detail": "Faellt zurueck auf 'dotnet run', wenn der C#-Debugger fehlt oder F5 streikt. Kein Debugger-Attach, dafuer immer da.",
+      "command": "dotnet",
+      "args": [ "run", "--project", "${workspaceFolder}/Allpaca/Allpaca.csproj" ],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": "$msCompile"
+    },
+    {
       "label": "clean",
       "command": "dotnet",
       "type": "process",
