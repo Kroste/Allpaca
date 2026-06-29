@@ -1,4 +1,5 @@
 using Allpaca.Models;
+using Allpaca.Services;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 
@@ -9,6 +10,10 @@ public partial class SourceFilterViewModel : ObservableObject
     public PackageSourceKind Kind { get; }
     public string Label { get; }
     public IBrush Brush { get; }
+
+    /// <summary>Konkreter Installations-Tipp fuer diese Quelle - landet im ToolTip
+    /// beim "nicht verfuegbar"-Text.</summary>
+    public string? RecoveryHint { get; }
 
     [ObservableProperty] private bool _isSelected = true;
     [ObservableProperty] private int _count;
@@ -28,5 +33,6 @@ public partial class SourceFilterViewModel : ObservableObject
         Kind = kind;
         Label = label;
         Brush = new SolidColorBrush(Color.Parse(color));
+        RecoveryHint = SourceRecoveryHints.For(kind);
     }
 }

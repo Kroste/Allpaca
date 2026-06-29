@@ -122,7 +122,9 @@
                                         <StackPanel Grid.Column="2" VerticalAlignment="Center">
                                             <TextBlock Text="{Binding Label}" Foreground="#EDEFF2"/>
                                             <TextBlock Text="{Binding Status}" Foreground="#E25555"
-                                                       FontSize="11" IsVisible="{Binding !IsAvailable}"/>
+                                                       FontSize="11" IsVisible="{Binding !IsAvailable}"
+                                                       TextDecorations="Underline"
+                                                       ToolTip.Tip="{Binding RecoveryHint}"/>
                                         </StackPanel>
                                         <Border Grid.Column="3" Background="#1E3527" CornerRadius="9"
                                                 Padding="6,1" VerticalAlignment="Center" Margin="0,0,4,0"
