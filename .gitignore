@@ -13,6 +13,8 @@ packaging/linux/Allpaca.AppDir/
 .vs/
 .idea/
 *.user
+# user-spezifische VS-Code-Settings (YOLO-Mode etc.) ausser den Team-Files
+.vscode/settings.json
 
 # Logs
 *.log
