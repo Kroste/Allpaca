@@ -9,9 +9,12 @@
       "program": "${workspaceFolder}/Allpaca/bin/Debug/net10.0/Allpaca.dll",
       "args": [],
       "cwd": "${workspaceFolder}/Allpaca",
-      "console": "internalConsole",
+      "console": "integratedTerminal",
       "stopAtEntry": false,
-      "env": { "DOTNET_ENVIRONMENT": "Development" }
+      "env": {
+        "DOTNET_ENVIRONMENT": "Development",
+        "AVALONIA_NO_TELEMETRY": "1"
+      }
     },
     {
       "name": ".NET: An laufenden Prozess anhaengen",

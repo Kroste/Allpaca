@@ -5,14 +5,30 @@
       "label": "build",
       "command": "dotnet",
       "type": "process",
+      "detail": "F5-Build: nur Allpaca.csproj in Debug. Spart die Tests-Compile-Sekunden vor jedem Start.",
+      "args": [
+        "build",
+        "${workspaceFolder}/Allpaca/Allpaca.csproj",
+        "-c",
+        "Debug",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "problemMatcher": "$msCompile",
+      "group": { "kind": "build", "isDefault": true }
+    },
+    {
+      "label": "build (full solution)",
+      "command": "dotnet",
+      "type": "process",
+      "detail": "Kompletter Solution-Build inkl. Tests-Projekt.",
       "args": [
         "build",
         "${workspaceFolder}/Allpaca.sln",
         "/property:GenerateFullPaths=true",
         "/consoleloggerparameters:NoSummary"
       ],
-      "problemMatcher": "$msCompile",
-      "group": { "kind": "build", "isDefault": true }
+      "problemMatcher": "$msCompile"
     },
     {
       "label": "test",
@@ -39,12 +55,7 @@
       "label": "clean-hard",
       "type": "shell",
       "detail": "Loescht ALLE bin/ und obj/ rekursiv vom Datentraeger (gegen haengenden Avalonia-XAML-Cache im obj/).",
-      "linux":  { "command": "find . -type d \\( -name bin -o -name obj \\) -exec rm -rf {} +" },
-      "osx":    { "command": "find . -type d \\( -name bin -o -name obj \\) -exec rm -rf {} +" },
-      "windows": {
-        "command": "Get-ChildItem -Path . -Recurse -Directory -Include bin,obj | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue",
-        "options": { "shell": { "executable": "powershell.exe", "args": ["-NoProfile","-Command"] } }
-      },
+      "command": "find . -type d \\( -name bin -o -name obj \\) -exec rm -rf {} +",
       "options": { "cwd": "${workspaceFolder}" },
       "problemMatcher": []
     },
@@ -53,7 +64,6 @@
       "type": "shell",
       "detail": "Liest <Version> aus der csproj, taggt vX.Y.Z und pusht -> loest den Release-Workflow aus.",
       "command": "bash scripts/release.sh",
-      "windows": { "command": "bash scripts/release.sh" },
       "options": { "cwd": "${workspaceFolder}" },
       "problemMatcher": []
     }

@@ -20,6 +20,11 @@ AppImage.
 ## 2. Stack & harte Konventionen
 
 - **.NET 10 / C# / Avalonia 12**, MVVM via **CommunityToolkit.Mvvm**, Logging via **NLog**.
+- **Plattform: Linux-only.** Bewusste Entscheidung (2026-06-17): Allpaca ist ein
+  Bazzite-Helfer und wird NICHT auf Windows/macOS portiert. Das `Release`-Template
+  in §2.1 erwähnt zwar Windows-ZIPs — das gilt für andere Lars-Projekte, hier
+  baut die Release-Action nur Linux-tar.gz + AppImage. Wenn ein CLI-Frontend
+  dazukommt, dann ebenfalls Linux-fokussiert (Bazzite/Fedora Atomic).
 - **Bei JEDER Änderung `<Version>` in `Allpaca.csproj` erhöhen.** Nicht vergessen.
 - **Alle Fenster erben von `ChromeWindow`** (Custom Chrome, randlos, resizable, sauberes
   Shutdown, auflösungsbewusst). Niemals direkt von `Window`.
