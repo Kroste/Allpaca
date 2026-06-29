@@ -97,15 +97,16 @@ public partial class MainWindow : ChromeWindow
     {
         var win = new LogWindow();
         win.TrustTapHandler = TrustHomebrewTapAsync;
-        win.DiagnoseHandler = DiagnoseWithAiAsync;
+        win.DiagnoseHandler = StreamAiAsync;
         win.Show(this);
         await win.RunAsync(ctx, work);
     }
 
-    /// <summary>Bridge ins KI-Subsystem - LogWindow ruft das auf, wenn der User auf
-    /// "Analysieren" im Fehler-Banner klickt. Liest CurrentAi vom MainWindow-VM,
-    /// baut den Assistant ueber die Factory und schickt das Prompt-Paar durch.</summary>
-    private async System.Threading.Tasks.Task<string> DiagnoseWithAiAsync(
+    /// <summary>Bridge ins KI-Subsystem - LogWindow/CleanupAnalysis/SearchWindow rufen
+    /// das, sobald sie die KI brauchen. Liest CurrentAi vom MainWindow-VM, baut den
+    /// Assistant ueber die Factory und streamt die Antwort. Caller akkumulieren bei
+    /// Bedarf - LogWindow/Cleanup zeigen live an, Search bufferd und parst am Ende.</summary>
+    private System.Collections.Generic.IAsyncEnumerable<string> StreamAiAsync(
         string systemPrompt, string userPrompt, System.Threading.CancellationToken ct)
     {
         if (DataContext is not MainWindowViewModel vm)
@@ -116,10 +117,21 @@ public partial class MainWindow : ChromeWindow
             throw new InvalidOperationException(
                 "KI ist noch nicht konfiguriert. Öffne die Einstellungen (⚙) und wähle Provider + Modell.");
 
-        // Hartes Timeout fuer die Diagnose - Ollama mit grossen Modellen kann zaeh sein.
+        // Hartes Timeout - bei sehr grossen Ollama-Modellen koennen einzelne Antworten
+        // zaeh werden. Wir wrappen die Stream-Iteration mit einem linked CTS, damit
+        // sowohl externe Cancellation als auch das 120-s-Timeout sauber durchschlagen.
+        return StreamWithTimeoutAsync(assistant, systemPrompt, userPrompt, ct);
+    }
+
+    private static async System.Collections.Generic.IAsyncEnumerable<string> StreamWithTimeoutAsync(
+        Allpaca.Services.Ai.IAiAssistant assistant,
+        string systemPrompt, string userPrompt,
+        [System.Runtime.CompilerServices.EnumeratorCancellation] System.Threading.CancellationToken ct)
+    {
         using var linked = System.Threading.CancellationTokenSource.CreateLinkedTokenSource(ct);
         linked.CancelAfter(TimeSpan.FromSeconds(120));
-        return await assistant.CompleteAsync(systemPrompt, userPrompt, linked.Token);
+        await foreach (var chunk in assistant.CompleteStreamAsync(systemPrompt, userPrompt, linked.Token))
+            yield return chunk;
     }
 
     /// <summary>Bridge ins HomebrewSource, damit das LogWindow auf "Tap vertrauen"-Klicks
@@ -162,7 +174,7 @@ public partial class MainWindow : ChromeWindow
     {
         var win = new CleanupAnalysisWindow
         {
-            AnalyzeHandler = DiagnoseWithAiAsync,  // gleicher KI-Bridge wie LogWindow
+            AnalyzeHandler = StreamAiAsync,  // gleicher KI-Bridge wie LogWindow
         };
         win.Show(this);
         _ = win.RunAsync(packages);
@@ -174,7 +186,7 @@ public partial class MainWindow : ChromeWindow
         {
             RunOperation = RunOperationAsync,
             ConfirmAsync = req => ConfirmWindow.AskAsync(this, req),
-            AiCompletion = DiagnoseWithAiAsync,
+            AiCompletion = StreamAiAsync,
             AfterInstall = () =>
             {
                 // Liste nach Install refreshen, damit der neue Eintrag sichtbar wird.

@@ -16,8 +16,10 @@ public partial class CleanupAnalysisWindow : ChromeWindow
     private readonly CleanupAnalysisViewModel _vm = new();
     private CancellationTokenSource _cts = new();
 
-    /// <summary>Wird vom Aufrufer (MainWindow) gesetzt: System+User-Prompt -> KI-Antwort.</summary>
-    public Func<string, string, CancellationToken, Task<string>>? AnalyzeHandler { get; set; }
+    /// <summary>Wird vom Aufrufer (MainWindow) gesetzt: System+User-Prompt -> KI-Stream.
+    /// Chunks fliessen live in AnalysisText - so sieht der User die Antwort wachsen
+    /// statt 30 s auf einen Spinner zu starren.</summary>
+    public Func<string, string, CancellationToken, IAsyncEnumerable<string>>? AnalyzeHandler { get; set; }
 
     public CleanupAnalysisWindow()
     {
@@ -51,11 +53,17 @@ public partial class CleanupAnalysisWindow : ChromeWindow
         try
         {
             var userPrompt = CleanupPromptBuilder.BuildUserPrompt(packages);
-            var answer = await AnalyzeHandler(
-                CleanupPromptBuilder.SystemPrompt, userPrompt, _cts.Token);
+            var sb = new System.Text.StringBuilder();
+            await foreach (var chunk in AnalyzeHandler(
+                CleanupPromptBuilder.SystemPrompt, userPrompt, _cts.Token))
+            {
+                sb.Append(chunk);
+                _vm.AnalysisText = sb.ToString();
+            }
 
-            _vm.AnalysisText = (answer ?? "").Trim();
-            if (string.IsNullOrWhiteSpace(_vm.AnalysisText))
+            var final = sb.ToString().Trim();
+            _vm.AnalysisText = final;
+            if (string.IsNullOrWhiteSpace(final))
             {
                 _vm.ErrorText = "Leere Antwort vom Provider erhalten.";
                 _vm.State = OperationState.Failed;

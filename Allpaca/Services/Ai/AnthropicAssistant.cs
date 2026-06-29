@@ -1,11 +1,12 @@
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using NLog;
 
 namespace Allpaca.Services.Ai;
 
-/// <summary>Claude ueber die native Messages-API (/v1/messages).</summary>
+/// <summary>Claude ueber die native Messages-API (/v1/messages) mit Streaming.</summary>
 public sealed class AnthropicAssistant : IAiAssistant
 {
     private static readonly Logger Log = LogManager.GetCurrentClassLogger();
@@ -21,7 +22,9 @@ public sealed class AnthropicAssistant : IAiAssistant
     public AiProvider Provider => AiProvider.Anthropic;
     public bool IsConfigured => !string.IsNullOrWhiteSpace(_s.ApiKey);
 
-    public async Task<string> CompleteAsync(string system, string user, CancellationToken ct = default)
+    public async IAsyncEnumerable<string> CompleteStreamAsync(
+        string system, string user,
+        [EnumeratorCancellation] CancellationToken ct = default)
     {
         var url = _s.ResolvedEndpoint.TrimEnd('/') + "/messages";
         var payload = new
@@ -30,6 +33,7 @@ public sealed class AnthropicAssistant : IAiAssistant
             max_tokens = 1024,
             system,
             messages = new[] { new { role = "user", content = user } },
+            stream = true,
         };
 
         using var req = new HttpRequestMessage(HttpMethod.Post, url)
@@ -39,15 +43,27 @@ public sealed class AnthropicAssistant : IAiAssistant
         req.Headers.Add("x-api-key", _s.ApiKey);
         req.Headers.Add("anthropic-version", "2023-06-01");
 
-        using var resp = await _http.SendAsync(req, ct).ConfigureAwait(false);
-        var body = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+        using var resp = await _http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
         if (!resp.IsSuccessStatusCode)
         {
-            Log.Warn("Claude HTTP {0}: {1}", (int)resp.StatusCode, body);
+            var err = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+            Log.Warn("Claude HTTP {0}: {1}", (int)resp.StatusCode, err);
             throw new HttpRequestException($"Claude-Antwort {(int)resp.StatusCode}");
         }
 
-        using var doc = JsonDocument.Parse(body);
-        return doc.RootElement.GetProperty("content")[0].GetProperty("text").GetString() ?? string.Empty;
+        using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
+        await foreach (var data in SseStreamReader.ReadDataLinesAsync(stream, ct))
+        {
+            var chunk = AnthropicStreamParser.ExtractContent(data);
+            if (!string.IsNullOrEmpty(chunk)) yield return chunk;
+        }
+    }
+
+    public async Task<string> CompleteAsync(string system, string user, CancellationToken ct = default)
+    {
+        var sb = new StringBuilder();
+        await foreach (var chunk in CompleteStreamAsync(system, user, ct).ConfigureAwait(false))
+            sb.Append(chunk);
+        return sb.ToString();
     }
 }

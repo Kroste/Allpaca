@@ -24,9 +24,10 @@ public partial class LogWindow : ChromeWindow
     /// LogWindow auf "Tap vertrauen"-Klicks reagieren kann.</summary>
     public Func<string, CancellationToken, IAsyncEnumerable<ProgressLine>>? TrustTapHandler { get; set; }
 
-    /// <summary>Wird vom Aufrufer gesetzt: bekommt System+User-Prompt und liefert die
-    /// KI-Antwort zurueck. Wird beim Klick auf "Analysieren" im Failed-Banner aufgerufen.</summary>
-    public Func<string, string, CancellationToken, Task<string>>? DiagnoseHandler { get; set; }
+    /// <summary>Wird vom Aufrufer gesetzt: bekommt System+User-Prompt und streamt die
+    /// KI-Antwort zurueck. Wird beim Klick auf "Analysieren" im Failed-Banner aufgerufen;
+    /// jedes yielded Chunk wird live an AiDiagnosis angehaengt.</summary>
+    public Func<string, string, CancellationToken, IAsyncEnumerable<string>>? DiagnoseHandler { get; set; }
 
     public LogWindow()
     {
@@ -71,16 +72,25 @@ public partial class LogWindow : ChromeWindow
         }
 
         _vm.IsAiDiagnosing = true;
+        _vm.AiDiagnosis = "";
         try
         {
             var userPrompt = DiagnosisPromptBuilder.BuildUserPrompt(
                 _vm.Title, _vm.ExitCode, _vm.Lines.ToList());
 
-            var diagnosis = await DiagnoseHandler(
-                DiagnosisPromptBuilder.SystemPrompt, userPrompt, _cts.Token);
+            // Chunks streamen live ins AiDiagnosis-Property - StringBuilder als
+            // Akkumulator, weil String-Concat in der Schleife O(n^2) waere.
+            var sb = new System.Text.StringBuilder();
+            await foreach (var chunk in DiagnoseHandler(
+                DiagnosisPromptBuilder.SystemPrompt, userPrompt, _cts.Token))
+            {
+                sb.Append(chunk);
+                _vm.AiDiagnosis = sb.ToString();
+            }
 
-            _vm.AiDiagnosis = diagnosis?.Trim();
-            if (string.IsNullOrWhiteSpace(_vm.AiDiagnosis))
+            var final = sb.ToString().Trim();
+            _vm.AiDiagnosis = final;
+            if (string.IsNullOrWhiteSpace(final))
                 _vm.AiDiagnosisError = "Leere Antwort vom Provider erhalten.";
         }
         catch (OperationCanceledException)

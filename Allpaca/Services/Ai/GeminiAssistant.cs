@@ -1,11 +1,13 @@
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using NLog;
 
 namespace Allpaca.Services.Ai;
 
-/// <summary>Gemini ueber die Generative-Language-API (models/{model}:generateContent).</summary>
+/// <summary>Gemini ueber die Generative-Language-API mit Streaming
+/// (models/{model}:streamGenerateContent?alt=sse).</summary>
 public sealed class GeminiAssistant : IAiAssistant
 {
     private static readonly Logger Log = LogManager.GetCurrentClassLogger();
@@ -21,9 +23,11 @@ public sealed class GeminiAssistant : IAiAssistant
     public AiProvider Provider => AiProvider.Gemini;
     public bool IsConfigured => !string.IsNullOrWhiteSpace(_s.ApiKey);
 
-    public async Task<string> CompleteAsync(string system, string user, CancellationToken ct = default)
+    public async IAsyncEnumerable<string> CompleteStreamAsync(
+        string system, string user,
+        [EnumeratorCancellation] CancellationToken ct = default)
     {
-        var url = $"{_s.ResolvedEndpoint.TrimEnd('/')}/models/{_s.ResolvedModel}:generateContent?key={_s.ApiKey}";
+        var url = $"{_s.ResolvedEndpoint.TrimEnd('/')}/models/{_s.ResolvedModel}:streamGenerateContent?alt=sse&key={_s.ApiKey}";
         var payload = new
         {
             system_instruction = new { parts = new[] { new { text = system } } },
@@ -38,20 +42,27 @@ public sealed class GeminiAssistant : IAiAssistant
             Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json"),
         };
 
-        using var resp = await _http.SendAsync(req, ct).ConfigureAwait(false);
-        var body = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+        using var resp = await _http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
         if (!resp.IsSuccessStatusCode)
         {
-            Log.Warn("Gemini HTTP {0}: {1}", (int)resp.StatusCode, body);
+            var err = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+            Log.Warn("Gemini HTTP {0}: {1}", (int)resp.StatusCode, err);
             throw new HttpRequestException($"Gemini-Antwort {(int)resp.StatusCode}");
         }
 
-        using var doc = JsonDocument.Parse(body);
-        return doc.RootElement
-            .GetProperty("candidates")[0]
-            .GetProperty("content")
-            .GetProperty("parts")[0]
-            .GetProperty("text")
-            .GetString() ?? string.Empty;
+        using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
+        await foreach (var data in SseStreamReader.ReadDataLinesAsync(stream, ct))
+        {
+            var chunk = GeminiStreamParser.ExtractContent(data);
+            if (!string.IsNullOrEmpty(chunk)) yield return chunk;
+        }
+    }
+
+    public async Task<string> CompleteAsync(string system, string user, CancellationToken ct = default)
+    {
+        var sb = new StringBuilder();
+        await foreach (var chunk in CompleteStreamAsync(system, user, ct).ConfigureAwait(false))
+            sb.Append(chunk);
+        return sb.ToString();
     }
 }

@@ -56,9 +56,10 @@ public partial class SearchWindowViewModel : ObservableObject
     /// um seine Liste zu refreshen.</summary>
     public Action? AfterInstall { get; set; }
 
-    /// <summary>Wird von der View beim Start gesetzt: System+User-Prompt -> KI-Antwort.
-    /// Wird ausschliesslich von SuggestWithAiAsync benutzt.</summary>
-    public Func<string, string, CancellationToken, Task<string>>? AiCompletion { get; set; }
+    /// <summary>Wird von der View beim Start gesetzt: System+User-Prompt -> KI-Stream.
+    /// Wir buffern den Stream und parsen am Ende - live Chunks wuerden bei der
+    /// structured-PROVIDER|ID|REASON-Antwort nur Halbsaetze produzieren.</summary>
+    public Func<string, string, CancellationToken, IAsyncEnumerable<string>>? AiCompletion { get; set; }
 
     public SearchWindowViewModel(IReadOnlyDictionary<PackageSourceKind, IPackageSource> sources)
     {
@@ -161,10 +162,15 @@ public partial class SearchWindowViewModel : ObservableObject
         {
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct);
             linked.CancelAfter(TimeSpan.FromSeconds(60));
-            var answer = await AiCompletion(
+            var sb = new System.Text.StringBuilder();
+            await foreach (var chunk in AiCompletion(
                 AiSuggestionPromptBuilder.SystemPrompt,
                 AiSuggestionPromptBuilder.BuildUserPrompt(Query),
-                linked.Token);
+                linked.Token))
+            {
+                sb.Append(chunk);
+            }
+            var answer = sb.ToString();
 
             var suggestions = AiSuggestionParser.Parse(answer);
 
