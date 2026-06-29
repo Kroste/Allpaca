@@ -305,9 +305,9 @@ VS-Code-Tasks: `build` (Default), `test`, `clean`, `clean-hard`, `rebuild`, `rel
       PROVIDER|ID|REASON-Output-Format).
 - [x] Aufräum-Analyse (Waisen/Duplikate/„brauchst du das noch?") in eigenem Fenster.
 - [x] Fehlerdiagnose aus Operation-Logs (LogWindow „Analysieren"-Button).
-- [ ] **Streaming** statt Single-Shot — alle drei AI-Features warten aktuell 10–30 s
-      bis komplette Antwort da ist. Refactor von `CompleteAsync` zu
-      `IAsyncEnumerable<string> CompleteStreamAsync` in 4 Provider-Klassen + 3 UI-Stellen.
+- [x] **Streaming** statt Single-Shot — `IAsyncEnumerable<string> CompleteStreamAsync` in
+      allen Providern (OpenAI/Ollama/Anthropic/Gemini via SSE), LogWindow + CleanupAnalysis
+      schreiben live in den Antworttext; SearchWindow buffered (structured Output).
 - [ ] **libsecret-Persistenz für API-Keys** — aktuell in-memory only, CLAUDE.md verlangt es.
 
 ### Spätere Quellen (optional)
@@ -329,11 +329,14 @@ VS-Code-Tasks: `build` (Default), `test`, `clean`, `clean-hard`, `rebuild`, `rel
       `brew trust`-Button.
 - [x] Resizable für alle Fenster (manueller Edge-Resize in ChromeWindow, weil
       KDE/Wayland-BorderOnly oft keinen treffbaren Griff hat).
-- [ ] Toast-/Tray-Notification wenn Hintergrund-Update-Check N Updates findet.
-- [ ] Auto-Refresh-Intervall (optional in Settings).
-- [ ] Fehler-Hinweis pro Quelle mit konkreter Lösung („pipx nicht gefunden →
-      `dnf install pipx`").
-- [ ] Drag-and-drop AppImages in MainWindow → wird nach `~/Applications/` integriert.
+- [x] **Toast-Notification** beim Hintergrund-Update-Check (`notify-send` ueber
+      ProcessRunner; nur bei Aenderung der Anzahl, kein Spam bei wiederholtem Refresh).
+- [x] **Auto-Refresh-Intervall** (Settings-ComboBox Aus/5/15/30/60 Min, DispatcherTimer
+      in MainWindowViewModel, persistiert in settings.json).
+- [x] **Per-Source-Recovery-Hint** als ToolTip beim „nicht verfuegbar"-Text in der
+      Sidebar - konkrete Install-Befehle pro Quelle (Bazzite-zentriert).
+- [ ] Drag-and-drop AppImages in MainWindow → bewusst skipped (entschieden 2026-06-17:
+      Gear Lever deckt's ab).
 
 ---
 
