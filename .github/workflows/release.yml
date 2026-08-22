@@ -58,7 +58,10 @@ jobs:
           path: |
             Allpaca-*-linux-x64.tar.gz
             Allpaca-*-x86_64.AppImage
-          retention-days: 7
+          # Nur die Durchreiche an den Release-Job -- danach hängen die Pakete am
+          # Release selbst. Der v1.5.1-Release ist an einem vollen Artifact-Kontingent
+          # gescheitert, deshalb so kurz wie möglich.
+          retention-days: 1
 
   release:
     needs: [build-linux]
