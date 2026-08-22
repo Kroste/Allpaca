@@ -21,11 +21,17 @@ AppImage.
 
 - **.NET 10 / C# / Avalonia 12**, MVVM via **CommunityToolkit.Mvvm**, Logging via **NLog**.
 - **Plattform: Linux-only.** Bewusste Entscheidung (2026-06-17): Allpaca ist ein
-  Bazzite-Helfer und wird NICHT auf Windows/macOS portiert. Das `Release`-Template
-  in §2.1 erwähnt zwar Windows-ZIPs — das gilt für andere Lars-Projekte, hier
-  baut die Release-Action nur Linux-tar.gz + AppImage. Wenn ein CLI-Frontend
-  dazukommt, dann ebenfalls Linux-fokussiert (Bazzite/Fedora Atomic).
-- **Bei JEDER Änderung `<Version>` in `Allpaca.csproj` erhöhen.** Nicht vergessen.
+  Bazzite-Helfer und wird NICHT auf Windows/macOS portiert. Die Release-Action hat
+  deshalb **keinen Windows-Job** — sie baut nur Linux-tar.gz + AppImage. Wenn ein
+  CLI-Frontend dazukommt, dann ebenfalls Linux-fokussiert (Bazzite/Fedora Atomic).
+- **Versionierung über MinVer, kein manuelles `<Version>` mehr.** Die Version kommt
+  aus dem Git-Tag (`v1.6.0` → Assembly `1.6.0`); `Directory.Build.props` setzt
+  `MinVerTagPrefix=v`. Ein Release entsteht durch `bash scripts/release.sh`
+  (fragt die neue Version ab, taggt, pusht).
+- **Zentrale Build-Konfiguration:** `Directory.Build.props` (net10.0, Nullable,
+  `TreatWarningsAsErrors`, MinVer) und `Directory.Packages.props` (Central Package
+  Management — der einzige Ort für Paketversionen). Die csproj-Dateien enthalten
+  **keine** `Version`-Attribute an `PackageReference`.
 - **Alle Fenster erben von `ChromeWindow`** (Custom Chrome, randlos, resizable, sauberes
   Shutdown, auflösungsbewusst). Niemals direkt von `Window`.
 - **Aktuelle Avalonia-12-APIs verwenden** — siehe §3. Keine veralteten WPF-/alt-Avalonia-Muster.
@@ -38,11 +44,17 @@ AppImage.
 - **VS Code:** immer `.vscode/launch.json` + `.vscode/tasks.json` beilegen, inkl. eines
   **`clean-hard`**-Tasks (löscht bin/obj rekursiv vom Datenträger — gegen hängenden
   Avalonia-XAML-Cache). `.vscode/` wird **eingecheckt**.
-- **Tests:** immer ein eigenes Testprojekt (`tests/Allpaca.Tests`, xUnit). Reine Logik
+- **Tests:** immer ein eigenes Testprojekt (`Allpaca.Tests`, **xunit.v3**). Reine Logik
   (Parser, Defaults) wird per `InternalsVisibleTo` testbar gemacht.
-- **Release:** GitHub-Action (`.github/workflows/release.yml`), die auf Tag `v*.*.*` fertige
-  Pakete für **Windows (ZIP)**, **Linux (tar.gz)** und **AppImage** baut. **Node 24** im
-  Linux-Job. Auslösung bequem über den VS-Code-Task `release (tag + push)` bzw.
+  ⚠️ xunit.v3 läuft auf der **Microsoft.Testing.Platform**; das .NET-10-SDK kennt den
+  alten VSTest-Pfad nicht mehr. Deshalb steht der Opt-in in `global.json`
+  (`"test": { "runner": "Microsoft.Testing.Platform" }`) und das Testprojekt ist
+  `<OutputType>Exe</OutputType>`. Ohne beides bricht `dotnet test` ab.
+- **CI:** `.github/workflows/ci.yml` baut und testet bei jedem Push auf `main` und
+  bei jedem PR. Nach dem Push den Status prüfen (`gh run list --repo Kroste/Allpaca`).
+- **Release:** GitHub-Action (`.github/workflows/release.yml`), die auf Tag `v*.*.*`
+  **Linux-tar.gz + AppImage** baut (kein Windows — siehe Linux-only oben). **Node 24**
+  im Linux-Job. Auslösung über den VS-Code-Task `release (tag + push)` bzw.
   `scripts/release.sh`.
 - **KI:** Multi-Provider-Abstraktion (`Services/Ai`) für **ChatGPT, Claude, Gemini, Ollama**
   — Provider/Endpoint/Modell/Key konfigurierbar, Ollama als Default (§7).
@@ -253,15 +265,19 @@ dotnet restore
 dotnet build -c Release
 dotnet run --project Allpaca
 
-dotnet test                       # Testprojekt (xUnit)
+dotnet test                       # Testprojekt (xunit.v3 auf Microsoft.Testing.Platform)
 bash scripts/release.sh           # taggt vX.Y.Z + push → löst Release-Action aus
 ```
 
 VS-Code-Tasks: `build` (Default), `test`, `clean`, `clean-hard`, `rebuild`, `release (tag + push)`.
 
-- **Avalonia-Version** in `Allpaca.csproj` steht auf `12.0.4` (Bump von 12.0.0 wegen
-  NU1903 / GHSA-xrw6-gwf8-vvr9: 12.0.4 zieht das gepatchte Tmds.DBus.Protocol 0.92.0
-  statt 0.90.3 mit). Magnat/NetScanner ggf. mit angleichen.
+- **Avalonia-Version** steht in `Directory.Packages.props` auf `12.1.1` (12.1 bringt
+  den nativen **Wayland-Backend** — relevant, weil auf Bazzite/KDE Wayland entwickelt
+  wird; der Sprung von 12.0.0 auf 12.0.4 war seinerzeit NU1903 / GHSA-xrw6-gwf8-vvr9,
+  gepatchtes Tmds.DBus.Protocol). Magnat/NetScanner ggf. mit angleichen.
+- **`TreatWarningsAsErrors` ist an.** Beim Sprung auf SkiaSharp 3.x sind die
+  `SKPath`-Bau-Methoden deprecated — `AppIcon` baut Pfade daher über
+  `SKPathBuilder` + `Detach()`.
 - **Zum echten Test auf dem Host starten** (oder `distrobox-host-exec`). In der Distrobox
   greift zwar der Host-Wrapper, aber das AppImage-Dateisystem-Scanning sieht dann nur das
   geteilte Home.
@@ -384,8 +400,9 @@ public interface IAiAssistant
 
 ## 8. Definition of Done (pro Änderung)
 
-1. `<Version>` erhöht.
-2. Baut in der `dotnet10`-Distrobox ohne Warnungen; `dotnet test` grün.
+1. Version kommt aus dem Git-Tag (MinVer) — kein manuelles Hochzählen mehr.
+2. Baut in der `dotnet10`-Distrobox ohne Warnungen (`TreatWarningsAsErrors`);
+   `dotnet test` grün; CI nach dem Push grün (`gh run list`).
 3. Neue Fenster erben von `ChromeWindow`, `x:DataType` gesetzt.
 4. Keine Host-Binary direkt aufgerufen (immer `ProcessRunner`).
 5. UI-Collections nur auf dem UI-Thread verändert.

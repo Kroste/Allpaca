@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Allpaca/Allpaca.csproj" />
+  <Project Path="Allpaca.Tests/Allpaca.Tests.csproj" />
+</Solution>

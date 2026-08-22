@@ -24,7 +24,7 @@
       "detail": "Kompletter Solution-Build inkl. Tests-Projekt.",
       "args": [
         "build",
-        "${workspaceFolder}/Allpaca.sln",
+        "${workspaceFolder}/Allpaca.slnx",
         "/property:GenerateFullPaths=true",
         "/consoleloggerparameters:NoSummary"
       ],
@@ -34,7 +34,7 @@
       "label": "test",
       "command": "dotnet",
       "type": "process",
-      "args": [ "test", "${workspaceFolder}/Allpaca.sln" ],
+      "args": [ "test", "${workspaceFolder}/Allpaca.slnx" ],
       "problemMatcher": "$msCompile",
       "group": { "kind": "test", "isDefault": true }
     },
@@ -51,7 +51,7 @@
       "label": "clean",
       "command": "dotnet",
       "type": "process",
-      "args": [ "clean", "${workspaceFolder}/Allpaca.sln" ],
+      "args": [ "clean", "${workspaceFolder}/Allpaca.slnx" ],
       "problemMatcher": "$msCompile"
     },
     {
@@ -71,7 +71,7 @@
     {
       "label": "release (tag + push)",
       "type": "shell",
-      "detail": "Liest <Version> aus der csproj, taggt vX.Y.Z und pusht -> loest den Release-Workflow aus.",
+      "detail": "Fragt die neue Version ab (MinVer: letzter Tag + Bump), taggt vX.Y.Z und pusht -> löst den Release-Workflow aus.",
       "command": "bash scripts/release.sh",
       "options": { "cwd": "${workspaceFolder}" },
       "problemMatcher": []

@@ -2,34 +2,28 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <LangVersion>latest</LangVersion>
-    <!-- Bei jeder Aenderung erhoehen (deine Konvention) -->
-    <Version>1.5.1</Version>
-    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
   </PropertyGroup>
 
-  <!--
-    Avalonia-Version ggf. auf die exakte 12.x anpassen, die du in
-    Magnat/NetScanner verwendest. Hier als 12.0.0 vorbelegt.
-  -->
+  <!-- Gemeinsame Einstellungen (net10.0, Nullable, TreatWarningsAsErrors, MinVer)
+       stehen in Directory.Build.props, Paketversionen in Directory.Packages.props. -->
+
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="12.0.4" />
-    <PackageReference Include="Avalonia.Desktop" Version="12.0.4" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.4" />
-    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.0.4" />
-    <!-- DevTools (F12). In Avalonia 12 wurde Avalonia.Diagnostics ENTFERNT und durch
-         AvaloniaUI.DiagnosticsSupport ersetzt. Nur im Debug-Build. -->
-    <PackageReference Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.1" Condition="'$(Configuration)' == 'Debug'" />
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-    <PackageReference Include="NLog" Version="5.3.4" />
-    <!-- Svg.Skia rendert SVG-Icons (KDE/GNOME-Apps haben oft nur scalable/<id>.svg)
-         in Avalonia-Bitmaps. Nutzt dieselbe SkiaSharp-Linie wie Avalonia 12.0.4
-         (beide 3.119.x), keine Versionskonflikte. -->
-    <PackageReference Include="Svg.Skia" Version="5.1.1" />
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="Avalonia.Desktop" />
+    <PackageReference Include="Avalonia.Themes.Fluent" />
+    <PackageReference Include="Avalonia.Fonts.Inter" />
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="NLog" />
+    <PackageReference Include="Svg.Skia" />
+  </ItemGroup>
+
+  <!-- DevTools (F12) nur im Debug-Build. In Avalonia 12 ersetzt
+       AvaloniaUI.DiagnosticsSupport das entfernte Avalonia.Diagnostics. -->
+  <ItemGroup Condition="'$(Configuration)' == 'Debug'">
+    <PackageReference Include="AvaloniaUI.DiagnosticsSupport" />
   </ItemGroup>
 
   <ItemGroup>

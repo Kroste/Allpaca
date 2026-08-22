@@ -1,0 +1,30 @@
+<Project>
+  <!-- Central Package Management: der EINZIGE Ort für Paketversionen.
+       Die csproj-Dateien referenzieren nur noch ohne Version-Attribut. -->
+  <ItemGroup>
+    <!-- Avalonia — 12.1.x bringt den nativen Wayland-Backend (Bazzite/KDE Wayland).
+         AvaloniaUI.DiagnosticsSupport folgt NICHT der Avalonia-Version (eigene 2.x-Reihe). -->
+    <PackageVersion Include="Avalonia" Version="12.1.1" />
+    <PackageVersion Include="Avalonia.Desktop" Version="12.1.1" />
+    <PackageVersion Include="Avalonia.Themes.Fluent" Version="12.1.1" />
+    <PackageVersion Include="Avalonia.Fonts.Inter" Version="12.1.1" />
+    <PackageVersion Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.3" />
+
+    <!-- MVVM, DI, Logging -->
+    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.11" />
+    <PackageVersion Include="NLog" Version="6.2.0" />
+
+    <!-- SVG-Icons (KDE/GNOME-Apps liefern oft nur scalable/<id>.svg).
+         Nutzt dieselbe SkiaSharp-Linie wie Avalonia. -->
+    <PackageVersion Include="Svg.Skia" Version="5.2.1" />
+
+    <!-- Versionierung aus Git-Tags -->
+    <PackageVersion Include="MinVer" Version="7.0.0" />
+
+    <!-- Tests: xunit.v3 (das alte "xunit"-Paket ist v2 und deprecated) -->
+    <PackageVersion Include="xunit.v3" Version="4.0.0" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
+  </ItemGroup>
+</Project>

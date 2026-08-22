@@ -118,9 +118,10 @@ dotnet run --project Allpaca       # oder die gebaute Binary auf dem Host starte
 dotnet test                        # 118 Tests, alle parser/Logik pure-Funktional
 ```
 
-> **Avalonia-Version:** `Allpaca.csproj` steht auf `12.0.4` (Bump von 12.0.0
-> wegen NU1903 / GHSA-xrw6-gwf8-vvr9 — 12.0.4 zieht das gepatchte
-> `Tmds.DBus.Protocol 0.92.0` mit).
+> **Avalonia-Version:** steht in `Directory.Packages.props` auf `12.1.1` — 12.1
+> bringt den nativen Wayland-Backend, was auf KDE Wayland (Bazzite) direkt
+> spürbar ist. Alle Paketversionen liegen zentral in dieser Datei (Central
+> Package Management), die Assembly-Version kommt aus dem Git-Tag (MinVer).
 
 ### Hinweis zum Ausführen
 Allpaca läuft sowohl direkt auf dem Host als auch innerhalb einer
@@ -138,3 +139,7 @@ Siehe `CLAUDE.md` §6 für die volle Roadmap. Kurz:
 - Weitere Quellen: cargo install, npm -g, toolbx
 - Toast-/Tray-Notification beim Update-Check
 - Drag-and-drop AppImages
+
+## Lizenz
+
+MIT — siehe [LICENSE](LICENSE).

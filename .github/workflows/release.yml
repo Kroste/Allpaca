@@ -1,95 +1,77 @@
 name: Release
 
-# Loest aus, sobald ein Tag wie v1.0.0 gepusht wird.
-# workflow_dispatch erlaubt zusaetzlich manuelles Starten zum Testen.
 on:
   push:
-    tags:
-      - "v*.*.*"
+    tags: ["v*"]
   workflow_dispatch:
 
 permissions:
-  contents: write   # noetig, damit der Release-Job das Release anlegen darf
+  contents: write # nötig, damit der Release-Job das Release anlegen darf
 
+# Allpaca ist bewusst Linux-only (Bazzite-Helfer) — es gibt keinen Windows-Job.
+# Gebaut werden tar.gz und AppImage für linux-x64.
 jobs:
-  # ---------------------------------------------------------------- Windows
-  build-windows:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
-        with:
-          global-json-file: global.json
-
-      - name: Version aus Tag ableiten
-        id: ver
-        shell: bash
-        run: echo "v=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
-
-      - name: Publish (win-x64, self-contained)
-        run: >
-          dotnet publish Allpaca/Allpaca.csproj -c Release -r win-x64 --self-contained
-          -p:Version=${{ steps.ver.outputs.v }} -o publish/win
-
-      - name: ZIP packen
-        shell: pwsh
-        run: Compress-Archive -Path publish/win/* -DestinationPath "Allpaca-${{ github.ref_name }}-win-x64.zip"
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: win
-          path: Allpaca-*-win-x64.zip
-          retention-days: 1
-
-  # ------------------------------------------------------------------ Linux
   build-linux:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v7
         with:
-          global-json-file: global.json
+          fetch-depth: 0 # MinVer braucht die volle Historie inkl. Tags
 
-      # Node 24 (Standardkonvention fuer alle Projekte)
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+          cache: true
+          cache-dependency-path: Directory.Packages.props
+
+      # Node 24 (Standardkonvention für alle Projekte)
       - uses: actions/setup-node@v4
         with:
           node-version: 24
 
-      - name: Version aus Tag ableiten
+      - name: Version ermitteln
         id: ver
-        run: echo "v=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+        run: |
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            echo "v=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "v=0.0.0-dev.${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Test
+        run: dotnet test Allpaca.Tests/Allpaca.Tests.csproj -c Release
 
       - name: Publish (linux-x64, self-contained)
         run: >
           dotnet publish Allpaca/Allpaca.csproj -c Release -r linux-x64 --self-contained
-          -p:Version=${{ steps.ver.outputs.v }} -o publish/linux
+          -o publish/linux
 
       - name: Tarball packen
-        run: tar -czf "Allpaca-${{ github.ref_name }}-linux-x64.tar.gz" -C publish/linux .
+        run: tar -czf "Allpaca-${{ steps.ver.outputs.v }}-linux-x64.tar.gz" -C publish/linux .
 
       - name: AppImage bauen
-        run: bash packaging/linux/build-appimage.sh "${{ github.ref_name }}" publish/linux
+        run: bash packaging/linux/build-appimage.sh "${{ steps.ver.outputs.v }}" publish/linux
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: linux
           path: |
             Allpaca-*-linux-x64.tar.gz
             Allpaca-*-x86_64.AppImage
-          retention-days: 1
+          retention-days: 7
 
-  # ---------------------------------------------------------------- Release
   release:
-    needs: [build-windows, build-linux]
+    needs: [build-linux]
     runs-on: ubuntu-latest
+    # Beim manuellen Start (workflow_dispatch ohne Tag) überspringen.
     if: github.ref_type == 'tag'
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           path: dist
 
       - name: GitHub-Release anlegen/aktualisieren
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: dist/**/*
           generate_release_notes: true

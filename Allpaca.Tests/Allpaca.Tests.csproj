@@ -1,17 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- xunit.v3 generiert einen eigenen Entry-Point, das Testprojekt ist eine Exe. -->
+    <OutputType>Exe</OutputType>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <!-- xunit.v3 läuft auf der Microsoft.Testing.Platform. Das .NET-10-SDK
+         unterstützt den alten VSTest-Pfad nicht mehr, deshalb ist das Opt-in
+         hier Pflicht - ohne das bricht "dotnet test" mit MTP-Fehler ab. -->
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
-    <PackageReference Include="xunit" Version="2.9.2" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <!-- xunit.v3 bringt den Microsoft.Testing.Platform-Runner selbst mit.
+         Microsoft.NET.Test.Sdk und xunit.runner.visualstudio gehören zum alten
+         VSTest-Pfad und würden ihn wieder aktivieren - deshalb bewusst NICHT hier. -->
+    <PackageReference Include="xunit.v3" />
   </ItemGroup>
 
   <ItemGroup>
