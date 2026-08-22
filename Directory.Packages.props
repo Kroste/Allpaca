@@ -16,8 +16,12 @@
     <PackageVersion Include="NLog" Version="6.2.0" />
 
     <!-- SVG-Icons (KDE/GNOME-Apps liefern oft nur scalable/<id>.svg).
-         Nutzt dieselbe SkiaSharp-Linie wie Avalonia. -->
-    <PackageVersion Include="Svg.Skia" Version="5.2.1" />
+         ⚠️ NICHT auf 5.2.x heben: ab 5.2.0 zieht Svg.Skia die managed SkiaSharp 4.148,
+         während Avalonia 12.1 die nativen Assets in der 3.119er Linie mitbringt. Der
+         Build bleibt grün, aber der erste Skia-Aufruf wirft zur Laufzeit
+         "native libSkiaSharp (119.0) is incompatible ... [148.0, 149.0)". Svg.Skia
+         muss auf derselben SkiaSharp-Linie sitzen wie Avalonia. -->
+    <PackageVersion Include="Svg.Skia" Version="5.1.1" />
 
     <!-- Versionierung aus Git-Tags -->
     <PackageVersion Include="MinVer" Version="7.0.0" />

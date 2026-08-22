@@ -16,7 +16,9 @@ public sealed class PackageAggregator
 
     public IReadOnlyList<IPackageSource> Sources { get; }
 
-    public PackageAggregator(IReadOnlyList<IPackageSource> sources) => Sources = sources;
+    /// <summary>DI reicht alle registrierten <see cref="IPackageSource"/> als
+    /// <see cref="IEnumerable{T}"/> herein; hier wird einmal materialisiert.</summary>
+    public PackageAggregator(IEnumerable<IPackageSource> sources) => Sources = sources.ToList();
 
     public async Task<SourceLoadResult> LoadOneAsync(IPackageSource s, CancellationToken ct = default)
     {

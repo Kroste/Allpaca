@@ -3,6 +3,7 @@ using Allpaca.Models;
 using Allpaca.Services;
 using Allpaca.Services.Ai;
 using Allpaca.Services.Sources;
+using Microsoft.Extensions.DependencyInjection;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -208,24 +209,28 @@ public partial class MainWindowViewModel : ObservableObject
         }
     }
 
-    public MainWindowViewModel() : this(new SettingsService()) { }
+    /// <summary>Bequemer Konstruktor für Tests und den XAML-Designer: baut sich den
+    /// Objektgraph selbst. Die App geht über <see cref="ServiceRegistration"/>.</summary>
+    public MainWindowViewModel() : this(BuildStandalone()) { }
 
-    public MainWindowViewModel(SettingsService settingsService)
+    private static IServiceProvider BuildStandalone() => ServiceRegistration.Build();
+
+    private MainWindowViewModel(IServiceProvider sp) : this(
+        sp.GetRequiredService<SettingsService>(),
+        sp.GetRequiredService<PackageAggregator>(),
+        sp.GetRequiredService<NotificationService>())
+    { }
+
+    public MainWindowViewModel(
+        SettingsService settingsService,
+        PackageAggregator aggregator,
+        NotificationService notifications)
     {
         _settings = settingsService;
+        _notifications = notifications;
+        _aggregator = aggregator;
 
-        var runner = new ProcessRunner(new SandboxDetector());
-        _notifications = new NotificationService(runner);
-        var sources = new IPackageSource[]
-        {
-            new FlatpakSource(runner),
-            new HomebrewSource(runner),
-            new RpmOstreeSource(runner),
-            new DistroboxSource(runner),
-            new AppImageSource(),
-            new PipxSource(runner),
-        };
-        _aggregator = new PackageAggregator(sources);
+        var sources = aggregator.Sources;
         _sourceByKind = sources.ToDictionary(s => s.Kind);
 
         foreach (var s in sources)
@@ -244,7 +249,7 @@ public partial class MainWindowViewModel : ObservableObject
 
         SelectedSortOption = SortOptions[0];
 
-        // Settings aus dem User-Config-Pfad laden + anwenden. Wahrend Apply dürfen die
+        // Settings aus dem User-Config-Pfad laden + anwenden. Während Apply dürfen die
         // partial-Method-Handler NICHT speichern, sonst speichern wir die geladenen
         // Werte direkt wieder zurück (egal, aber unsauber).
         ApplySettings(_settings.Load());

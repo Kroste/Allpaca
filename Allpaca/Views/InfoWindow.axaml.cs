@@ -1,29 +1,131 @@
-using System;
 using System.Diagnostics;
-using System.Reflection;
 using Allpaca.Chrome;
+using Allpaca.Services;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
+using NLog;
 
 namespace Allpaca.Views;
 
 public partial class InfoWindow : ChromeWindow
 {
-    // TODO(Lars): echten GitHub-Slug und Buy-me-a-coffee-Handle eintragen.
-    private const string GithubUrl = "https://github.com/Kroste/Allpaca";
-    private const string CoffeeUrl = "https://www.buymeacoffee.com/kroste";
+    private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
-    public InfoWindow()
+    private readonly UpdateService _updates;
+    private UpdateRelease? _pending;
+
+    public InfoWindow() : this(new UpdateService()) { }
+
+    public InfoWindow(UpdateService updates)
     {
         InitializeComponent();
+        _updates = updates;
 
-        var v = Assembly.GetExecutingAssembly().GetName().Version;
         if (this.FindControl<TextBlock>("VersionText") is { } vt)
-            vt.Text = "Version " + (v?.ToString(3) ?? "1.0");
+            vt.Text = "Version " + AppInfo.Version;
     }
 
-    private void OnGithubClick(object? sender, RoutedEventArgs e) => OpenUrl(GithubUrl);
-    private void OnCoffeeClick(object? sender, RoutedEventArgs e) => OpenUrl(CoffeeUrl);
+    private async void OnCheckUpdateClick(object? sender, RoutedEventArgs e)
+    {
+        var button = this.FindControl<Button>("CheckUpdateButton");
+        var status = this.FindControl<TextBlock>("UpdateStatusText");
+        var install = this.FindControl<Button>("InstallUpdateButton");
+        if (status is null) return;
+
+        if (button is not null) button.IsEnabled = false;
+        status.IsVisible = true;
+        status.Text = "Suche nach Updates …";
+        if (install is not null) install.IsVisible = false;
+
+        try
+        {
+            var release = await _updates.CheckAsync();
+            if (release is null)
+            {
+                status.Text = $"Allpaca {AppInfo.Version} ist aktuell.";
+                _pending = null;
+                return;
+            }
+
+            _pending = release;
+            var asset = UpdateService.SelectAsset(release);
+            if (asset is null)
+            {
+                // Kein passendes Paket für diese Installationsform -> Release-Seite anbieten,
+                // statt so zu tun, als könnte die App sich selbst austauschen.
+                status.Text = $"Version {release.Version} ist verfügbar, aber ohne passendes "
+                            + "Paket für diese Installation. Öffne die Release-Seite.";
+                Log.Warn("Update {0} ohne passendes Asset (AppImage={1})",
+                    release.Version, UpdateService.RunningAsAppImage);
+                return;
+            }
+
+            status.Text = $"Version {release.Version} ist verfügbar (installiert: {AppInfo.Version}).";
+            if (install is not null) install.IsVisible = true;
+        }
+        catch (Exception ex)
+        {
+            Log.Warn(ex, "Update-Check aus dem Info-Fenster fehlgeschlagen");
+            status.Text = "Update-Check fehlgeschlagen - siehe Log.";
+        }
+        finally
+        {
+            if (button is not null) button.IsEnabled = true;
+        }
+    }
+
+    private async void OnInstallUpdateClick(object? sender, RoutedEventArgs e)
+    {
+        if (_pending is null) return;
+
+        var status = this.FindControl<TextBlock>("UpdateStatusText");
+        var bar = this.FindControl<ProgressBar>("UpdateProgress");
+        var install = this.FindControl<Button>("InstallUpdateButton");
+
+        var confirmed = await ConfirmWindow.AskAsync(this, new ViewModels.ConfirmRequest(
+            "Update installieren?",
+            $"Allpaca {_pending.Version} wird heruntergeladen und ersetzt die laufende "
+            + "Version. Die App startet dabei neu.",
+            "Installieren",
+            IsDestructive: false));
+        if (!confirmed) return;
+
+        if (install is not null) install.IsEnabled = false;
+        if (bar is not null) bar.IsVisible = true;
+
+        var progress = new Progress<double>(p =>
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (bar is not null) bar.Value = p;
+                if (status is not null) status.Text = $"Update lädt … {p:P0}";
+            }));
+
+        try
+        {
+            var ok = await _updates.DownloadAndApplyAsync(_pending, progress);
+            if (!ok)
+            {
+                if (status is not null) status.Text = "Update konnte nicht vorbereitet werden - siehe Log.";
+                if (install is not null) install.IsEnabled = true;
+                return;
+            }
+
+            // PFLICHT: der Installer wartet per kill -0 auf das Prozessende. Ohne den
+            // Self-Exit hängt die Anzeige bei 100 % und das Update passiert nie.
+            if (status is not null) status.Text = "Update wird angewendet - Allpaca startet neu …";
+            UpdateService.TerminateForUpdate();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Update-Installation fehlgeschlagen");
+            if (status is not null) status.Text = "Update fehlgeschlagen - siehe Log.";
+            if (install is not null) install.IsEnabled = true;
+        }
+    }
+
+    private void OnGithubClick(object? sender, RoutedEventArgs e) => OpenUrl(AppInfo.GithubUrl);
+    private void OnCoffeeClick(object? sender, RoutedEventArgs e) => OpenUrl(AppInfo.CoffeeUrl);
 
     private void OpenUrl(string url)
     {
@@ -40,6 +142,6 @@ public partial class InfoWindow : ChromeWindow
         catch { /* Fallback unten */ }
 
         try { Process.Start(new ProcessStartInfo(url) { UseShellExecute = true }); }
-        catch { /* nicht weiter behandelbar */ }
+        catch (Exception ex) { Log.Warn(ex, "URL konnte nicht geöffnet werden: {0}", url); }
     }
 }

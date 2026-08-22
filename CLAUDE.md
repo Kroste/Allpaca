@@ -205,6 +205,30 @@ Antwort fast immer `/template/ ContentPresenter`.
 - `WithInterFont()` in `Program.cs` braucht das Paket **`Avalonia.Fonts.Inter`** — sonst
   Build-Fehler. (Schon referenziert.)
 
+### 3.11b SkiaSharp-Linie: Svg.Skia MUSS zu Avalonia passen
+`Svg.Skia` bringt die **managed** SkiaSharp mit, Avalonia die **nativen** Assets.
+Driften die auseinander, bleibt der Build grün und die App stirbt beim ersten
+Skia-Aufruf (also beim ersten Fenster, weil `AppIcon` das Logo rendert):
+
+```
+The version of the native libSkiaSharp library (119.0) is incompatible with this
+version of SkiaSharp. Supported versions are in the range [148.0, 149.0).
+```
+
+Real passiert beim Sprung auf Avalonia 12.1.1: `Svg.Skia 5.2.x` zieht
+SkiaSharp 4.148, Avalonia 12.1 liefert die nativen Assets in 3.119.
+**Deshalb steht Svg.Skia auf `5.1.1`** (letzte Version auf der 3.119er Linie).
+Vor jedem Bump von Avalonia ODER Svg.Skia gegenprüfen:
+
+```bash
+dotnet list Allpaca/Allpaca.csproj package --include-transitive | grep -i skia
+# SkiaSharp und SkiaSharp.NativeAssets.Linux MÜSSEN dieselbe Linie haben
+```
+
+Nebenwirkung: auf der 3.119er Linie gibt es `SKPathBuilder` noch nicht, und die
+`SKPath`-Bau-Methoden sind dort auch nicht deprecated — `AppIcon` baut die Pfade
+also direkt über `SKPath`.
+
 ### 3.12 DataGrid (falls je gebraucht)
 - Eigenes Paket `Avalonia.Controls.DataGrid` **plus** Theme-Include:
   `<StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>`.
@@ -222,6 +246,12 @@ IPackageSource ── FlatpakSource     flatpak list --columns=…
               ├─ AppImageSource     .desktop-Scan + Dateisystem
               └─ PipxSource         pipx list --json
 
+ServiceRegistration ── DI-Komposition (ServiceCollection); einzige Stelle, an der
+                       verdrahtet wird, wer wen bekommt
+GlobalExceptionHandler ── AppDomain + TaskScheduler + Dispatcher → NLog Fatal/Error
+MaskingLayoutRenderer ── NLog ${masked}: entfernt API-Keys aus jeder Log-Zeile
+UpdateService   ── GitHub-Release-Check + echtes Self-Update (AppImage/tar.gz)
+TrayController  ── Minimieren → Tray, Menü Anzeigen/Beenden
 ProcessRunner   ── zentrale, sandbox-bewusste Prozessausführung
 SandboxDetector ── erkennt Flatpak/Container → flatpak-spawn --host
 PackageAggregator ── lädt jede Quelle parallel & fehlertolerant
@@ -281,7 +311,17 @@ VS-Code-Tasks: `build` (Default), `test`, `clean`, `clean-hard`, `rebuild`, `rel
 - **Zum echten Test auf dem Host starten** (oder `distrobox-host-exec`). In der Distrobox
   greift zwar der Host-Wrapper, aber das AppImage-Dateisystem-Scanning sieht dann nur das
   geteilte Home.
-- Logs: `~/.local/share/Allpaca/logs/` bzw. `${ApplicationData}/Allpaca/logs/`.
+- Logs: `${ApplicationData}/Allpaca/logs/` — auf Linux also **`~/.config/Allpaca/logs/`**
+  (nicht `~/.local/share`, das ist `LocalApplicationData`).
+- **NLog schreibt ab `Trace` in die Datei**, ab `Info` auf die Konsole, 14 Tage Archiv.
+- **Secret-Masking ist Pflicht und aktiv:** das Layout nutzt `${masked}` aus
+  `Allpaca.Logging.MaskingLayoutRenderer` (Provider-Keyformate `sk-…`/`sk-ant-…`/
+  `AIza…`, dazu `api_key=`, `x-api-key:`, `Authorization: Bearer`, `?key=`).
+  ⚠️ **Der Renderer registriert sich über einen `[ModuleInitializer]`, nicht in
+  `Program.Main`.** Kennt NLog das `${masked}` nicht, verschluckt es den Rest der
+  Zeile und im Log steht eine **leere Message**. Genau das ist passiert, als die
+  Registrierung nur in `Main` stand: die App loggte korrekt, der Testprozess (kein
+  `Main`) schrieb lauter Zeilen ohne Text.
 
 ---
 
@@ -331,6 +371,28 @@ VS-Code-Tasks: `build` (Default), `test`, `clean`, `clean-hard`, `rebuild`, `rel
 - [ ] `cargo install` (Rust-Tools, `cargo install --list`).
 - [ ] `npm -g` (globale Node-Pakete, `npm list -g --json`).
 - [ ] `toolbx` parallel zu Distrobox.
+
+### v4 — Kroste-Standards nachgezogen (2026-08-22)
+- [x] **Infrastruktur:** `Directory.Build.props` + `Directory.Packages.props` (CPM),
+      MinVer statt manuellem `<Version>`, `.slnx`, `ci.yml`, `dependabot.yml`,
+      `LICENSE`, `FUNDING.yml`, Release-Action auf Node-24-Action-Majors.
+- [x] **xunit.v3** statt xunit 2.x (deprecated) — inkl. MTP-Opt-in in `global.json`.
+- [x] **Echte Umlaute** im gesamten Repo (322 Stellen).
+- [x] **DI-Container** (`ServiceRegistration`) — vorher baute sich das
+      MainWindowViewModel seinen Objektgraph selbst zusammen.
+- [x] **GlobalExceptionHandler** (AppDomain + TaskScheduler + Dispatcher).
+- [x] **NLog:** Trace-Level + `${masked}`-Renderer gegen Secrets im Log.
+- [x] **UpdateService** mit echtem Self-Update (AppImage ersetzt sich per `cp -f`,
+      tar.gz wird über das Installationsverzeichnis entpackt) + „⬇ Update
+      installieren"-Button im InfoWindow.
+- [x] **System-Tray** (`TrayController`): Minimieren → Tray, Menü Anzeigen/Beenden.
+- [x] **Persistenz atomar** (tmp + Move) mit `.broken`-Quarantäne nur bei `JsonException`.
+- [x] **App-Icon als Datei** (`Allpaca/Assets/allpaca.png`) über `scripts/build_icon.sh`,
+      das den vorhandenen SkiaSharp-Renderer aufruft.
+- [ ] **Card-Look / Kroste-Palette**: bewusst ausgeklammert — die Views nutzen 163
+      hartkodierte `#XXXXXX`-Literale statt `DynamicResource`-Keys, und `Border.card`
+      kommt nirgends vor. Eigener Umbau, kein Nebenbei-Fix.
+- [ ] **Localization EN+DE**: ebenfalls ausgeklammert, die UI ist komplett hart deutsch.
 
 ### Polishing & QoL (laufend)
 - [x] App-Icon (Alpaca-Silhouette via SkiaSharp, einheitlich auf allen Fenstern).
@@ -409,3 +471,5 @@ public interface IAiAssistant
 6. Kurz auf dem **Host** gegengetestet (nicht nur in der Box).
 7. Neue testbare Logik hat Tests; `.vscode`-Tasks & Release-Action bleiben lauffähig.
 8. InfoBox/BMC vorhanden und funktionsfähig.
+9. Neue Services über `ServiceRegistration` einhängen, nicht per `new` im ViewModel.
+10. Nach dem Push CI prüfen: `gh run list --repo Kroste/Allpaca --limit 3`.

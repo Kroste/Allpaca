@@ -130,15 +130,36 @@ Allpaca läuft sowohl direkt auf dem Host als auch innerhalb einer
 Flatpak-Icons einmal pro Session ins geteilte Home — also keine fehlenden
 Logos in der Liste.
 
+## Updates
+
+Allpaca prüft nicht ungefragt im Hintergrund. Im Info-Fenster (ⓘ) gibt es
+**„Nach Updates suchen"** — liegt eine neuere Version vor, erscheint
+**„⬇ Update installieren"**. Nach einer Rückfrage lädt Allpaca das passende
+Paket, tauscht sich aus und startet neu:
+
+- als **AppImage** ersetzt es die laufende Datei an Ort und Stelle,
+- als **tar.gz-Installation** entpackt es über das Programmverzeichnis.
+
+Passt kein Paket zur Installationsform, sagt Allpaca das und verweist auf die
+Release-Seite, statt so zu tun, als könnte es sich selbst ersetzen.
+
+## System-Tray
+
+Minimieren legt Allpaca in den System-Tray statt in die Taskleiste. Ein Klick
+aufs Tray-Symbol (oder „Anzeigen" im Kontextmenü) holt das Fenster zurück,
+„Beenden" schließt die App. Das ✕ am Fenster beendet weiterhin direkt.
+
+Gibt es keinen Tray (headless, kaputtes DBus), bleibt es beim normalen
+Minimieren — die App läuft in jedem Fall.
+
 ## Was offen ist
 
 Siehe `CLAUDE.md` §6 für die volle Roadmap. Kurz:
 
-- KI-Streaming statt Single-Shot (Diagnose/Cleanup/Suggest werden live ausgegeben)
-- libsecret-Persistenz für API-Keys (aktuell in-memory)
+- libsecret-Persistenz für API-Keys (aktuell nur im Speicher, pro Sitzung neu eingeben)
 - Weitere Quellen: cargo install, npm -g, toolbx
-- Toast-/Tray-Notification beim Update-Check
-- Drag-and-drop AppImages
+- Einheitlicher Card-Look über die ganze Oberfläche
+- Englische Übersetzung der Oberfläche
 
 ## Lizenz
 

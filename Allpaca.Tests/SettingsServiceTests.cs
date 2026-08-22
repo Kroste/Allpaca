@@ -105,4 +105,47 @@ public class SettingsServiceTests
         var path = SettingsService.DefaultPath();
         Assert.EndsWith(Path.Combine("Allpaca", "settings.json"), path);
     }
+
+    [Fact]
+    public void Load_QuarantinesBrokenJson_InsteadOfLosingIt()
+    {
+        var path = Tmp();
+        var broken = path + ".broken";
+        try
+        {
+            File.WriteAllText(path, "{ das ist kein json");
+
+            var s = new SettingsService(path).Load();
+
+            // Defaults zurück, kaputte Datei zur Seite gelegt statt überschrieben.
+            Assert.Equal("Name", s.SortKey);
+            Assert.False(File.Exists(path));
+            Assert.True(File.Exists(broken));
+            Assert.Contains("das ist kein json", File.ReadAllText(broken));
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+            if (File.Exists(broken)) File.Delete(broken);
+        }
+    }
+
+    [Fact]
+    public void Save_LeavesNoTempFileBehind()
+    {
+        var path = Tmp();
+        try
+        {
+            new SettingsService(path).Save(new AppSettings { SortKey = "Size" });
+
+            Assert.True(File.Exists(path));
+            Assert.False(File.Exists(path + ".tmp"));
+            Assert.Equal("Size", new SettingsService(path).Load().SortKey);
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+            if (File.Exists(path + ".tmp")) File.Delete(path + ".tmp");
+        }
+    }
 }

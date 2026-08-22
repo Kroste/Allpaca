@@ -25,6 +25,29 @@ public static class AppIcon
     /// dieselbe Bitmap teilen.</summary>
     public static WindowIcon WindowIcon => _windowIcon ??= new WindowIcon(Bitmap);
 
+    /// <summary>
+    /// Schreibt das Logo als PNG auf die Platte. Wird von scripts/build_icon.sh über
+    /// "Allpaca --export-icon &lt;pfad&gt;" gerufen, damit sich das Icon reproduzierbar
+    /// neu bauen lässt, ohne das Motiv ein zweites Mal zu definieren.
+    /// </summary>
+    public static void ExportPng(string path, int size = 256)
+    {
+        using var skBitmap = new SKBitmap(size, size, SKColorType.Bgra8888, SKAlphaType.Premul);
+        using (var canvas = new SKCanvas(skBitmap))
+        {
+            canvas.Clear(SKColors.Transparent);
+            DrawAlpaca(canvas, size);
+        }
+
+        var dir = Path.GetDirectoryName(path);
+        if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
+
+        using var image = SKImage.FromBitmap(skBitmap);
+        using var png = image.Encode(SKEncodedImageFormat.Png, 100);
+        using var file = File.Create(path);
+        png.SaveTo(file);
+    }
+
     private static Bitmap Render(int size)
     {
         using var skBitmap = new SKBitmap(size, size, SKColorType.Bgra8888, SKAlphaType.Premul);
@@ -68,15 +91,14 @@ public static class AppIcon
         canvas.DrawOval(new SKRect(50 * s, 200 * s, 206 * s, 240 * s), bodyShadow);
 
         // Kopf als Bezier-Pfad.
-        using var headBuilder = new SKPathBuilder();
-        headBuilder.MoveTo(78 * s, 145 * s);
-        headBuilder.CubicTo(78 * s, 100 * s, 95 * s, 70 * s, 128 * s, 70 * s);
-        headBuilder.CubicTo(161 * s, 70 * s, 178 * s, 100 * s, 178 * s, 145 * s);
-        headBuilder.LineTo(178 * s, 175 * s);
-        headBuilder.CubicTo(178 * s, 200 * s, 158 * s, 220 * s, 128 * s, 220 * s);
-        headBuilder.CubicTo(98 * s, 220 * s, 78 * s, 200 * s, 78 * s, 175 * s);
-        headBuilder.Close();
-        using var head = headBuilder.Detach();
+        using var head = new SKPath();
+        head.MoveTo(78 * s, 145 * s);
+        head.CubicTo(78 * s, 100 * s, 95 * s, 70 * s, 128 * s, 70 * s);
+        head.CubicTo(161 * s, 70 * s, 178 * s, 100 * s, 178 * s, 145 * s);
+        head.LineTo(178 * s, 175 * s);
+        head.CubicTo(178 * s, 200 * s, 158 * s, 220 * s, 128 * s, 220 * s);
+        head.CubicTo(98 * s, 220 * s, 78 * s, 200 * s, 78 * s, 175 * s);
+        head.Close();
         canvas.DrawPath(head, fur);
 
         // Wollbüsche oben (drei Locken).
@@ -85,20 +107,18 @@ public static class AppIcon
         canvas.DrawCircle(141 * s, 70 * s, 12 * s, fur);
 
         // Ohren - links und rechts kleine Dreiecke.
-        using var leftEarBuilder = new SKPathBuilder();
-        leftEarBuilder.MoveTo(85 * s, 78 * s);
-        leftEarBuilder.LineTo(70 * s, 50 * s);
-        leftEarBuilder.LineTo(95 * s, 65 * s);
-        leftEarBuilder.Close();
-        using var leftEar = leftEarBuilder.Detach();
+        using var leftEar = new SKPath();
+        leftEar.MoveTo(85 * s, 78 * s);
+        leftEar.LineTo(70 * s, 50 * s);
+        leftEar.LineTo(95 * s, 65 * s);
+        leftEar.Close();
         canvas.DrawPath(leftEar, fur);
 
-        using var rightEarBuilder = new SKPathBuilder();
-        rightEarBuilder.MoveTo(171 * s, 78 * s);
-        rightEarBuilder.LineTo(186 * s, 50 * s);
-        rightEarBuilder.LineTo(161 * s, 65 * s);
-        rightEarBuilder.Close();
-        using var rightEar = rightEarBuilder.Detach();
+        using var rightEar = new SKPath();
+        rightEar.MoveTo(171 * s, 78 * s);
+        rightEar.LineTo(186 * s, 50 * s);
+        rightEar.LineTo(161 * s, 65 * s);
+        rightEar.Close();
         canvas.DrawPath(rightEar, fur);
 
         // Augen - leicht ovale schwarze Punkte.
@@ -109,10 +129,9 @@ public static class AppIcon
         canvas.DrawOval(new SKRect(115 * s, 161 * s, 141 * s, 179 * s), ink);
 
         // Mund - leicht abwärts gewölbter Bogen.
-        using var smileBuilder = new SKPathBuilder();
-        smileBuilder.MoveTo(120 * s, 185 * s);
-        smileBuilder.QuadTo(128 * s, 192 * s, 136 * s, 185 * s);
-        using var smile = smileBuilder.Detach();
+        using var smile = new SKPath();
+        smile.MoveTo(120 * s, 185 * s);
+        smile.QuadTo(128 * s, 192 * s, 136 * s, 185 * s);
         canvas.DrawPath(smile, inkStroke);
     }
 }

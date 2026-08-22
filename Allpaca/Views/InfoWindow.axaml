@@ -40,6 +40,26 @@
 
                 <Border Height="1" Background="#2A2E35" Margin="0,6" Width="320"/>
 
+                <!-- Update-Sektion: Check auf Knopfdruck, Installation nur nach
+                     ausdrücklicher Zustimmung (kein Silent-Update). -->
+                <StackPanel Spacing="8" HorizontalAlignment="Stretch">
+                    <Button x:Name="CheckUpdateButton" Content="Nach Updates suchen"
+                            Click="OnCheckUpdateClick"
+                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+
+                    <TextBlock x:Name="UpdateStatusText" Text="" Foreground="#9AA0A8"
+                               FontSize="12" TextWrapping="Wrap" TextAlignment="Center"
+                               IsVisible="False" MaxWidth="360"/>
+
+                    <ProgressBar x:Name="UpdateProgress" Minimum="0" Maximum="1"
+                                 Height="4" IsVisible="False"/>
+
+                    <Button x:Name="InstallUpdateButton" Classes="accent"
+                            Content="⬇ Update installieren" Click="OnInstallUpdateClick"
+                            IsVisible="False"
+                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+                </StackPanel>
+
                 <Button Content="GitHub-Projekt öffnen" Click="OnGithubClick"
                         HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
 
