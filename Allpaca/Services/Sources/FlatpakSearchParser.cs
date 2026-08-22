@@ -3,8 +3,8 @@ using Allpaca.Models;
 namespace Allpaca.Services.Sources;
 
 /// <summary>
-/// Parser fuer "flatpak search --columns=application,name,description,branch,remotes".
-/// Tab-getrennte Spalten, eine Zeile pro Treffer. Aeltere flatpak-Versionen drucken
+/// Parser für "flatpak search --columns=application,name,description,branch,remotes".
+/// Tab-getrennte Spalten, eine Zeile pro Treffer. Ältere flatpak-Versionen drucken
 /// eine Header-Zeile ("Application ID\tName..."), die filtern wir defensiv mit aus.
 /// </summary>
 internal static class FlatpakSearchParser
@@ -26,7 +26,7 @@ internal static class FlatpakSearchParser
             var appId = parts[0].Trim();
             if (appId.Length == 0) continue;
 
-            // Header-Zeile aelterer flatpak-Versionen abfangen.
+            // Header-Zeile älterer flatpak-Versionen abfangen.
             if (appId.Equals("Application ID", StringComparison.OrdinalIgnoreCase)) continue;
             if (appId.Equals("Application", StringComparison.OrdinalIgnoreCase)) continue;
 

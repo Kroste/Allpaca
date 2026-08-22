@@ -8,8 +8,8 @@ using NLog;
 namespace Allpaca.Services;
 
 /// <summary>
-/// Zentrale, sandbox-bewusste Prozessausfuehrung. Kapselt die Entscheidung,
-/// ob ein Kommando direkt oder via "flatpak-spawn --host" laeuft, sodass
+/// Zentrale, sandbox-bewusste Prozessausführung. Kapselt die Entscheidung,
+/// ob ein Kommando direkt oder via "flatpak-spawn --host" läuft, sodass
 /// alle Quellen denselben Aufrufpfad nutzen.
 /// </summary>
 public sealed class ProcessRunner
@@ -29,7 +29,7 @@ public sealed class ProcessRunner
         public bool Success => ExitCode == 0;
     }
 
-    /// <summary>Einmalige Ausfuehrung, sammelt stdout/stderr vollstaendig.</summary>
+    /// <summary>Einmalige Ausführung, sammelt stdout/stderr vollständig.</summary>
     public async Task<Result> RunAsync(string file, IReadOnlyList<string> args, CancellationToken ct = default)
     {
         using var proc = new Process { StartInfo = BuildStartInfo(file, args) };
@@ -54,7 +54,7 @@ public sealed class ProcessRunner
         return new Result(proc.ExitCode, so.ToString(), se.ToString());
     }
 
-    /// <summary>Streamt Ausgabe zeilenweise und yieldet abschliessend eine Marker-Zeile
+    /// <summary>Streamt Ausgabe zeilenweise und yieldet abschließend eine Marker-Zeile
     /// mit dem Exit-Code des Prozesses, damit der Consumer sauber zwischen Erfolg und
     /// Fehler unterscheiden kann.</summary>
     public async IAsyncEnumerable<ProgressLine> StreamAsync(
@@ -78,7 +78,7 @@ public sealed class ProcessRunner
 
         await proc.WaitForExitAsync(ct).ConfigureAwait(false);
 
-        // Abschliessender Marker - leerer Text, nur ExitCode zaehlt.
+        // Abschließender Marker - leerer Text, nur ExitCode zählt.
         yield return new ProgressLine("", false, ExitCode: proc.ExitCode);
     }
 

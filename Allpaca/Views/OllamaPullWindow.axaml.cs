@@ -62,7 +62,7 @@ public partial class OllamaPullWindow : ChromeWindow
             }
 
             // Stream zu Ende ohne explizites "success" - als Erfolg werten (alte Ollama-
-            // Versionen schliessen den Stream ohne success-Event).
+            // Versionen schließen den Stream ohne success-Event).
             _vm.State = OperationState.Succeeded;
             Log.Info("Pull {0}: Stream beendet (kein expliziter success-Event)", model);
         }

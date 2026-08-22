@@ -47,7 +47,7 @@ public partial class LogWindowViewModel : ObservableObject
     private string? _untrustedTapName;
 
     /// <summary>Hinweis-Banner erscheint, wenn ein untrusted-tap-Fehler vorliegt UND
-    /// die Operation gescheitert ist (nicht waehrend des Laufs).</summary>
+    /// die Operation gescheitert ist (nicht während des Laufs).</summary>
     public bool ShowUntrustedTapHint =>
         !string.IsNullOrEmpty(UntrustedTapName) && State == OperationState.Failed;
 
@@ -94,7 +94,7 @@ public partial class LogWindowViewModel : ObservableObject
     public IBrush StatusBrush => new SolidColorBrush(Color.Parse(State switch
     {
         OperationState.Running => "#F5A623",   // gelb
-        OperationState.Succeeded => "#2BB673", // gruen
+        OperationState.Succeeded => "#2BB673", // grün
         OperationState.Failed => "#E25555",    // rot
         OperationState.Cancelled => "#9AA0A8", // grau
         _ => "#9AA0A8",
@@ -105,7 +105,7 @@ public partial class LogWindowViewModel : ObservableObject
     public event Action? CancelRequested;
 
     /// <summary>Wird vom Code-Behind gesetzt, sobald die Operation komplett durch ist
-    /// (egal ob success/fail/cancel) - das Fenster soll dann schliessbar sein.</summary>
+    /// (egal ob success/fail/cancel) - das Fenster soll dann schließbar sein.</summary>
     public event Action? CloseRequested;
 
     /// <summary>Triggert vom Code-Behind aus den "brew trust &lt;tap&gt;"-Lauf im selben

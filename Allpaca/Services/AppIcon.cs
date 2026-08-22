@@ -7,10 +7,10 @@ using SkiaSharp;
 namespace Allpaca.Services;
 
 /// <summary>
-/// Rendert das Allpaca-Logo programmatisch via SkiaSharp (kommt transitiv ueber
-/// Avalonia.Skia, keine Extra-Dep). Eine Quelle der Wahrheit fuer Window.Icon
+/// Rendert das Allpaca-Logo programmatisch via SkiaSharp (kommt transitiv über
+/// Avalonia.Skia, keine Extra-Dep). Eine Quelle der Wahrheit für Window.Icon
 /// und das InfoWindow-Logo - damit das XAML-Designer-Preview ohne Asset-Files
-/// auskommt und das Packaging-SVG (packaging/linux/allpaca.svg) nur fuer
+/// auskommt und das Packaging-SVG (packaging/linux/allpaca.svg) nur für
 /// AppImage/.desktop existiert.
 /// </summary>
 public static class AppIcon
@@ -18,10 +18,10 @@ public static class AppIcon
     private static Bitmap? _bitmap;
     private static WindowIcon? _windowIcon;
 
-    /// <summary>256x256 RGBA-Bitmap fuer Image.Source-Bindings (z. B. InfoWindow).</summary>
+    /// <summary>256x256 RGBA-Bitmap für Image.Source-Bindings (z. B. InfoWindow).</summary>
     public static Bitmap Bitmap => _bitmap ??= Render(256);
 
-    /// <summary>WindowIcon fuer Window.Icon - cached, sodass mehrere Fenster
+    /// <summary>WindowIcon für Window.Icon - cached, sodass mehrere Fenster
     /// dieselbe Bitmap teilen.</summary>
     public static WindowIcon WindowIcon => _windowIcon ??= new WindowIcon(Bitmap);
 
@@ -34,7 +34,7 @@ public static class AppIcon
             DrawAlpaca(canvas, size);
         }
 
-        // SKBitmap -> PNG -> Avalonia Bitmap. Umweg ueber PNG ist sauberer als
+        // SKBitmap -> PNG -> Avalonia Bitmap. Umweg über PNG ist sauberer als
         // direkter Pixel-Copy, weil Avalonia Bitmap eine Stream-Quelle erwartet.
         using var image = SKImage.FromBitmap(skBitmap);
         using var pngData = image.Encode(SKEncodedImageFormat.Png, 100);
@@ -46,7 +46,7 @@ public static class AppIcon
 
     private static void DrawAlpaca(SKCanvas canvas, int size)
     {
-        var s = size / 256f;  // alle Koordinaten in 256x256-Designgroesse
+        var s = size / 256f;  // alle Koordinaten in 256x256-Designgröße
 
         using var bg = new SKPaint { Color = SKColor.Parse("#2BB673"), IsAntialias = true };
         using var bodyShadow = new SKPaint { Color = SKColor.Parse("#1F8E5A"), IsAntialias = true };
@@ -79,7 +79,7 @@ public static class AppIcon
         using var head = headBuilder.Detach();
         canvas.DrawPath(head, fur);
 
-        // Wollbuesche oben (drei Locken).
+        // Wollbüsche oben (drei Locken).
         canvas.DrawCircle(115 * s, 70 * s, 12 * s, fur);
         canvas.DrawCircle(128 * s, 60 * s, 14 * s, fur);
         canvas.DrawCircle(141 * s, 70 * s, 12 * s, fur);
@@ -108,7 +108,7 @@ public static class AppIcon
         // Nase.
         canvas.DrawOval(new SKRect(115 * s, 161 * s, 141 * s, 179 * s), ink);
 
-        // Mund - leicht abwaerts gewoelbter Bogen.
+        // Mund - leicht abwärts gewölbter Bogen.
         using var smileBuilder = new SKPathBuilder();
         smileBuilder.MoveTo(120 * s, 185 * s);
         smileBuilder.QuadTo(128 * s, 192 * s, 136 * s, 185 * s);

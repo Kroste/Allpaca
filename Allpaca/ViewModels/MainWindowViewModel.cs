@@ -23,32 +23,32 @@ public partial class MainWindowViewModel : ObservableObject
     private bool _settingsReady;
 
     // Anti-Spam: Notifications nur, wenn sich die Update-Zahl seit dem letzten
-    // Hinweis aendert. -1 = noch nie benachrichtigt.
+    // Hinweis ändert. -1 = noch nie benachrichtigt.
     private int _lastNotifiedUpdateCount = -1;
     private bool _lastOsUpdateNotified;
 
-    /// <summary>Wird von der View beim Start gesetzt: oeffnet das LogWindow und faedelt
+    /// <summary>Wird von der View beim Start gesetzt: öffnet das LogWindow und fädelt
     /// die Stream-Operation hindurch. ViewModel kennt damit weiterhin keine View-Typen.</summary>
     public Func<OperationContext, Func<CancellationToken, IAsyncEnumerable<ProgressLine>>, Task>? RunOperation { get; set; }
 
-    /// <summary>Wird von der View beim Start gesetzt: zeigt einen modalen Bestaetigungsdialog
-    /// und liefert true bei Bestaetigung, false bei Abbruch.</summary>
+    /// <summary>Wird von der View beim Start gesetzt: zeigt einen modalen Bestätigungsdialog
+    /// und liefert true bei Bestätigung, false bei Abbruch.</summary>
     public Func<ConfirmRequest, Task<bool>>? ConfirmAsync { get; set; }
 
-    /// <summary>Wird von der View beim Start gesetzt: oeffnet ein Container-Inspector-Fenster
-    /// fuer den angegebenen Distrobox-Container.</summary>
+    /// <summary>Wird von der View beim Start gesetzt: öffnet ein Container-Inspector-Fenster
+    /// für den angegebenen Distrobox-Container.</summary>
     public Action<string>? OpenContainerInspector { get; set; }
 
-    /// <summary>Wird von der View beim Start gesetzt: oeffnet das SearchWindow fuer den
-    /// Install-Flow. Die View baut die SearchWindowViewModel selbst, weil sie zusaetzlich
-    /// LogWindow + Confirm-Dialog faedeln muss.</summary>
+    /// <summary>Wird von der View beim Start gesetzt: öffnet das SearchWindow für den
+    /// Install-Flow. Die View baut die SearchWindowViewModel selbst, weil sie zusätzlich
+    /// LogWindow + Confirm-Dialog fädeln muss.</summary>
     public Action? OpenInstallSearch { get; set; }
 
-    /// <summary>Wird von der View gesetzt: oeffnet das Settings-Fenster und kommt mit
-    /// den geaenderten AppPreferences zurueck (oder null bei Abbruch).</summary>
+    /// <summary>Wird von der View gesetzt: öffnet das Settings-Fenster und kommt mit
+    /// den geänderten AppPreferences zurück (oder null bei Abbruch).</summary>
     public Func<AppPreferences, Task<AppPreferences?>>? OpenSettings { get; set; }
 
-    /// <summary>Wird von der View gesetzt: oeffnet das Aufraeum-Analyse-Fenster mit
+    /// <summary>Wird von der View gesetzt: öffnet das Aufräum-Analyse-Fenster mit
     /// einem Snapshot der aktuellen Paketliste.</summary>
     public Action<IReadOnlyList<PackageItemViewModel>>? OpenCleanupAnalysis { get; set; }
 
@@ -63,7 +63,7 @@ public partial class MainWindowViewModel : ObservableObject
     private DispatcherTimer? _autoRefreshTimer;
 
     /// <summary>Internal lookup, damit das MainWindow code-behind die SearchWindowViewModel
-    /// mit der richtigen Quellen-Map fuettern kann.</summary>
+    /// mit der richtigen Quellen-Map füttern kann.</summary>
     internal IReadOnlyDictionary<PackageSourceKind, IPackageSource> SourcesByKind => _sourceByKind;
 
     /// <summary>Liest die installierten Pakete *innerhalb* eines Distrobox-Containers.
@@ -130,7 +130,7 @@ public partial class MainWindowViewModel : ObservableObject
     public int SelectedCount => SelectedItems.Count;
     public bool HasMultiSelection => SelectedCount > 1;
 
-    /// <summary>Batch geht, wenn alle Markierten aus derselben (batch-faehigen) Quelle
+    /// <summary>Batch geht, wenn alle Markierten aus derselben (batch-fähigen) Quelle
     /// kommen. CanBatchUpdate/Uninstall verfeinern das pro Operation anhand der
     /// Source-Capabilities (AppImage z. B. kann uninstall, aber kein update).</summary>
     public bool CanBatchOperate
@@ -186,7 +186,7 @@ public partial class MainWindowViewModel : ObservableObject
 
     /// <summary>Sichtbar, sobald die Trefferliste leer ist - signalisiert dem User,
     /// warum gerade nichts da ist (Loading, gar nichts installiert, alle gefiltert,
-    /// Suche ohne Treffer). Waehrend Loading laeuft der ProgressBar parallel oben.</summary>
+    /// Suche ohne Treffer). Während Loading läuft der ProgressBar parallel oben.</summary>
     public bool ShowEmptyState => VisibleCount == 0;
 
     public string EmptyStateText
@@ -196,7 +196,7 @@ public partial class MainWindowViewModel : ObservableObject
             if (IsLoading) return "Pakete werden geladen …";
             if (TotalCount == 0)
                 return "Keine Pakete gefunden. Sind flatpak, brew & Co. installiert und im PATH?";
-            // Es gibt Eintraege, aber keiner ist gerade sichtbar.
+            // Es gibt Einträge, aber keiner ist gerade sichtbar.
             var q = SearchText.Trim();
             if (q.Length > 0)
                 return $"Keine Treffer für „{q}“. Versuche einen anderen Suchbegriff oder erweitere die Quellen-Auswahl links.";
@@ -244,9 +244,9 @@ public partial class MainWindowViewModel : ObservableObject
 
         SelectedSortOption = SortOptions[0];
 
-        // Settings aus dem User-Config-Pfad laden + anwenden. Wahrend Apply duerfen die
+        // Settings aus dem User-Config-Pfad laden + anwenden. Wahrend Apply dürfen die
         // partial-Method-Handler NICHT speichern, sonst speichern wir die geladenen
-        // Werte direkt wieder zurueck (egal, aber unsauber).
+        // Werte direkt wieder zurück (egal, aber unsauber).
         ApplySettings(_settings.Load());
         _settingsReady = true;
     }
@@ -310,9 +310,9 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     private void ToggleSortDirection() => SortDescending = !SortDescending;
 
-    /// <summary>Alle Mutations-faehigen Quellen sind verdrahtet: Flatpak, rpm-ostree
-    /// (pkexec, Reboot-Hinweis), Homebrew, Distrobox (Container loeschen/upgraden),
-    /// AppImage (Datei + Waisen-.desktop loeschen) und pipx (Python-CLI-Tools).</summary>
+    /// <summary>Alle Mutations-fähigen Quellen sind verdrahtet: Flatpak, rpm-ostree
+    /// (pkexec, Reboot-Hinweis), Homebrew, Distrobox (Container löschen/upgraden),
+    /// AppImage (Datei + Waisen-.desktop löschen) und pipx (Python-CLI-Tools).</summary>
     private bool IsWiredForMutation(PackageItemViewModel? item) => item?.Model.Source switch
     {
         PackageSourceKind.Flatpak => true,
@@ -324,9 +324,9 @@ public partial class MainWindowViewModel : ObservableObject
         _ => false,
     };
 
-    /// <summary>Batch-faehige Quellen. Flatpak/Homebrew haben natives Multi-ID-CLI,
-    /// AppImage und pipx iterieren ueber die Default-Implementierung von
-    /// UninstallManyAsync - schnell genug fuer Dutzende Eintraege.</summary>
+    /// <summary>Batch-fähige Quellen. Flatpak/Homebrew haben natives Multi-ID-CLI,
+    /// AppImage und pipx iterieren über die Default-Implementierung von
+    /// UninstallManyAsync - schnell genug für Dutzende Einträge.</summary>
     private static bool SupportsBatch(PackageSourceKind kind) => kind switch
     {
         PackageSourceKind.Flatpak => true,
@@ -346,7 +346,7 @@ public partial class MainWindowViewModel : ObservableObject
         var name = Selected.Name;
 
         // Destruktive Aktion - vor dem Start nachfragen, sofern die View einen
-        // Dialog eingehaengt hat (Headless-Tests koennen das weglassen).
+        // Dialog eingehängt hat (Headless-Tests können das weglassen).
         if (ConfirmAsync is not null)
         {
             var ok = await ConfirmAsync(BuildUninstallConfirmRequest(src, name));
@@ -371,7 +371,7 @@ public partial class MainWindowViewModel : ObservableObject
     private bool CanUninstallSelected() => IsWiredForMutation(Selected);
 
     /// <summary>Quellen-spezifischer Confirm-Text. Distrobox ist ein Sonderfall - das
-    /// "Uninstall" loescht den GESAMTEN Container inklusive aller Daten, deshalb
+    /// "Uninstall" löscht den GESAMTEN Container inklusive aller Daten, deshalb
     /// muss der Dialog das laut und deutlich sagen.</summary>
     private static ConfirmRequest BuildUninstallConfirmRequest(IPackageSource src, string name)
     {
@@ -439,8 +439,8 @@ public partial class MainWindowViewModel : ObservableObject
             new OperationContext("rpm-ostree: System aktualisieren", RequiresReboot: true),
             ct => src.UpdateAsync(null, ct));
 
-        // Nach erfolgreicher Anwendung sollte der Banner verschwinden - der naechste
-        // Refresh laeuft sowieso, der bringt einen frischen Check mit.
+        // Nach erfolgreicher Anwendung sollte der Banner verschwinden - der nächste
+        // Refresh läuft sowieso, der bringt einen frischen Check mit.
         OsUpdateMessage = null;
         await RefreshAsync();
     }
@@ -492,7 +492,7 @@ public partial class MainWindowViewModel : ObservableObject
         };
         _autoRefreshTimer.Tick += (_, _) =>
         {
-            // Nicht parallel starten, wenn schon was laeuft.
+            // Nicht parallel starten, wenn schon was läuft.
             if (!IsLoading && RefreshCommand.CanExecute(null))
                 RefreshCommand.Execute(null);
         };
@@ -507,7 +507,7 @@ public partial class MainWindowViewModel : ObservableObject
         var items = SelectedItems.ToList();
         if (items.Count == 0) return;
 
-        // CanBatchOperate hat schon zugesichert: alle aus derselben (batch-faehigen) Quelle.
+        // CanBatchOperate hat schon zugesichert: alle aus derselben (batch-fähigen) Quelle.
         var srcKind = items[0].Model.Source;
         if (!_sourceByKind.TryGetValue(srcKind, out var src)) return;
 
@@ -567,7 +567,7 @@ public partial class MainWindowViewModel : ObservableObject
 
         _all.Clear();
         Packages.Clear();
-        // UpdateCount mit zurueck auf 0 - sonst zeigt die Sidebar stale "↑N", waehrend
+        // UpdateCount mit zurück auf 0 - sonst zeigt die Sidebar stale "↑N", während
         // die neuen PackageItemViewModels noch alle HasUpdate=false haben.
         foreach (var f in Filters) { f.Count = 0; f.Status = null; f.UpdateCount = 0; }
         TotalCount = 0;
@@ -603,7 +603,7 @@ public partial class MainWindowViewModel : ObservableObject
             IsLoading = false;
         }
 
-        // Update-Check laeuft im Hintergrund - Liste ist sofort sichtbar, Badges fliegen
+        // Update-Check läuft im Hintergrund - Liste ist sofort sichtbar, Badges fliegen
         // ein, sobald die Antworten der Quellen da sind. Bei erneutem Refresh canceln wir
         // den vorherigen Check, damit kein stale Ergebnis dazwischenfunkt.
         _updatesCheckCts?.Cancel();
@@ -632,7 +632,7 @@ public partial class MainWindowViewModel : ObservableObject
             OsUpdateMessage = info;
             Log.Info("rpm-ostree OS-Update: {0}", info ?? "keins");
 
-            // Toast nur beim Uebergang nicht-vorhanden -> verfuegbar.
+            // Toast nur beim Übergang nicht-vorhanden -> verfügbar.
             var hasUpdate = !string.IsNullOrEmpty(info);
             if (hasUpdate && !_lastOsUpdateNotified)
             {
@@ -674,9 +674,9 @@ public partial class MainWindowViewModel : ObservableObject
             }
 
             var updateCount = _all.Count(p => p.HasUpdate);
-            Log.Info("Update-Check fertig: {0} Updates verfuegbar", updateCount);
+            Log.Info("Update-Check fertig: {0} Updates verfügbar", updateCount);
 
-            // Per-Source-Counter nachziehen, damit das gruene "↑ N"-Badge in der
+            // Per-Source-Counter nachziehen, damit das grüne "↑ N"-Badge in der
             // Sidebar passt.
             foreach (var f in Filters)
                 f.UpdateCount = _all.Count(p => p.Model.Source == f.Kind && p.HasUpdate);
@@ -685,7 +685,7 @@ public partial class MainWindowViewModel : ObservableObject
             // neu gerendert und die HasUpdate-Badges erscheinen.
             ApplyFilter();
 
-            // Toast nur bei Aenderung gegenueber dem letzten Lauf - sonst wuerde
+            // Toast nur bei Änderung gegenüber dem letzten Lauf - sonst würde
             // jeder Refresh die gleichen N Updates erneut anzeigen.
             if (updateCount > 0 && updateCount != _lastNotifiedUpdateCount)
             {
@@ -726,8 +726,8 @@ public partial class MainWindowViewModel : ObservableObject
 
     private void ApplyFilter()
     {
-        // Duplikat-Status ueber die volle Liste recompute - mit jedem zusaetzlich
-        // geladenen Source-Result koennen neue Doppel auftauchen.
+        // Duplikat-Status über die volle Liste recompute - mit jedem zusätzlich
+        // geladenen Source-Result können neue Doppel auftauchen.
         PackageDuplicateDetector.Annotate(_all);
 
         var active = Filters.Where(f => f.IsSelected).Select(f => f.Kind).ToHashSet();

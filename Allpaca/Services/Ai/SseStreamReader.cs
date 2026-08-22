@@ -4,9 +4,9 @@ using System.Runtime.CompilerServices;
 namespace Allpaca.Services.Ai;
 
 /// <summary>
-/// Gemeinsamer Reader fuer Server-Sent-Events von HTTP-Response-Streams. Yieldet
+/// Gemeinsamer Reader für Server-Sent-Events von HTTP-Response-Streams. Yieldet
 /// pro "data: …"-Zeile den JSON-Payload (ohne den "data: "-Prefix). Andere Zeilen
-/// (event:, leer, Kommentare mit ":" Praefix) ueberspringt der Reader still.
+/// (event:, leer, Kommentare mit ":" Präfix) überspringt der Reader still.
 /// </summary>
 internal static class SseStreamReader
 {
@@ -22,7 +22,7 @@ internal static class SseStreamReader
             if (line.StartsWith("data: ", System.StringComparison.Ordinal))
                 yield return line[6..];
             // alles andere ignorieren: event:-Zeilen, leere Zeilen zwischen Events,
-            // Kommentar-Zeilen mit ":"-Praefix.
+            // Kommentar-Zeilen mit ":"-Präfix.
         }
     }
 }

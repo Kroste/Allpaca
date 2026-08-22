@@ -5,10 +5,10 @@ using NLog;
 namespace Allpaca.Services.Sources;
 
 /// <summary>
-/// Verwaltet Python-CLI-Tools, die ueber pipx in eigene venvs installiert sind
-/// (z. B. httpie, glances, yt-dlp, gh). Auf Bazzite haeufig genutzt; rootless,
-/// kein pkexec noetig. Search ist absichtlich nicht implementiert - pipx selbst
-/// hat keine "search"-Sub, das laeuft normalerweise via "pip search" gegen PyPI
+/// Verwaltet Python-CLI-Tools, die über pipx in eigene venvs installiert sind
+/// (z. B. httpie, glances, yt-dlp, gh). Auf Bazzite häufig genutzt; rootless,
+/// kein pkexec nötig. Search ist absichtlich nicht implementiert - pipx selbst
+/// hat keine "search"-Sub, das läuft normalerweise via "pip search" gegen PyPI
 /// und ist seit Jahren deaktiviert.
 /// </summary>
 public sealed class PipxSource : IPackageSource

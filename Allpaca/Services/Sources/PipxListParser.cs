@@ -4,7 +4,7 @@ using Allpaca.Models;
 namespace Allpaca.Services.Sources;
 
 /// <summary>
-/// Parser fuer "pipx list --json". Struktur (vereinfacht):
+/// Parser für "pipx list --json". Struktur (vereinfacht):
 /// {
 ///   "venvs": {
 ///     "youtube-dl": {
@@ -48,7 +48,7 @@ internal static class PipxListParser
                     version = pv;
             }
 
-            // Fallback: wenn metadata fehlt, nehmen wir den venv-Schluessel als Id+Name.
+            // Fallback: wenn metadata fehlt, nehmen wir den venv-Schlüssel als Id+Name.
             var id = pkg ?? venvName;
             list.Add(new PackageInfo
             {

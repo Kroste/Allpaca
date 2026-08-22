@@ -3,10 +3,10 @@ using System.Text.Json;
 namespace Allpaca.Services.Ai;
 
 /// <summary>
-/// Parser fuer einen "data:"-Block aus dem Gemini-Streaming-Endpoint
+/// Parser für einen "data:"-Block aus dem Gemini-Streaming-Endpoint
 /// (POST :streamGenerateContent?alt=sse). Format:
 ///   {"candidates":[{"content":{"parts":[{"text":"…"}],"role":"model"}}]}
-/// Manche Frames enthalten nur Metadaten ohne text - dann null zurueck.
+/// Manche Frames enthalten nur Metadaten ohne text - dann null zurück.
 /// </summary>
 internal static class GeminiStreamParser
 {

@@ -37,7 +37,7 @@ public partial class OllamaPullViewModel : ObservableObject
 
     public bool HasProgress => TotalBytes is > 0 && CompletedBytes is not null;
 
-    /// <summary>0..100. Wenn HasProgress=false, bleibt 0 - der ProgressBar laeuft dann
+    /// <summary>0..100. Wenn HasProgress=false, bleibt 0 - der ProgressBar läuft dann
     /// indeterminate.</summary>
     public double ProgressValue =>
         HasProgress ? (double)CompletedBytes!.Value / TotalBytes!.Value * 100.0 : 0;

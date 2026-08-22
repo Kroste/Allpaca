@@ -3,9 +3,9 @@ using System.Text.Json;
 namespace Allpaca.Services.Ai;
 
 /// <summary>
-/// Parser fuer Ollamas GET /api/tags. Antwort sieht so aus:
+/// Parser für Ollamas GET /api/tags. Antwort sieht so aus:
 /// { "models": [ { "name": "qwen2.5-coder:14b", "size": ..., ... }, ... ] }
-/// Wir interessieren uns nur fuer die Namen.
+/// Wir interessieren uns nur für die Namen.
 /// </summary>
 internal static class OllamaTagsParser
 {

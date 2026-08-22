@@ -4,8 +4,8 @@ namespace Allpaca.Services.Ai;
 
 /// <summary>
 /// Parst eine Zeile aus Ollamas NDJSON-Stream von POST /api/pull. Jede Zeile ist ein
-/// eigenstaendiges JSON-Objekt. Unbekannte Formate werden als null zurueckgegeben,
-/// damit der Aufrufer schlicht ueberspringt.
+/// eigenständiges JSON-Objekt. Unbekannte Formate werden als null zurückgegeben,
+/// damit der Aufrufer schlicht überspringt.
 /// </summary>
 internal static class OllamaPullProgressParser
 {

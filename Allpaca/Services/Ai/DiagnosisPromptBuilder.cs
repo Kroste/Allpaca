@@ -4,13 +4,13 @@ using Allpaca.Models;
 namespace Allpaca.Services.Ai;
 
 /// <summary>
-/// Baut den Prompt fuer die KI-Fehlerdiagnose im LogWindow. Pur statisch, damit
+/// Baut den Prompt für die KI-Fehlerdiagnose im LogWindow. Pur statisch, damit
 /// die Logik (Truncation, Zeilenformat) testbar bleibt - die HTTP-Calls liegen
 /// in AiAssistant.
 /// </summary>
 public static class DiagnosisPromptBuilder
 {
-    /// <summary>System-Prompt: Rolle + Format-Constraint. Identisch fuer alle Diagnosen.</summary>
+    /// <summary>System-Prompt: Rolle + Format-Constraint. Identisch für alle Diagnosen.</summary>
     public const string SystemPrompt =
         "Du bist ein Linux-Paket-Manager-Experte für Bazzite (Fedora Atomic). " +
         "Du kennst Flatpak, Homebrew, rpm-ostree, Distrobox und AppImage. " +

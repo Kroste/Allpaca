@@ -46,10 +46,10 @@ public partial class SearchWindowViewModel : ObservableObject
                 ? "Tippe ein Stichwort und drücke „Suchen“."
                 : $"{ResultCount} Treffer";
 
-    /// <summary>Wird von der View beim Start gesetzt: oeffnet das LogWindow.</summary>
+    /// <summary>Wird von der View beim Start gesetzt: öffnet das LogWindow.</summary>
     public Func<OperationContext, Func<CancellationToken, IAsyncEnumerable<ProgressLine>>, Task>? RunOperation { get; set; }
 
-    /// <summary>Wird von der View beim Start gesetzt: modaler Bestaetigungsdialog.</summary>
+    /// <summary>Wird von der View beim Start gesetzt: modaler Bestätigungsdialog.</summary>
     public Func<ConfirmRequest, Task<bool>>? ConfirmAsync { get; set; }
 
     /// <summary>Callback nach erfolgreicher Installation - die MainWindow nutzt das,
@@ -57,8 +57,8 @@ public partial class SearchWindowViewModel : ObservableObject
     public Action? AfterInstall { get; set; }
 
     /// <summary>Wird von der View beim Start gesetzt: System+User-Prompt -> KI-Stream.
-    /// Wir buffern den Stream und parsen am Ende - live Chunks wuerden bei der
-    /// structured-PROVIDER|ID|REASON-Antwort nur Halbsaetze produzieren.</summary>
+    /// Wir buffern den Stream und parsen am Ende - live Chunks würden bei der
+    /// structured-PROVIDER|ID|REASON-Antwort nur Halbsätze produzieren.</summary>
     public Func<string, string, CancellationToken, IAsyncEnumerable<string>>? AiCompletion { get; set; }
 
     public SearchWindowViewModel(IReadOnlyDictionary<PackageSourceKind, IPackageSource> sources)
@@ -104,7 +104,7 @@ public partial class SearchWindowViewModel : ObservableObject
             var allResults = await Task.WhenAll(tasks);
             if (ct.IsCancellationRequested) return;
 
-            // Zusammenfuehren, sortieren (Source-asc, dann Name-asc).
+            // Zusammenführen, sortieren (Source-asc, dann Name-asc).
             var merged = allResults
                 .SelectMany(r => r)
                 .OrderBy(p => p.Source.ToString(), StringComparer.OrdinalIgnoreCase)
@@ -133,7 +133,7 @@ public partial class SearchWindowViewModel : ObservableObject
         try { return await src.SearchAsync(query, ct); }
         catch (Exception ex)
         {
-            Log.Warn(ex, "SearchAsync '{0}' fuer Quelle {1}", query, src.DisplayName);
+            Log.Warn(ex, "SearchAsync '{0}' für Quelle {1}", query, src.DisplayName);
             return Array.Empty<PackageInfo>();
         }
     }

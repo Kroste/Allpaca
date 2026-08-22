@@ -14,7 +14,7 @@ public partial class ConfirmWindow : ChromeWindow
     }
 
     /// <summary>
-    /// Bequemer Aufruf-Entry-Point: oeffnet modal, liefert true bei Bestaetigung,
+    /// Bequemer Aufruf-Entry-Point: öffnet modal, liefert true bei Bestätigung,
     /// false bei Abbruch / X-Klick / Window-Manager-Close.
     /// </summary>
     public static async Task<bool> AskAsync(Window owner, ConfirmRequest request)

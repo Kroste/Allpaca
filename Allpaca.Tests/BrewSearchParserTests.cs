@@ -70,7 +70,7 @@ public class BrewSearchParserTests
     [Fact]
     public void Parse_SkipsAnnotationTokens()
     {
-        // brew kann Token in Klammern hinten dranhaengen wie "(installed)".
+        // brew kann Token in Klammern hinten dranhängen wie "(installed)".
         var input =
             "==> Formulae\n" +
             "node (installed)\n";

@@ -6,7 +6,7 @@ using NLog;
 
 namespace Allpaca.Services.Ai;
 
-/// <summary>Claude ueber die native Messages-API (/v1/messages) mit Streaming.</summary>
+/// <summary>Claude über die native Messages-API (/v1/messages) mit Streaming.</summary>
 public sealed class AnthropicAssistant : IAiAssistant
 {
     private static readonly Logger Log = LogManager.GetCurrentClassLogger();

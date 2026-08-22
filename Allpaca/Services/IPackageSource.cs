@@ -3,7 +3,7 @@ using Allpaca.Models;
 namespace Allpaca.Services;
 
 /// <summary>
-/// Abstraktion ueber eine Installationsquelle. v1 nutzt nur die Lese-Pfade
+/// Abstraktion über eine Installationsquelle. v1 nutzt nur die Lese-Pfade
 /// (IsAvailable + ListInstalled). Die Mutations-Signaturen sind bereits
 /// definiert, damit die UI in v2 ohne Architekturbruch andocken kann.
 /// </summary>
@@ -13,10 +13,10 @@ public interface IPackageSource
     string DisplayName { get; }
     PackageCapabilities Capabilities { get; }
 
-    /// <summary>Ist das zugehoerige Tool auf dem Host vorhanden/aufrufbar?</summary>
+    /// <summary>Ist das zugehörige Tool auf dem Host vorhanden/aufrufbar?</summary>
     Task<bool> IsAvailableAsync(CancellationToken ct = default);
 
-    /// <summary>Alle installierten Eintraege dieser Quelle.</summary>
+    /// <summary>Alle installierten Einträge dieser Quelle.</summary>
     Task<IReadOnlyList<PackageInfo>> ListInstalledAsync(CancellationToken ct = default);
 
     // --- v2 ---
@@ -26,17 +26,17 @@ public interface IPackageSource
     IAsyncEnumerable<ProgressLine> UpdateAsync(string? id, CancellationToken ct = default);
 
     /// <summary>
-    /// Liefert die IDs aller eigenen Eintraege, fuer die ein Update verfuegbar ist.
-    /// Default: leeres Set - Quellen, die das nicht unterstuetzen (z. B. AppImage,
-    /// Distrobox-Container), brauchen nichts zu ueberschreiben.
+    /// Liefert die IDs aller eigenen Einträge, für die ein Update verfügbar ist.
+    /// Default: leeres Set - Quellen, die das nicht unterstützen (z. B. AppImage,
+    /// Distrobox-Container), brauchen nichts zu überschreiben.
     /// </summary>
     Task<IReadOnlySet<string>> CheckUpdatesAsync(CancellationToken ct = default)
         => Task.FromResult<IReadOnlySet<string>>(new HashSet<string>());
 
     /// <summary>
-    /// Deinstalliert mehrere Eintraege in einer Operation. Default: sequentiell
+    /// Deinstalliert mehrere Einträge in einer Operation. Default: sequentiell
     /// einzeln, damit der Stream nur ein Fenster braucht. Quellen mit nativer
-    /// Batch-CLI (z. B. Flatpak) ueberschreiben das fuer Geschwindigkeit.
+    /// Batch-CLI (z. B. Flatpak) überschreiben das für Geschwindigkeit.
     /// </summary>
     async IAsyncEnumerable<ProgressLine> UninstallManyAsync(
         IReadOnlyList<string> ids,
@@ -51,7 +51,7 @@ public interface IPackageSource
         }
     }
 
-    /// <summary>Analog zu <see cref="UninstallManyAsync"/> fuer Updates.</summary>
+    /// <summary>Analog zu <see cref="UninstallManyAsync"/> für Updates.</summary>
     async IAsyncEnumerable<ProgressLine> UpdateManyAsync(
         IReadOnlyList<string> ids,
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken ct = default)

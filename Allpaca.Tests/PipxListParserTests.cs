@@ -54,8 +54,8 @@ public class PipxListParserTests
     [Fact]
     public void Parse_FallsBackToVenvName_WhenMetadataMissing()
     {
-        // Falls eine spaetere pipx-Version das Schema veraendert: zumindest den
-        // venv-Schluessel als Name verwenden, damit der Eintrag nicht verschluckt wird.
+        // Falls eine spätere pipx-Version das Schema verändert: zumindest den
+        // venv-Schlüssel als Name verwenden, damit der Eintrag nicht verschluckt wird.
         var json = """
         {
           "venvs": {

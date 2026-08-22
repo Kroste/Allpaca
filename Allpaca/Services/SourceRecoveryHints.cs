@@ -4,8 +4,8 @@ namespace Allpaca.Services;
 
 /// <summary>
 /// Pro Quelle ein konkreter „so installierst du das Tool"-Hint, der im Sidebar-
-/// ToolTip erscheint, wenn die Quelle als nicht verfuegbar gemeldet wird.
-/// Bewusst Bazzite-zentriert: rpm-ostree fuer System-Layer, Homebrew als
+/// ToolTip erscheint, wenn die Quelle als nicht verfügbar gemeldet wird.
+/// Bewusst Bazzite-zentriert: rpm-ostree für System-Layer, Homebrew als
 /// rootless Alternative, ujust-Pfade wo praktisch.
 /// </summary>
 public static class SourceRecoveryHints

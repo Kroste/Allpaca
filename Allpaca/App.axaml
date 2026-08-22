@@ -6,7 +6,7 @@
     <Application.Styles>
         <FluentTheme />
 
-        <!-- Fensterknoepfe (Custom Chrome) -->
+        <!-- Fensterknöpfe (Custom Chrome) -->
         <Style Selector="Button.chrome">
             <Setter Property="Width" Value="46" />
             <Setter Property="Height" Value="40" />
@@ -28,7 +28,7 @@
 
         <!-- Akzent-Button. FluentTheme bringt selbst einen Button.accent-Style mit
              eigenem ControlTemplate mit, dessen Background unsere Setter ignoriert.
-             Deshalb hier explizit den ContentPresenter im Template einfaerben. -->
+             Deshalb hier explizit den ContentPresenter im Template einfärben. -->
         <Style Selector="Button.accent">
             <Setter Property="Foreground" Value="White" />
             <Setter Property="Padding" Value="14,7" />
@@ -53,7 +53,7 @@
             <Setter Property="Padding" Value="12,6" />
         </Style>
 
-        <!-- Listeneintraege -->
+        <!-- Listeneinträge -->
         <Style Selector="ListBoxItem">
             <Setter Property="Padding" Value="6" />
             <Setter Property="CornerRadius" Value="8" />

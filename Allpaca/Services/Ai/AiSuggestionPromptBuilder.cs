@@ -1,9 +1,9 @@
 namespace Allpaca.Services.Ai;
 
 /// <summary>
-/// System- und User-Prompt fuer die natuerlichsprachige Such-Empfehlung im
+/// System- und User-Prompt für die natürlichsprachige Such-Empfehlung im
 /// SearchWindow. Output-Format ist HART vorgeschrieben, damit AiSuggestionParser
-/// die Antwort zuverlaessig zerlegen kann.
+/// die Antwort zuverlässig zerlegen kann.
 /// </summary>
 public static class AiSuggestionPromptBuilder
 {

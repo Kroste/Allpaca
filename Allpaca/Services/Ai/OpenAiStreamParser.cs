@@ -3,10 +3,10 @@ using System.Text.Json;
 namespace Allpaca.Services.Ai;
 
 /// <summary>
-/// Parser fuer einen "data:"-Block aus dem OpenAI/Ollama-Streaming-Endpoint
+/// Parser für einen "data:"-Block aus dem OpenAI/Ollama-Streaming-Endpoint
 /// (POST /chat/completions mit stream=true). Format pro Event:
 ///   {"choices":[{"delta":{"content":"…"}, "finish_reason":null}], ...}
-/// Erstes/letztes Event enthaelt oft kein "content" - dann null zurueck.
+/// Erstes/letztes Event enthält oft kein "content" - dann null zurück.
 /// </summary>
 internal static class OpenAiStreamParser
 {

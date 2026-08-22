@@ -4,8 +4,8 @@ namespace Allpaca.Services.Sources;
 
 /// <summary>
 /// Erkennt Homebrews "Refusing to load ... from untrusted tap &lt;name&gt;"-Fehler in
-/// Log-Zeilen und liefert den Tap-Namen zurueck. Genau diesen Tap muss der User
-/// mit "brew trust" markieren, bevor Install/Uninstall fuer dessen Casks/Formulae
+/// Log-Zeilen und liefert den Tap-Namen zurück. Genau diesen Tap muss der User
+/// mit "brew trust" markieren, bevor Install/Uninstall für dessen Casks/Formulae
 /// klappt - typisch auf Bazzite mit ublue-os/tap.
 /// </summary>
 internal static class UntrustedTapDetector
@@ -22,8 +22,8 @@ internal static class UntrustedTapDetector
         var sb = new StringBuilder();
         foreach (var ch in rest)
         {
-            // Tap-Name endet beim ersten Punkt/Whitespace - brew haengt am Satzende
-            // ueblicherweise "." an.
+            // Tap-Name endet beim ersten Punkt/Whitespace - brew hängt am Satzende
+            // üblicherweise "." an.
             if (ch == '.' || char.IsWhiteSpace(ch)) break;
             sb.Append(ch);
         }

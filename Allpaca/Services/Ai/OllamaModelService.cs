@@ -8,7 +8,7 @@ namespace Allpaca.Services.Ai;
 
 /// <summary>
 /// Liest die Liste der lokal installierten Ollama-Modelle. Akzeptiert beide Endpoint-
-/// Varianten, die in AiSettings auftauchen koennen: das OpenAI-kompatible "/v1"-Suffix
+/// Varianten, die in AiSettings auftauchen können: das OpenAI-kompatible "/v1"-Suffix
 /// und den nativen Ollama-Pfad ohne /v1.
 /// </summary>
 public sealed class OllamaModelService
@@ -19,8 +19,8 @@ public sealed class OllamaModelService
 
     public OllamaModelService(HttpClient? http = null)
     {
-        // Lange Timeouts fuer Pull (mehrere GB Download) - die einzelne Streaming-Pause
-        // soll nicht versehentlich den Pull abreissen.
+        // Lange Timeouts für Pull (mehrere GB Download) - die einzelne Streaming-Pause
+        // soll nicht versehentlich den Pull abreißen.
         _http = http ?? new HttpClient { Timeout = TimeSpan.FromMinutes(60) };
     }
 
@@ -54,7 +54,7 @@ public sealed class OllamaModelService
     /// <summary>
     /// Streamt die NDJSON-Events von POST /api/pull. Ein Event pro Status-Wechsel
     /// (manifest, downloading-Fortschritt, verifying, writing, success). Cancel
-    /// schliesst die Verbindung sauber und bricht den Server-seitigen Pull mit ab.
+    /// schließt die Verbindung sauber und bricht den Server-seitigen Pull mit ab.
     /// </summary>
     public async IAsyncEnumerable<OllamaPullEvent> PullAsync(
         string endpoint, string model,

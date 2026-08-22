@@ -3,12 +3,12 @@ using System.Text.Json;
 namespace Allpaca.Services.Ai;
 
 /// <summary>
-/// Parser fuer einen "data:"-Block aus dem Anthropic-Streaming-Endpoint
+/// Parser für einen "data:"-Block aus dem Anthropic-Streaming-Endpoint
 /// (POST /v1/messages mit stream=true). Mehrere Event-Typen, wir interessieren
-/// uns nur fuer "content_block_delta" mit "text_delta":
+/// uns nur für "content_block_delta" mit "text_delta":
 ///   {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"…"}}
 /// Alle anderen Events (message_start, content_block_start, message_stop, …)
-/// liefern null und werden vom Caller stillschweigend uebersprungen.
+/// liefern null und werden vom Caller stillschweigend übersprungen.
 /// </summary>
 internal static class AnthropicStreamParser
 {

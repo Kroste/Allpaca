@@ -5,7 +5,7 @@ using NLog;
 namespace Allpaca.Services.Sources;
 
 /// <summary>
-/// Listet Distrobox-Container als Eintraege. Das granulare Auflisten der
+/// Listet Distrobox-Container als Einträge. Das granulare Auflisten der
 /// Pakete *innerhalb* jedes Containers (enter + pm list) ist teuer und folgt
 /// als Drill-down in v2.
 /// </summary>
@@ -72,14 +72,14 @@ public sealed class DistroboxSource : IPackageSource
         => Task.FromResult<IReadOnlyList<PackageInfo>>(Array.Empty<PackageInfo>());
 
     /// <summary>
-    /// Listet die Pakete *innerhalb* eines Containers. Probiert die ueblichen Package-
+    /// Listet die Pakete *innerhalb* eines Containers. Probiert die üblichen Package-
     /// Manager der Reihe nach (dpkg/rpm/pacman/apk), damit wir uns das Erkennen des
     /// Distro-Geschmacks im Voraus sparen. Ausgabeformat: pro Zeile "Name\tVersion".
     /// </summary>
     public async Task<IReadOnlyList<ContainerPackage>> ListContainerPackagesAsync(
         string containerName, CancellationToken ct = default)
     {
-        // Doppelte $ sind die normale Bash-Escape-Form fuer dpkg-querys Format-String
+        // Doppelte $ sind die normale Bash-Escape-Form für dpkg-querys Format-String
         // (das Escapen passiert in der Shell, nicht in C#).
         const string script =
             "if command -v dpkg-query >/dev/null 2>&1; then " +

@@ -1,6 +1,6 @@
 namespace Allpaca.Models;
 
-/// <summary>Die unterstuetzten Installationsquellen unter Bazzite.</summary>
+/// <summary>Die unterstützten Installationsquellen unter Bazzite.</summary>
 public enum PackageSourceKind
 {
     Flatpak,

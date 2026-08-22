@@ -6,7 +6,7 @@ using NLog;
 
 namespace Allpaca.Services.Ai;
 
-/// <summary>Gemini ueber die Generative-Language-API mit Streaming
+/// <summary>Gemini über die Generative-Language-API mit Streaming
 /// (models/{model}:streamGenerateContent?alt=sse).</summary>
 public sealed class GeminiAssistant : IAiAssistant
 {

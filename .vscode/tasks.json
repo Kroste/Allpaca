@@ -41,7 +41,7 @@
     {
       "label": "run (no debug)",
       "type": "shell",
-      "detail": "Faellt zurueck auf 'dotnet run', wenn der C#-Debugger fehlt oder F5 streikt. Kein Debugger-Attach, dafuer immer da.",
+      "detail": "Fällt zurück auf 'dotnet run', wenn der C#-Debugger fehlt oder F5 streikt. Kein Debugger-Attach, dafür immer da.",
       "command": "dotnet",
       "args": [ "run", "--project", "${workspaceFolder}/Allpaca/Allpaca.csproj" ],
       "options": { "cwd": "${workspaceFolder}" },
@@ -63,7 +63,7 @@
     {
       "label": "clean-hard",
       "type": "shell",
-      "detail": "Loescht ALLE bin/ und obj/ rekursiv vom Datentraeger (gegen haengenden Avalonia-XAML-Cache im obj/).",
+      "detail": "Löscht ALLE bin/ und obj/ rekursiv vom Datenträger (gegen hängenden Avalonia-XAML-Cache im obj/).",
       "command": "find . -type d \\( -name bin -o -name obj \\) -exec rm -rf {} +",
       "options": { "cwd": "${workspaceFolder}" },
       "problemMatcher": []

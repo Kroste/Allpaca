@@ -17,7 +17,7 @@ public partial class SettingsWindowViewModel : ObservableObject
         AiProvider.Ollama, AiProvider.OpenAi, AiProvider.Anthropic, AiProvider.Gemini,
     };
 
-    /// <summary>Lokal installierte Ollama-Modelle, via /api/tags geladen. Leer fuer
+    /// <summary>Lokal installierte Ollama-Modelle, via /api/tags geladen. Leer für
     /// andere Provider.</summary>
     public ObservableCollection<string> LocalOllamaModels { get; } = new();
 
@@ -81,8 +81,8 @@ public partial class SettingsWindowViewModel : ObservableObject
     /// <summary>Wird vom Code-Behind als Fenster-zu-Lebenszyklus genutzt.</summary>
     public event Action? CloseRequested;
 
-    /// <summary>Wird vom Code-Behind gesetzt: oeffnet ein OllamaPullWindow fuer das
-    /// uebergebene Modell und liefert true zurueck, wenn der Pull erfolgreich war.</summary>
+    /// <summary>Wird vom Code-Behind gesetzt: öffnet ein OllamaPullWindow für das
+    /// übergebene Modell und liefert true zurück, wenn der Pull erfolgreich war.</summary>
     public Func<string, Task<bool>>? PullModelAsync { get; set; }
 
     public SettingsWindowViewModel(AppPreferences current)
@@ -90,7 +90,7 @@ public partial class SettingsWindowViewModel : ObservableObject
 
     public SettingsWindowViewModel(AppPreferences current, OllamaModelService ollamaModels)
     {
-        // Initial-Belegung aus aktuellen Settings - leere Strings statt null fuer TextBox-Bindings.
+        // Initial-Belegung aus aktuellen Settings - leere Strings statt null für TextBox-Bindings.
         var ai = current.Ai;
         _selectedProvider = ai.Provider;
         _endpointText = ai.Endpoint ?? "";
@@ -204,7 +204,7 @@ public partial class SettingsWindowViewModel : ObservableObject
         var ok = await PullModelAsync(SelectedCuratedModel.Name);
         if (ok)
         {
-            // Erfolgreich gezogen -> Modell direkt als aktives Modell uebernehmen
+            // Erfolgreich gezogen -> Modell direkt als aktives Modell übernehmen
             // und die lokale Liste neu laden, damit das neue Modell auftaucht.
             ModelText = SelectedCuratedModel.Name;
             await LoadLocalModelsAsync();

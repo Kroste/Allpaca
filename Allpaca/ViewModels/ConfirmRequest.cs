@@ -1,9 +1,9 @@
 namespace Allpaca.ViewModels;
 
 /// <summary>
-/// Parameter fuer einen Bestaetigungsdialog. Die View bindet direkt auf diese
+/// Parameter für einen Bestätigungsdialog. Die View bindet direkt auf diese
 /// Properties (DataContext = ConfirmRequest), ein eigenes ViewModel ist hier
-/// uebertrieben.
+/// übertrieben.
 /// </summary>
 public sealed record ConfirmRequest(
     string Title,

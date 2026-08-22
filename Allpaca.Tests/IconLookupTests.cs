@@ -92,7 +92,7 @@ public class AppImageResolveIconTests
         var tmp = Path.GetTempFileName();
         try
         {
-            // ResolveIcon ist internal - direkter Aufruf reicht ueber InternalsVisibleTo.
+            // ResolveIcon ist internal - direkter Aufruf reicht über InternalsVisibleTo.
             var result = AppImageSource.ResolveIcon(tmp);
             Assert.Equal(tmp, result);
         }

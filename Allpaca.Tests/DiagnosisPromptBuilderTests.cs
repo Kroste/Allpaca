@@ -38,7 +38,7 @@ public class DiagnosisPromptBuilderTests
 
         var prompt = DiagnosisPromptBuilder.BuildUserPrompt("op", null, lines);
 
-        // Letzte 50 muessen drin sein (line-150..line-199), die ersten nicht.
+        // Letzte 50 müssen drin sein (line-150..line-199), die ersten nicht.
         Assert.Contains("line-199", prompt);
         Assert.Contains("line-150", prompt);
         Assert.DoesNotContain("line-149", prompt);
@@ -54,7 +54,7 @@ public class DiagnosisPromptBuilderTests
 
         var prompt = DiagnosisPromptBuilder.BuildUserPrompt("op", null, lines);
 
-        // Sollte gekuerzt sein - 300 chars + Ellipsis.
+        // Sollte gekürzt sein - 300 chars + Ellipsis.
         Assert.Contains(new string('x', 300) + "…", prompt);
         Assert.DoesNotContain(new string('x', 301) + "x", prompt);
     }

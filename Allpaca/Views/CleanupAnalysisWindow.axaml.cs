@@ -17,7 +17,7 @@ public partial class CleanupAnalysisWindow : ChromeWindow
     private CancellationTokenSource _cts = new();
 
     /// <summary>Wird vom Aufrufer (MainWindow) gesetzt: System+User-Prompt -> KI-Stream.
-    /// Chunks fliessen live in AnalysisText - so sieht der User die Antwort wachsen
+    /// Chunks fließen live in AnalysisText - so sieht der User die Antwort wachsen
     /// statt 30 s auf einen Spinner zu starren.</summary>
     public Func<string, string, CancellationToken, IAsyncEnumerable<string>>? AnalyzeHandler { get; set; }
 
@@ -71,7 +71,7 @@ public partial class CleanupAnalysisWindow : ChromeWindow
             else
             {
                 _vm.State = OperationState.Succeeded;
-                Log.Info("Aufraeum-Analyse fertig ({0} Pakete)", _vm.PackageCount);
+                Log.Info("Aufräum-Analyse fertig ({0} Pakete)", _vm.PackageCount);
             }
         }
         catch (OperationCanceledException)
@@ -82,7 +82,7 @@ public partial class CleanupAnalysisWindow : ChromeWindow
         {
             _vm.ErrorText = ex.Message;
             _vm.State = OperationState.Failed;
-            Log.Warn(ex, "Aufraeum-Analyse fehlgeschlagen");
+            Log.Warn(ex, "Aufräum-Analyse fehlgeschlagen");
         }
     }
 

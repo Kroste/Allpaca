@@ -28,7 +28,7 @@ public class HomebrewOutdatedParserTests
     [Fact]
     public void ParseIds_PrefersCaskToken_OverName()
     {
-        // brew outdated --json=v2 fuer Casks: token = ID, name = Anzeigename.
+        // brew outdated --json=v2 für Casks: token = ID, name = Anzeigename.
         // Wir wollen den token, weil ListInstalledAsync ihn als Id speichert.
         var json = """
         {

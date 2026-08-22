@@ -10,7 +10,7 @@ public sealed class HomebrewSource : IPackageSource
     private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
     // brew steht in GUI-Sessions (KDE/Wayland) oft nicht im PATH – daher
-    // zusaetzlich der bekannte Linuxbrew-Pfad als Fallback.
+    // zusätzlich der bekannte Linuxbrew-Pfad als Fallback.
     private static readonly string[] Candidates =
     {
         "brew",
@@ -201,7 +201,7 @@ public sealed class HomebrewSource : IPackageSource
     }
 
     /// <summary>
-    /// Markiert einen Homebrew-Tap als vertrauenswuerdig. Auf Bazzite haeufig
+    /// Markiert einen Homebrew-Tap als vertrauenswürdig. Auf Bazzite häufig
     /// ublue-os/tap - Casks aus untrusted Taps lassen sich sonst weder installieren
     /// noch deinstallieren ("Refusing to load cask ... from untrusted tap").
     /// </summary>

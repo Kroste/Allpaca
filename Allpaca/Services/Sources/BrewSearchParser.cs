@@ -3,8 +3,8 @@ using Allpaca.Models;
 namespace Allpaca.Services.Sources;
 
 /// <summary>
-/// Parser fuer "brew search &lt;query&gt;". brew gruppiert die Treffer in zwei
-/// Sections ueber "==&gt; Formulae" und "==&gt; Casks". Wir behalten die Section-Info
+/// Parser für "brew search &lt;query&gt;". brew gruppiert die Treffer in zwei
+/// Sections über "==&gt; Formulae" und "==&gt; Casks". Wir behalten die Section-Info
 /// als Scope ("formula" / "cask"), damit die UI sie als Hinweis zeigen kann.
 /// </summary>
 internal static class BrewSearchParser
@@ -32,7 +32,7 @@ internal static class BrewSearchParser
                 continue;
             }
 
-            // Ohne Section keine Zuordnung -> ueberspringen (z. B. "No formula found" Zeile).
+            // Ohne Section keine Zuordnung -> überspringen (z. B. "No formula found" Zeile).
             if (section.Length == 0) continue;
 
             // brew search liefert ggf. mehrere Tokens pro Zeile (kommagetrennt in

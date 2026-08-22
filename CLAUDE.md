@@ -302,7 +302,7 @@ VS-Code-Tasks: `build` (Default), `test`, `clean`, `clean-hard`, `rebuild`, `rel
 - [x] **Distrobox-Drill-down:** Pakete *innerhalb* eines Containers (enter + pm-Probe,
       tolerant gegen dpkg/rpm/pacman/apk). Bisher read-only; install/uninstall in der
       Container-Inspector-UI bleibt optional.
-- [x] Fehler-Handling: ProcessRunner yieldet abschliessende Marker-Zeile mit Exit-Code,
+- [x] Fehler-Handling: ProcessRunner yieldet abschließende Marker-Zeile mit Exit-Code,
       LogWindow kippt rot bei != 0.
 
 ### v2.x — Komfort  ✅ komplett
@@ -345,11 +345,11 @@ VS-Code-Tasks: `build` (Default), `test`, `clean`, `clean-hard`, `rebuild`, `rel
       `brew trust`-Button.
 - [x] Resizable für alle Fenster (manueller Edge-Resize in ChromeWindow, weil
       KDE/Wayland-BorderOnly oft keinen treffbaren Griff hat).
-- [x] **Toast-Notification** beim Hintergrund-Update-Check (`notify-send` ueber
-      ProcessRunner; nur bei Aenderung der Anzahl, kein Spam bei wiederholtem Refresh).
+- [x] **Toast-Notification** beim Hintergrund-Update-Check (`notify-send` über
+      ProcessRunner; nur bei Änderung der Anzahl, kein Spam bei wiederholtem Refresh).
 - [x] **Auto-Refresh-Intervall** (Settings-ComboBox Aus/5/15/30/60 Min, DispatcherTimer
       in MainWindowViewModel, persistiert in settings.json).
-- [x] **Per-Source-Recovery-Hint** als ToolTip beim „nicht verfuegbar"-Text in der
+- [x] **Per-Source-Recovery-Hint** als ToolTip beim „nicht verfügbar"-Text in der
       Sidebar - konkrete Install-Befehle pro Quelle (Bazzite-zentriert).
 - [ ] Drag-and-drop AppImages in MainWindow → bewusst skipped (entschieden 2026-06-17:
       Gear Lever deckt's ab).

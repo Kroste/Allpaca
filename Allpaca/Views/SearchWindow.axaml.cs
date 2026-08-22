@@ -20,7 +20,7 @@ public partial class SearchWindow : ChromeWindow
         DataContext = _vm;
     }
 
-    // Parameterloser ctor nur fuer den XAML-Loader (Preview), Liefert leere Source-Map.
+    // Parameterloser ctor nur für den XAML-Loader (Preview), Liefert leere Source-Map.
     public SearchWindow()
         : this(new SearchWindowViewModel(new Dictionary<PackageSourceKind, IPackageSource>()))
     {

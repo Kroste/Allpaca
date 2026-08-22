@@ -150,7 +150,7 @@
             <Border Grid.Column="1" Background="#202329" CornerRadius="10" Margin="0,0,10,0"
                     ClipToBounds="True">
                 <Grid RowDefinitions="Auto,*">
-                    <!-- Batch-Banner: erscheint, sobald 2+ Eintraege markiert sind -->
+                    <!-- Batch-Banner: erscheint, sobald 2+ Einträge markiert sind -->
                     <Border Grid.Row="0" Background="#262E36" CornerRadius="8"
                             Padding="12,6" Margin="6,6,6,0"
                             IsVisible="{Binding HasMultiSelection}">
@@ -236,7 +236,7 @@
             <!-- Detailpanel -->
             <Border Grid.Column="2" Background="#202329" CornerRadius="10" Padding="16">
                 <Panel>
-                    <!-- Platzhalter, wenn nichts gewaehlt -->
+                    <!-- Platzhalter, wenn nichts gewählt -->
                     <TextBlock Text="Eintrag auswählen für Details"
                                Foreground="#6E747C" FontSize="13"
                                HorizontalAlignment="Center" VerticalAlignment="Center"

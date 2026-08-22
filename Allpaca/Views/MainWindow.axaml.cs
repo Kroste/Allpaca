@@ -22,7 +22,7 @@ public partial class MainWindow : ChromeWindow
 
     protected override void OnKeyDown(KeyEventArgs e)
     {
-        // Reihenfolge: Tastenkuerzel zuerst, dann an die Basis fuer Esc-Logik etc.
+        // Reihenfolge: Tastenkürzel zuerst, dann an die Basis für Esc-Logik etc.
         if (!e.Handled && DataContext is MainWindowViewModel vm)
         {
             if (e.KeyModifiers == KeyModifiers.Control)
@@ -71,7 +71,7 @@ public partial class MainWindow : ChromeWindow
 
         if (DataContext is MainWindowViewModel vm)
         {
-            // ViewModel kennt keine View-Typen - "oeffne ein LogWindow" und "frag den
+            // ViewModel kennt keine View-Typen - "öffne ein LogWindow" und "frag den
             // User per modalem Dialog" werden hier injiziert. DataContext steht erst in
             // OnOpened sicher (siehe App.OnFrameworkInitializationCompleted).
             vm.RunOperation ??= RunOperationAsync;
@@ -104,7 +104,7 @@ public partial class MainWindow : ChromeWindow
 
     /// <summary>Bridge ins KI-Subsystem - LogWindow/CleanupAnalysis/SearchWindow rufen
     /// das, sobald sie die KI brauchen. Liest CurrentAi vom MainWindow-VM, baut den
-    /// Assistant ueber die Factory und streamt die Antwort. Caller akkumulieren bei
+    /// Assistant über die Factory und streamt die Antwort. Caller akkumulieren bei
     /// Bedarf - LogWindow/Cleanup zeigen live an, Search bufferd und parst am Ende.</summary>
     private System.Collections.Generic.IAsyncEnumerable<string> StreamAiAsync(
         string systemPrompt, string userPrompt, System.Threading.CancellationToken ct)
@@ -117,8 +117,8 @@ public partial class MainWindow : ChromeWindow
             throw new InvalidOperationException(
                 "KI ist noch nicht konfiguriert. Öffne die Einstellungen (⚙) und wähle Provider + Modell.");
 
-        // Hartes Timeout - bei sehr grossen Ollama-Modellen koennen einzelne Antworten
-        // zaeh werden. Wir wrappen die Stream-Iteration mit einem linked CTS, damit
+        // Hartes Timeout - bei sehr großen Ollama-Modellen können einzelne Antworten
+        // zäh werden. Wir wrappen die Stream-Iteration mit einem linked CTS, damit
         // sowohl externe Cancellation als auch das 120-s-Timeout sauber durchschlagen.
         return StreamWithTimeoutAsync(assistant, systemPrompt, userPrompt, ct);
     }

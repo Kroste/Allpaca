@@ -46,7 +46,7 @@ public class PackageDuplicateDetectorTests
     [Fact]
     public void Annotate_DoesNotFlag_SameNameSameSource()
     {
-        // Zwei Eintraege mit gleichem Namen aus DERSELBEN Quelle - das ist kein
+        // Zwei Einträge mit gleichem Namen aus DERSELBEN Quelle - das ist kein
         // Cross-Source-Duplikat und soll nicht gewarnt werden.
         var items = new[]
         {

@@ -20,7 +20,7 @@ public partial class SettingsWindow : ChromeWindow
         _vm.PullModelAsync = PullAsync;
     }
 
-    // Parameterloser ctor nur fuer den XAML-Loader (Preview), default-Settings.
+    // Parameterloser ctor nur für den XAML-Loader (Preview), default-Settings.
     public SettingsWindow() : this(new SettingsWindowViewModel(new AppPreferences(new AiSettings(), 0)))
     {
     }
@@ -35,7 +35,7 @@ public partial class SettingsWindow : ChromeWindow
         win.Show(this);
         await win.PullAsync(_ollama, endpoint, model);
 
-        // win.DataContext ist die OllamaPullViewModel - State pruefen.
+        // win.DataContext ist die OllamaPullViewModel - State prüfen.
         if (win.DataContext is OllamaPullViewModel pvm)
             return pvm.State == OperationState.Succeeded;
         return false;

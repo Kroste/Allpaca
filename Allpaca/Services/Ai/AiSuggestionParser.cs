@@ -3,7 +3,7 @@ using Allpaca.Models;
 namespace Allpaca.Services.Ai;
 
 /// <summary>
-/// Parser fuer die KI-Antwort von AiSuggestionPromptBuilder. Erwartet Zeilen im
+/// Parser für die KI-Antwort von AiSuggestionPromptBuilder. Erwartet Zeilen im
 /// Format "PROVIDER|PAKET-ID|BEGRÜNDUNG". Tolerant gegen Vor-/Nachgeplapper und
 /// Provider-Schreibvarianten (flatpak, Flatpak, brew, Homebrew); Zeilen, die nicht
 /// passen, werden schlicht ignoriert.

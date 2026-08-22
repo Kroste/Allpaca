@@ -30,8 +30,8 @@ public partial class ContainerInspectorWindow : ChromeWindow
         Title = _vm.Title;
     }
 
-    // Parameterloser Konstruktor nur fuer den Avalonia-XAML-Loader (Preview).
-    // Liefert eine leere Probe-Funktion, damit der Designer keine Side-Effects ausloest.
+    // Parameterloser Konstruktor nur für den Avalonia-XAML-Loader (Preview).
+    // Liefert eine leere Probe-Funktion, damit der Designer keine Side-Effects auslöst.
     public ContainerInspectorWindow()
         : this((_, _) => Task.FromResult<IReadOnlyList<ContainerPackage>>(Array.Empty<ContainerPackage>()), "")
     {
@@ -65,7 +65,7 @@ public partial class ContainerInspectorWindow : ChromeWindow
         }
         catch (OperationCanceledException)
         {
-            // Window wurde zugemacht waehrend des Ladens - kein UI-Update mehr noetig.
+            // Window wurde zugemacht während des Ladens - kein UI-Update mehr nötig.
         }
         catch (Exception ex)
         {

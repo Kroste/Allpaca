@@ -60,7 +60,7 @@ public class CleanupPromptBuilderTests
         var ai = Pkg("Brave", PackageSourceKind.AppImage, "/home/u/Apps/Brave.AppImage");
 
         // PackageDuplicateDetector normalerweise via MainWindowViewModel.ApplyFilter -
-        // hier setzen wir die Felder direkt fuer den Test.
+        // hier setzen wir die Felder direkt für den Test.
         PackageDuplicateDetector.Annotate(new[] { fp, ai });
 
         var prompt = CleanupPromptBuilder.BuildUserPrompt(new[] { fp, ai });

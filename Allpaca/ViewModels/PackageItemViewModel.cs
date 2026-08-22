@@ -21,7 +21,7 @@ public sealed class PackageItemViewModel
 
     /// <summary>Per-App-Icon (Flatpak hicolor, AppImage .desktop Icon=). Lazy beim
     /// ersten Zugriff geladen. PNG direkt via Avalonia.Bitmap, SVG via Svg.Skia
-    /// rastert auf 64x64 (ListBox zeigt 28x28 - leichte Skalierung haelt Antialiasing
+    /// rastert auf 64x64 (ListBox zeigt 28x28 - leichte Skalierung hält Antialiasing
     /// sauber). Fehler werden silent in Debug geloggt und liefern null.</summary>
     public Bitmap? Icon
     {
@@ -88,7 +88,7 @@ public sealed class PackageItemViewModel
     /// (z. B. "Flatpak, AppImage"). Leer, wenn IsDuplicate=false.</summary>
     public string DuplicateInfo { get; internal set; } = "";
 
-    /// <summary>True, wenn fuer diesen Eintrag laut CheckUpdatesAsync der Quelle ein
+    /// <summary>True, wenn für diesen Eintrag laut CheckUpdatesAsync der Quelle ein
     /// Update bereitsteht. Wird vom MainWindowViewModel nach dem Refresh gesetzt.</summary>
     public bool HasUpdate { get; internal set; }
 
@@ -105,12 +105,12 @@ public sealed class PackageItemViewModel
         _ => "?",
     };
 
-    /// <summary>Bequemes Bool fuer XAML-Bindings (z. B. fuer den Drill-down-Button im Detailpanel).</summary>
+    /// <summary>Bequemes Bool für XAML-Bindings (z. B. für den Drill-down-Button im Detailpanel).</summary>
     public bool IsDistrobox => Model.Source == PackageSourceKind.Distrobox;
 
     public IBrush SourceBrush => new SolidColorBrush(Color.Parse(ColorFor(Model.Source)));
 
-    /// <summary>Distrobox-Container-Status (z. B. "Up 2 hours", "Exited", "Created"). Leer fuer andere Quellen.</summary>
+    /// <summary>Distrobox-Container-Status (z. B. "Up 2 hours", "Exited", "Created"). Leer für andere Quellen.</summary>
     public string DistroboxStatus =>
         Model.Source == PackageSourceKind.Distrobox &&
         Model.Extra is { } x && x.TryGetValue("status", out var s)
@@ -126,7 +126,7 @@ public sealed class PackageItemViewModel
     private static string StatusForegroundColor(string status)
     {
         var s = status.ToLowerInvariant();
-        if (s.StartsWith("up") || s.Contains("running")) return "#2BB673";   // gruen
+        if (s.StartsWith("up") || s.Contains("running")) return "#2BB673";   // grün
         if (s.StartsWith("created") || s.StartsWith("configured")) return "#F5A623"; // gelb
         if (s.StartsWith("paused")) return "#4A90D9";                        // blau
         return "#9AA0A8";                                                    // exited/stopped/dead/unknown -> grau

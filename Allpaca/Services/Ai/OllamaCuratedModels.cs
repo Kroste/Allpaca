@@ -1,7 +1,7 @@
 namespace Allpaca.Services.Ai;
 
 /// <summary>
-/// Eine kleine kuratierte Liste fuer Allpaca-typische Aufgaben (Empfehlung, Aufraeum-
+/// Eine kleine kuratierte Liste für Allpaca-typische Aufgaben (Empfehlung, Aufräum-
 /// Analyse, Fehler-Diagnose). Bewusst klein gehalten - der User kann jeden anderen
 /// Ollama-Namen auch direkt eintippen.
 /// </summary>

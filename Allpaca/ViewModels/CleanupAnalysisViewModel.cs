@@ -47,7 +47,7 @@ public partial class CleanupAnalysisViewModel : ObservableObject
 
     public event Action? CloseRequested;
 
-    /// <summary>Triggert die Re-Analyse - der Code-Behind faengt das.</summary>
+    /// <summary>Triggert die Re-Analyse - der Code-Behind fängt das.</summary>
     public event Action? AnalyzeRequested;
 
     [RelayCommand(CanExecute = nameof(CanAnalyze))]

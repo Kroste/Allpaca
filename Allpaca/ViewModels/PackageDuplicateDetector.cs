@@ -3,14 +3,14 @@ using System.Text;
 namespace Allpaca.ViewModels;
 
 /// <summary>
-/// Markiert Eintraege, die unter normalisiertem Namen in mehreren Quellen auftauchen
+/// Markiert Einträge, die unter normalisiertem Namen in mehreren Quellen auftauchen
 /// (klassischer Fall: dieselbe App als Flatpak UND als AppImage). Runtimes werden
 /// bewusst ausgenommen, weil sie technische Dependencies sind und sonst nur Larm
-/// erzeugen wuerden.
+/// erzeugen würden.
 ///
-/// Heuristik fuer v1 absichtlich konservativ: exakter Match auf "lowercase + nur
+/// Heuristik für v1 absichtlich konservativ: exakter Match auf "lowercase + nur
 /// Buchstaben/Ziffern". Damit treffen wir "Brave"/"Brave"; "Brave Browser"/"Brave"
-/// wuerden wir verfehlen - false negatives sind okay, false positives nicht.
+/// würden wir verfehlen - false negatives sind okay, false positives nicht.
 /// </summary>
 internal static class PackageDuplicateDetector
 {

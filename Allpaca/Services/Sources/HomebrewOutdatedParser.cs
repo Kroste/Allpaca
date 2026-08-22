@@ -3,8 +3,8 @@ using System.Text.Json;
 namespace Allpaca.Services.Sources;
 
 /// <summary>
-/// Parser fuer "brew outdated --json=v2". Struktur: {"formulae":[{name,...}], "casks":[{name,...}]}.
-/// Wir interessieren uns nur fuer die Namen/Tokens - das matcht die IDs, die wir in
+/// Parser für "brew outdated --json=v2". Struktur: {"formulae":[{name,...}], "casks":[{name,...}]}.
+/// Wir interessieren uns nur für die Namen/Tokens - das matcht die IDs, die wir in
 /// HomebrewSource.ListInstalledAsync vergeben (Formulae: name, Casks: token).
 /// </summary>
 internal static class HomebrewOutdatedParser

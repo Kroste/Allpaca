@@ -25,8 +25,8 @@ public partial class LogWindow : ChromeWindow
     public Func<string, CancellationToken, IAsyncEnumerable<ProgressLine>>? TrustTapHandler { get; set; }
 
     /// <summary>Wird vom Aufrufer gesetzt: bekommt System+User-Prompt und streamt die
-    /// KI-Antwort zurueck. Wird beim Klick auf "Analysieren" im Failed-Banner aufgerufen;
-    /// jedes yielded Chunk wird live an AiDiagnosis angehaengt.</summary>
+    /// KI-Antwort zurück. Wird beim Klick auf "Analysieren" im Failed-Banner aufgerufen;
+    /// jedes yielded Chunk wird live an AiDiagnosis angehängt.</summary>
     public Func<string, string, CancellationToken, IAsyncEnumerable<string>>? DiagnoseHandler { get; set; }
 
     public LogWindow()
@@ -43,10 +43,10 @@ public partial class LogWindow : ChromeWindow
     }
 
     /// <summary>
-    /// Startet die uebergebene Stream-Operation, fuettert die Live-Log-Liste mit den
+    /// Startet die übergebene Stream-Operation, füttert die Live-Log-Liste mit den
     /// Zeilen und kippt am Ende den OperationState passend zu Erfolg/Fehler/Cancel.
-    /// Laeuft komplett auf dem UI-Thread (kein ConfigureAwait(false) - die Continuations
-    /// muessen die ObservableCollection auf dem UI-Thread mutieren).
+    /// Läuft komplett auf dem UI-Thread (kein ConfigureAwait(false) - die Continuations
+    /// müssen die ObservableCollection auf dem UI-Thread mutieren).
     /// </summary>
     public async Task RunAsync(OperationContext context, Func<CancellationToken, IAsyncEnumerable<ProgressLine>> work)
     {
@@ -79,7 +79,7 @@ public partial class LogWindow : ChromeWindow
                 _vm.Title, _vm.ExitCode, _vm.Lines.ToList());
 
             // Chunks streamen live ins AiDiagnosis-Property - StringBuilder als
-            // Akkumulator, weil String-Concat in der Schleife O(n^2) waere.
+            // Akkumulator, weil String-Concat in der Schleife O(n^2) wäre.
             var sb = new System.Text.StringBuilder();
             await foreach (var chunk in DiagnoseHandler(
                 DiagnosisPromptBuilder.SystemPrompt, userPrompt, _cts.Token))
@@ -106,9 +106,9 @@ public partial class LogWindow : ChromeWindow
     }
 
     /// <summary>
-    /// Sekundaerlauf im selben Fenster - "brew trust &lt;tap&gt;" als Folgeoperation
-    /// nach einem untrusted-tap-Fehler. Behaelt die bisherigen Log-Zeilen + setzt
-    /// einen Separator, damit der User sehen kann was er angestossen hat.
+    /// Sekundärlauf im selben Fenster - "brew trust &lt;tap&gt;" als Folgeoperation
+    /// nach einem untrusted-tap-Fehler. Behält die bisherigen Log-Zeilen + setzt
+    /// einen Separator, damit der User sehen kann was er angestoßen hat.
     /// </summary>
     private async Task RunTrustAsync(string tap)
     {

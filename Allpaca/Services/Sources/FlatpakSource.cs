@@ -30,8 +30,8 @@ public sealed class FlatpakSource : IPackageSource
     {
         // Einmal pro Session den System-Hicolor-Baum in den User-Cache mirroren -
         // damit eine in Distrobox laufende Allpaca die System-Flatpak-Icons aus
-        // /var/lib/flatpak ueberhaupt zu Gesicht bekommt. ProcessRunner geht ueber
-        // flatpak-spawn --host, wenn er sandboxed laeuft.
+        // /var/lib/flatpak überhaupt zu Gesicht bekommt. ProcessRunner geht über
+        // flatpak-spawn --host, wenn er sandboxed läuft.
         await EnsureIconCacheAsync(ct).ConfigureAwait(false);
 
         // Apps und Runtimes getrennt holen - die UI blendet Runtimes per Default aus.
@@ -52,8 +52,8 @@ public sealed class FlatpakSource : IPackageSource
             Directory.CreateDirectory(dest);
 
             // cp -ruL: recursive + update-only (newer wins) + Symlinks folgen.
-            // Flatpak's exports/-Dir ist ueberwiegend Symlinks ins app/<id>/.../export/.
-            // Ohne -L wuerden wir tote Verweise kopieren.
+            // Flatpak's exports/-Dir ist überwiegend Symlinks ins app/<id>/.../export/.
+            // Ohne -L würden wir tote Verweise kopieren.
             var r = await _runner.RunAsync("cp", new[]
             {
                 "-ruL",
@@ -66,7 +66,7 @@ public sealed class FlatpakSource : IPackageSource
         }
         catch (Exception ex)
         {
-            Log.Debug(ex, "Icon-Cache-Sync uebersprungen");
+            Log.Debug(ex, "Icon-Cache-Sync übersprungen");
         }
     }
 
@@ -102,8 +102,8 @@ public sealed class FlatpakSource : IPackageSource
                 SizeBytes = ParseSize(p[6].Trim()),
                 IsRuntime = asRuntime,
                 // Flatpak exportiert seine App-Icons in hicolor unter dem App-ID-
-                // Schluessel. Runtimes haben keine Icons, deshalb spaaren wir uns die
-                // Disk-Suche dafuer.
+                // Schlüssel. Runtimes haben keine Icons, deshalb spaaren wir uns die
+                // Disk-Suche dafür.
                 IconPath = asRuntime ? null : IconLookup.FindIcon(id),
                 Extra = new Dictionary<string, string> { ["branch"] = p[3].Trim() },
             });
@@ -111,7 +111,7 @@ public sealed class FlatpakSource : IPackageSource
         return list;
     }
 
-    /// <summary>Parst Flatpaks Groessen-Spalte ("1,2 GB", "234 MB", de/en-Locale).</summary>
+    /// <summary>Parst Flatpaks Größen-Spalte ("1,2 GB", "234 MB", de/en-Locale).</summary>
     internal static long? ParseSize(string s)
     {
         if (string.IsNullOrWhiteSpace(s)) return null;
@@ -150,7 +150,7 @@ public sealed class FlatpakSource : IPackageSource
 
     public async Task<IReadOnlySet<string>> CheckUpdatesAsync(CancellationToken ct = default)
     {
-        // "flatpak remote-ls --updates" listet alles, was an verfuegbaren Updates auf den
+        // "flatpak remote-ls --updates" listet alles, was an verfügbaren Updates auf den
         // konfigurierten Remotes vorliegt. --columns=application reduziert auf die App-ID
         // (eine pro Zeile, ohne Header).
         var r = await _runner.RunAsync("flatpak",

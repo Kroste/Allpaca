@@ -1,8 +1,8 @@
 namespace Allpaca.Services.Sources;
 
 /// <summary>
-/// Parser fuer die textuelle Ausgabe von "rpm-ostree upgrade --check".
-/// Beispiel bei verfuegbarem Update:
+/// Parser für die textuelle Ausgabe von "rpm-ostree upgrade --check".
+/// Beispiel bei verfügbarem Update:
 ///
 ///   AvailableUpdate:
 ///     Version: 41.20241115.0 (2024-11-15T00:55:09Z)
@@ -15,7 +15,7 @@ internal static class RpmOstreeUpgradeCheckParser
 {
     /// <summary>
     /// Extrahiert die "Version: ..."-Zeile aus dem AvailableUpdate-Block.
-    /// Gibt null zurueck, wenn keine Version-Zeile gefunden wurde.
+    /// Gibt null zurück, wenn keine Version-Zeile gefunden wurde.
     /// </summary>
     public static string? ExtractAvailableVersion(string stdout)
     {

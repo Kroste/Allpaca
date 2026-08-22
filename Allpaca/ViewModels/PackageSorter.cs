@@ -19,7 +19,7 @@ internal static class PackageSorter
     private static IEnumerable<PackageItemViewModel> SortBySize(
         IEnumerable<PackageItemViewModel> input, bool descending)
     {
-        // Eintraege ohne bekannte Groesse landen immer am Ende - unabhaengig von asc/desc.
+        // Einträge ohne bekannte Größe landen immer am Ende - unabhängig von asc/desc.
         var primary = input.OrderBy(p => p.Model.SizeBytes is null ? 1 : 0);
         var sized = descending
             ? primary.ThenByDescending(p => p.Model.SizeBytes ?? 0L)

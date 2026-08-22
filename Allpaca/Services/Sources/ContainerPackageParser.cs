@@ -3,7 +3,7 @@ using Allpaca.Models;
 namespace Allpaca.Services.Sources;
 
 /// <summary>
-/// Parser fuer die Tab-getrennte Ausgabe unseres Container-Probe-Bash-Scripts
+/// Parser für die Tab-getrennte Ausgabe unseres Container-Probe-Bash-Scripts
 /// (siehe DistroboxSource.ListContainerPackagesAsync). Ein Eintrag pro Zeile,
 /// Spalten "Name\tVersion".
 /// </summary>

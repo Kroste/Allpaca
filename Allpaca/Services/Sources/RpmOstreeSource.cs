@@ -48,7 +48,7 @@ public sealed class RpmOstreeSource : IPackageSource
             }
         }
 
-        // "packages" = tatsaechlich gelayerte Pakete; Fallback "requested-packages".
+        // "packages" = tatsächlich gelayerte Pakete; Fallback "requested-packages".
         if (!TryReadStringArray(booted, "packages", list)
             && !TryReadStringArray(booted, "requested-packages", list))
         {

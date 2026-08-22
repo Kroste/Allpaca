@@ -100,7 +100,7 @@ public class SettingsServiceTests
     [Fact]
     public void DefaultPath_UsesXdgConfigHome_WhenSet()
     {
-        // Wir testen nur die Endung - der Anfang haengt vom Env ab und ist nicht
+        // Wir testen nur die Endung - der Anfang hängt vom Env ab und ist nicht
         // deterministisch in CI. Wichtig: "Allpaca/settings.json" am Ende.
         var path = SettingsService.DefaultPath();
         Assert.EndsWith(Path.Combine("Allpaca", "settings.json"), path);

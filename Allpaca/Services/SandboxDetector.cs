@@ -1,9 +1,9 @@
 namespace Allpaca.Services;
 
 /// <summary>
-/// Erkennt, ob Allpaca selbst in einer Sandbox laeuft. Relevant, weil die
+/// Erkennt, ob Allpaca selbst in einer Sandbox läuft. Relevant, weil die
 /// Paket-Tools (flatpak, brew, rpm-ostree, distrobox) auf dem HOST liegen.
-/// In einer Sandbox muessen Host-Kommandos ueber flatpak-spawn --host laufen.
+/// In einer Sandbox müssen Host-Kommandos über flatpak-spawn --host laufen.
 /// </summary>
 public sealed class SandboxDetector
 {

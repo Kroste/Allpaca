@@ -4,7 +4,7 @@ namespace Allpaca.Services;
 
 /// <summary>
 /// Verschickt Desktop-Notifications via notify-send. Auf Bazzite landet das im
-/// KDE-Plasma-Notification-Stack; auf GNOME analog. ProcessRunner haengt
+/// KDE-Plasma-Notification-Stack; auf GNOME analog. ProcessRunner hängt
 /// flatpak-spawn --host davor, sobald wir in der Distrobox laufen, sodass die
 /// Notification auf dem Host-Notification-Bus erscheint statt im Sandbox-Nichts.
 /// </summary>
@@ -25,7 +25,7 @@ public sealed class NotificationService
             var r = await _runner.RunAsync("notify-send", new[]
             {
                 "--app-name=Allpaca",
-                // Freedesktop-Theme-Icon, ueberall verfuegbar. Spaeter koennten wir
+                // Freedesktop-Theme-Icon, überall verfügbar. Später könnten wir
                 // unser eigenes ~/.local/share/icons/hicolor/<size>/apps/allpaca.png
                 // installieren und hier referenzieren.
                 "--icon=system-software-update",

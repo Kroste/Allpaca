@@ -5,8 +5,8 @@ using Allpaca.ViewModels;
 namespace Allpaca.Services.Ai;
 
 /// <summary>
-/// Baut den Prompt fuer die "KI-Aufraeum-Analyse" - pur statisch, damit
-/// Truncation + Formatierung getestet werden koennen ohne KI-Mock.
+/// Baut den Prompt für die "KI-Aufräum-Analyse" - pur statisch, damit
+/// Truncation + Formatierung getestet werden können ohne KI-Mock.
 /// </summary>
 public static class CleanupPromptBuilder
 {
@@ -26,7 +26,7 @@ public static class CleanupPromptBuilder
         "Max 30 Zeilen total. Pro Eintrag eine knappe Begründung. Lieber wenige sichere Empfehlungen " +
         "als viele schwache.";
 
-    /// <summary>Pro Quelle so viele Eintraege - bei groesseren Listen wird der Rest gekappt.</summary>
+    /// <summary>Pro Quelle so viele Einträge - bei größeren Listen wird der Rest gekappt.</summary>
     public const int MaxPerSource = 200;
 
     public static string BuildUserPrompt(IReadOnlyList<PackageItemViewModel> all)

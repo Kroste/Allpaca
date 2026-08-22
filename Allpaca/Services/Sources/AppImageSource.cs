@@ -6,10 +6,10 @@ using NLog;
 namespace Allpaca.Services.Sources;
 
 /// <summary>
-/// Erkennt AppImages ueber zwei Wege: integrierte .desktop-Eintraege (z. B.
+/// Erkennt AppImages über zwei Wege: integrierte .desktop-Einträge (z. B.
 /// via Gear Lever), deren Exec auf eine .AppImage zeigt, sowie lose
-/// .AppImage-Dateien in ueblichen Verzeichnissen. Rein dateisystembasiert,
-/// daher kein CLI-Tool noetig.
+/// .AppImage-Dateien in üblichen Verzeichnissen. Rein dateisystembasiert,
+/// daher kein CLI-Tool nötig.
 /// </summary>
 public sealed class AppImageSource : IPackageSource
 {
@@ -36,7 +36,7 @@ public sealed class AppImageSource : IPackageSource
         var home = Home();
         var found = new Dictionary<string, PackageInfo>(StringComparer.OrdinalIgnoreCase);
 
-        // 1) Integrierte .desktop-Eintraege mit AppImage-Exec.
+        // 1) Integrierte .desktop-Einträge mit AppImage-Exec.
         var apps = Path.Combine(home, ".local/share/applications");
         if (Directory.Exists(apps))
         {
@@ -69,7 +69,7 @@ public sealed class AppImageSource : IPackageSource
             }
         }
 
-        // 2) Lose .AppImage-Dateien in ueblichen Ordnern.
+        // 2) Lose .AppImage-Dateien in üblichen Ordnern.
         foreach (var dir in SearchDirs(home).Where(Directory.Exists))
         {
             foreach (var ai in Directory.EnumerateFiles(dir, "*.AppImage", SearchOption.TopDirectoryOnly))
@@ -121,7 +121,7 @@ public sealed class AppImageSource : IPackageSource
     }
 
     /// <summary>Icon= im .desktop kann ein absoluter Pfad sein (PNG/SVG) oder ein
-    /// Theme-Name - dann via IconLookup aufloesen.</summary>
+    /// Theme-Name - dann via IconLookup auflösen.</summary>
     internal static string? ResolveIcon(string? iconValue)
     {
         if (string.IsNullOrWhiteSpace(iconValue)) return null;
@@ -153,12 +153,12 @@ public sealed class AppImageSource : IPackageSource
     {
         await Task.CompletedTask;
 
-        // 1) AppImage-Datei selbst loeschen.
-        yield return DeleteFileSafe(id, "Entfernt", "Datei nicht gefunden", "Loeschen fehlgeschlagen");
+        // 1) AppImage-Datei selbst löschen.
+        yield return DeleteFileSafe(id, "Entfernt", "Datei nicht gefunden", "Löschen fehlgeschlagen");
 
-        // 2) Waisen-.desktop-Eintraege aufraeumen, sonst bleibt der Menueeintrag mit
+        // 2) Waisen-.desktop-Einträge aufräumen, sonst bleibt der Menüeintrag mit
         //    totem Exec-Pfad stehen. Nur ~/.local/share/applications - systemweite
-        //    Eintraege (z. B. /usr/share/applications) ruehren wir bewusst nicht an.
+        //    Einträge (z. B. /usr/share/applications) rühren wir bewusst nicht an.
         foreach (var orphan in FindMatchingDesktopEntries(id))
             yield return DeleteFileSafe(orphan, "Menüeintrag entfernt", "Menüeintrag fehlt", "Menüeintrag konnte nicht entfernt werden");
     }
@@ -166,7 +166,7 @@ public sealed class AppImageSource : IPackageSource
     public IAsyncEnumerable<ProgressLine> UpdateAsync(string? id, CancellationToken ct = default)
         => EmptyStream();
 
-    /// <summary>Loescht eine Datei und liefert eine fertige ProgressLine zurueck -
+    /// <summary>Löscht eine Datei und liefert eine fertige ProgressLine zurück -
     /// kapselt das try/catch, damit der Aufrufer das in iterator-Methoden mit yield
     /// kombinieren kann (yield in try/catch ist in C# nicht erlaubt).</summary>
     private static ProgressLine DeleteFileSafe(string path, string okLabel, string notFoundLabel, string errLabel)

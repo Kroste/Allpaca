@@ -1,7 +1,7 @@
 namespace Allpaca.Services.Ai;
 
 /// <summary>
-/// Konfiguration des KI-Assistenten. Endpoint/Model duerfen null sein – dann
+/// Konfiguration des KI-Assistenten. Endpoint/Model dürfen null sein – dann
 /// greifen die providerspezifischen Defaults (siehe AiDefaults).
 /// </summary>
 public sealed record AiSettings

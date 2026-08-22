@@ -14,13 +14,13 @@ namespace Allpaca.Chrome;
 /// </summary>
 public class ChromeWindow : Window
 {
-    /// <summary>Esc schliesst das Fenster. MainWindow setzt das auf false, damit
+    /// <summary>Esc schließt das Fenster. MainWindow setzt das auf false, damit
     /// der App-Hauptframe nicht versehentlich zugeht; alle Subfenster (Confirm/
     /// Settings/Info/Search/Log/...) profitieren vom Default.</summary>
     protected virtual bool CloseOnEscape => true;
 
     /// <summary>Breite des unsichtbaren Resize-Streifens an jeder Fensterkante (DIPs).
-    /// 6 ist ein guter Kompromiss zwischen Treffgenauigkeit und nicht-stoeren bei
+    /// 6 ist ein guter Kompromiss zwischen Treffgenauigkeit und nicht-stören bei
     /// Klicks knapp neben Buttons.</summary>
     private const double EdgeMargin = 6;
 
@@ -38,14 +38,14 @@ public class ChromeWindow : Window
         MinHeight = 600;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
 
-        // Einheitliches App-Icon fuer ALLE Fenster (Window-Manager-Taskbar, Alt+Tab,
-        // KDE-Activities etc.). Cached static - eine Bitmap fuer alle Fenster.
+        // Einheitliches App-Icon für ALLE Fenster (Window-Manager-Taskbar, Alt+Tab,
+        // KDE-Activities etc.). Cached static - eine Bitmap für alle Fenster.
         Icon = AppIcon.WindowIcon;
 
         // Auf KDE/Wayland (Bazzite) liefert BorderOnly oft KEINE nutzbaren Resize-Griffe -
         // der "Border" ist 1 px breit und praktisch nicht treffbar. Wir schieben deshalb
-        // eine Tunnel-Phase vor alle Child-Handler und mappen Klicks in der aeusseren
-        // EdgeMargin-Zone auf BeginResizeDrag. Tunnel laeuft VOR Bubble, damit z. B. der
+        // eine Tunnel-Phase vor alle Child-Handler und mappen Klicks in der äußeren
+        // EdgeMargin-Zone auf BeginResizeDrag. Tunnel läuft VOR Bubble, damit z. B. der
         // Titelleisten-Drag nicht zuerst zuschnappt.
         AddHandler(PointerPressedEvent, OnEdgeResizePressed, RoutingStrategies.Tunnel);
         AddHandler(PointerMovedEvent, OnEdgeCursorMoved, RoutingStrategies.Tunnel);
@@ -70,8 +70,8 @@ public class ChromeWindow : Window
     }
 
     /// <summary>
-    /// Verhindert, dass ein Fenster groesser als der Arbeitsbereich des aktiven
-    /// Bildschirms oeffnet (z. B. auf einem kleineren 2. Monitor). Width/Height
+    /// Verhindert, dass ein Fenster größer als der Arbeitsbereich des aktiven
+    /// Bildschirms öffnet (z. B. auf einem kleineren 2. Monitor). Width/Height
     /// sind DIPs, WorkingArea ist in physischen Pixeln – daher durch Scaling teilen.
     /// </summary>
     protected void ClampToWorkingArea(double maxFraction = 0.9)
@@ -152,7 +152,7 @@ public class ChromeWindow : Window
         var top = pos.Y <= EdgeMargin;
         var bottom = pos.Y >= size.Height - EdgeMargin;
 
-        // Ecken zuerst pruefen (haben Vorrang vor den Kanten).
+        // Ecken zuerst prüfen (haben Vorrang vor den Kanten).
         if (top && left) return WindowEdge.NorthWest;
         if (top && right) return WindowEdge.NorthEast;
         if (bottom && left) return WindowEdge.SouthWest;

@@ -9,7 +9,7 @@ public sealed record SourceLoadResult(
     IReadOnlyList<PackageInfo> Packages,
     string? Error);
 
-/// <summary>Buendelt alle Quellen und laedt jede einzeln, fehlertolerant.</summary>
+/// <summary>Bündelt alle Quellen und lädt jede einzeln, fehlertolerant.</summary>
 public sealed class PackageAggregator
 {
     private static readonly Logger Log = LogManager.GetCurrentClassLogger();
@@ -24,12 +24,12 @@ public sealed class PackageAggregator
         {
             if (!await s.IsAvailableAsync(ct))
             {
-                Log.Info("{0}: nicht verfuegbar", s.DisplayName);
+                Log.Info("{0}: nicht verfügbar", s.DisplayName);
                 return new SourceLoadResult(s, false, Array.Empty<PackageInfo>(), "nicht verfügbar");
             }
 
             var pkgs = await s.ListInstalledAsync(ct);
-            Log.Info("{0}: {1} Eintraege", s.DisplayName, pkgs.Count);
+            Log.Info("{0}: {1} Einträge", s.DisplayName, pkgs.Count);
             return new SourceLoadResult(s, true, pkgs, null);
         }
         catch (Exception ex)
