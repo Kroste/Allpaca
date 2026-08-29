@@ -21,7 +21,7 @@
          Build bleibt grün, aber der erste Skia-Aufruf wirft zur Laufzeit
          "native libSkiaSharp (119.0) is incompatible ... [148.0, 149.0)". Svg.Skia
          muss auf derselben SkiaSharp-Linie sitzen wie Avalonia. -->
-    <PackageVersion Include="Svg.Skia" Version="5.1.1" />
+    <PackageVersion Include="Svg.Skia" Version="5.2.3" />
 
     <!-- Versionierung aus Git-Tags -->
     <PackageVersion Include="MinVer" Version="7.0.0" />
