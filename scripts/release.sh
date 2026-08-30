@@ -12,7 +12,10 @@ if [ -z "$VERSION" ]; then
   LAST=${LAST#v}
   IFS=. read -r MA MI PA <<< "$LAST"
   SUGGEST="${MA}.${MI}.$((PA+1))"
-  read -r -p "Neue Version [${SUGGEST}]: " VERSION
+  # "|| true": bei nicht-interaktivem Aufruf (Pipe, CI) liefert read am
+  # Eingabe-Ende einen Exit-Code != 0, und "set -e" würde das Skript hier
+  # kommentarlos beenden - ohne Tag und ohne eine einzige Zeile Ausgabe.
+  read -r -p "Neue Version [${SUGGEST}]: " VERSION || true
   VERSION=${VERSION:-$SUGGEST}
 fi
 
@@ -34,7 +37,9 @@ if [ -n "$(git log '@{upstream}'..HEAD --oneline 2>/dev/null)" ]; then
   exit 1
 fi
 if git rev-parse "$TAG" >/dev/null 2>&1; then
-  read -r -p "Tag $TAG existiert bereits. Löschen und neu setzen? [j/N] " answer
+  echo "HINWEIS: Tag $TAG zeigt aktuell auf $(git log --oneline -1 "$TAG")" >&2
+  answer=""
+  read -r -p "Tag $TAG existiert bereits. Löschen und neu setzen? [j/N] " answer || true
   if [ "${answer,,}" != "j" ]; then
     echo "Abgebrochen."
     exit 0
@@ -45,4 +50,5 @@ fi
 
 git tag -a "$TAG" -m "Release $TAG"
 git push origin "$TAG"
-echo "Tag $TAG gepusht - die Release-Action baut jetzt die Pakete."
+echo "Tag $TAG auf $(git log --oneline -1 HEAD) gesetzt und gepusht."
+echo "Die Release-Action baut jetzt die Pakete."
