@@ -26,8 +26,11 @@ if [ -n "$(git status --porcelain)" ]; then
   echo "FEHLER: Es gibt uncommittete Änderungen. Erst committen." >&2
   exit 1
 fi
-if [ -n "$(git log --branches --not --remotes --oneline 2>/dev/null)" ]; then
-  echo "FEHLER: Es gibt ungepushte Commits. Erst pushen." >&2
+# Nur den AKTUELLEN Branch prüfen: "--branches" schaut auf alle lokalen Branches,
+# und ein alter, nie gepushter WIP-Branch hätte das Release blockiert, obwohl main
+# sauber ist.
+if [ -n "$(git log '@{upstream}'..HEAD --oneline 2>/dev/null)" ]; then
+  echo "FEHLER: Es gibt ungepushte Commits auf diesem Branch. Erst pushen." >&2
   exit 1
 fi
 if git rev-parse "$TAG" >/dev/null 2>&1; then

@@ -141,7 +141,9 @@ Paket, tauscht sich aus und startet neu:
 - als **tar.gz-Installation** entpackt es über das Programmverzeichnis.
 
 Passt kein Paket zur Installationsform, sagt Allpaca das und verweist auf die
-Release-Seite, statt so zu tun, als könnte es sich selbst ersetzen.
+Release-Seite, statt so zu tun, als könnte es sich selbst ersetzen. Schlägt der
+Check fehl (kein Netz, GitHub-Rate-Limit), steht das auch so da — nicht als
+„du bist aktuell".
 
 ## System-Tray
 
@@ -149,8 +151,10 @@ Minimieren legt Allpaca in den System-Tray statt in die Taskleiste. Ein Klick
 aufs Tray-Symbol (oder „Anzeigen" im Kontextmenü) holt das Fenster zurück,
 „Beenden" schließt die App. Das ✕ am Fenster beendet weiterhin direkt.
 
-Gibt es keinen Tray (headless, kaputtes DBus), bleibt es beim normalen
-Minimieren — die App läuft in jedem Fall.
+Gibt es keinen Tray, bleibt es beim normalen Minimieren — Allpaca prüft das beim
+Start und versteckt das Fenster nur dann, wenn es auch wirklich einen Tray gibt,
+aus dem du es zurückholen kannst. Betrifft zum Beispiel GNOME ohne
+AppIndicator-Erweiterung.
 
 ## Was offen ist
 

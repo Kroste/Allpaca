@@ -23,17 +23,22 @@ public sealed class UpdateService
     private static readonly Uri LatestReleaseUrl =
         new($"https://api.github.com/repos/{AppInfo.RepoOwner}/{AppInfo.RepoName}/releases/latest");
 
-    private UpdateRelease? _cached;
 
     /// <summary>True, wenn die App als AppImage läuft (der Loader setzt $APPIMAGE).</summary>
     public static bool RunningAsAppImage =>
         !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("APPIMAGE"));
 
     /// <summary>
-    /// Fragt das neueste Release ab. Gibt null zurück, wenn kein Update vorliegt oder
-    /// der Check fehlschlägt -- offline zu sein ist kein Fehlerfall, der die App stört.
+    /// Fragt das neueste Release ab.
     /// </summary>
-    public async Task<UpdateRelease?> CheckAsync(CancellationToken ct = default)
+    /// <remarks>
+    /// Liefert bewusst ein <see cref="UpdateCheckResult"/> statt <c>UpdateRelease?</c>:
+    /// "kein Update vorhanden" und "Check fehlgeschlagen" sind für den Nutzer zwei
+    /// verschiedene Aussagen. Mit einem nullable Rückgabewert hätte die UI beides als
+    /// "Du bist aktuell" angezeigt -- also auch dann, wenn gar nicht geprüft werden
+    /// konnte, weil kein Netz da war oder GitHub das Rate-Limit gezogen hat.
+    /// </remarks>
+    public async Task<UpdateCheckResult> CheckAsync(CancellationToken ct = default)
     {
         var sw = Stopwatch.StartNew();
         try
@@ -46,15 +51,14 @@ public sealed class UpdateService
             if (release is null)
             {
                 Log.Warn("Update-Check: Release-JSON nicht lesbar");
-                return null;
+                return UpdateCheckResult.Failed("Antwort von GitHub war nicht lesbar.");
             }
 
-            _cached = release;
             var newer = UpdateReleaseParser.IsNewer(AppInfo.Version, release.Version);
             Log.Info("Update-Check fertig in {0} ms: installiert {1}, neuestes {2}, Update {3}",
                 sw.ElapsedMilliseconds, AppInfo.Version, release.Version, newer ? "verfügbar" : "keins");
 
-            return newer ? release : null;
+            return newer ? UpdateCheckResult.Available(release) : UpdateCheckResult.UpToDate();
         }
         catch (OperationCanceledException)
         {
@@ -64,7 +68,7 @@ public sealed class UpdateService
         {
             // Bewusst nur Warn: kein Netz, Proxy davor oder Rate-Limit sind Alltag.
             Log.Warn(ex, "Update-Check fehlgeschlagen nach {0} ms", sw.ElapsedMilliseconds);
-            return null;
+            return UpdateCheckResult.Failed(ex.Message);
         }
     }
 
@@ -92,9 +96,12 @@ public sealed class UpdateService
             return false;
         }
 
-        var workDir = Path.Combine(Path.GetTempPath(), $"allpaca-update-{Environment.ProcessId}");
-        Directory.CreateDirectory(workDir);
-        var downloaded = Path.Combine(workDir, asset.Name);
+        // CreateTempSubdirectory statt eines vorhersagbaren Namens: /tmp ist
+        // world-writable, und hier landet ein Skript, das gleich ausgeführt wird.
+        // Ein vorab angelegter Symlink auf denselben Pfad wäre sonst ein
+        // Einfallstor (TOCTOU).
+        var workDir = Directory.CreateTempSubdirectory("allpaca-update-").FullName;
+        var downloaded = Path.Combine(workDir, Path.GetFileName(asset.Name));
 
         Log.Info("Lade Update-Asset {0} ({1} Bytes) nach {2}", asset.Name, asset.Size, downloaded);
         await DownloadAsync(asset, downloaded, progress, ct).ConfigureAwait(false);
@@ -183,30 +190,54 @@ public sealed class UpdateService
         Line("STATE=\"${XDG_STATE_HOME:-$HOME/.local/state}/Allpaca\"");
         Line("mkdir -p \"$STATE\" 2>/dev/null || STATE=/tmp");
         Line("exec >>\"$STATE/update.log\" 2>&1");
-        Line("echo \"--- $(date -Is) Update-Austausch startet ---\"");
+        Line("echo \"=== $(date -Is) Update-Austausch startet ===\"");
         Line($"PID={pid}");
         Line("for _ in $(seq 1 120); do kill -0 \"$PID\" 2>/dev/null || break; sleep 0.5; done");
         Line("sleep 1");
 
+        // Pfade als Variablen mit Single-Quote-Escaping, nicht direkt in doppelte
+        // Quotes interpoliert: ein $, ein Backtick oder ein " im Pfad (der Asset-Name
+        // kommt von GitHub, $APPIMAGE vom Nutzer) würde die Zeile sonst umlenken oder
+        // das Skript zerlegen.
+        Line($"SRC={Quote(downloadedFile)}");
+
         if (!string.IsNullOrWhiteSpace(appImage))
         {
+            Line($"TARGET={Quote(appImage)}");
             // cp -f statt mv/rm: das laufende AppImage ist als Loop-Device gemountet,
             // ein Verschieben scheitert mit "Text file busy". Der Inode bleibt gleich.
-            Line($"cp -f \"{downloadedFile}\" \"{appImage}\" || {{ echo \"cp fehlgeschlagen\"; exit 1; }}");
-            Line($"chmod +x \"{appImage}\"");
-            Line($"setsid \"{appImage}\" >/dev/null 2>&1 &");
+            Line("if cp -f \"$SRC\" \"$TARGET\"; then");
+            Line("  chmod +x \"$TARGET\"");
+            Line("  echo \"AppImage ersetzt\"");
+            Line("else");
+            Line("  echo \"FEHLER: cp nach $TARGET fehlgeschlagen - starte die alte Version\"");
+            Line("fi");
+            Line("setsid \"$TARGET\" >/dev/null 2>&1 &");
         }
         else
         {
-            Line($"tar -xzf \"{downloadedFile}\" -C \"{baseDir}\" || {{ echo \"tar fehlgeschlagen\"; exit 1; }}");
-            Line($"chmod +x \"{exe}\" 2>/dev/null");
-            Line($"setsid \"{exe}\" >/dev/null 2>&1 &");
+            Line($"TARGET={Quote(baseDir)}");
+            Line($"EXE={Quote(exe)}");
+            Line("if tar -xzf \"$SRC\" -C \"$TARGET\"; then");
+            Line("  chmod +x \"$EXE\" 2>/dev/null");
+            Line("  echo \"Tarball entpackt\"");
+            Line("else");
+            Line("  echo \"FEHLER: tar nach $TARGET fehlgeschlagen - starte die alte Version\"");
+            Line("fi");
+            Line("setsid \"$EXE\" >/dev/null 2>&1 &");
         }
 
-        Line("echo \"--- Austausch fertig ---\"");
+        // Der Neustart läuft in BEIDEN Fällen. Die App hat sich für den Austausch
+        // schon beendet -- bricht das Skript hier mit exit 1 ab, ist sie einfach weg,
+        // ohne Update und ohne dass jemand den Grund sieht. Lieber die alte Version
+        // zurückholen; die Ursache steht im update.log.
+        Line("echo \"=== Austausch fertig ===\"");
         Line("exit 0");
         return sb.ToString();
     }
+
+    /// <summary>Verpackt einen Pfad in Single Quotes, POSIX-konform escaped.</summary>
+    private static string Quote(string value) => "'" + value.Replace("'", "'\\''") + "'";
 
     private static HttpClient CreateClient()
     {

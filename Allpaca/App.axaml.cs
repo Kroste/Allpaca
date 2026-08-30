@@ -16,7 +16,12 @@ public partial class App : Application
     /// das Symbol verschwindet nach ein paar Minuten aus der Leiste.</summary>
     private TrayController? _tray;
 
-    public IServiceProvider? Services { get; private set; }
+    /// <summary>
+    /// Der DI-Container der laufenden App. Fenster, die Avalonia selbst erzeugt
+    /// (parameterlose Konstruktoren), holen sich ihre Dienste hierüber statt sie
+    /// per <c>new</c> zu bauen.
+    /// </summary>
+    public static IServiceProvider? Services { get; private set; }
 
     public override void Initialize() => AvaloniaXamlLoader.Load(this);
 

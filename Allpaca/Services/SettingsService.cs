@@ -92,10 +92,13 @@ public sealed class SettingsService
 
             var json = JsonSerializer.Serialize(settings, JsonOptions);
 
-            // Atomar schreiben: erst vollständig in die .tmp, dann in einem Rutsch
-            // über das Ziel bewegen. Ein Absturz mitten im Schreiben hinterlässt so
-            // die alte, gültige Datei statt einer halben.
-            var tmp = Path + ".tmp";
+            // Atomar schreiben: erst vollständig in eine temporäre Datei, dann in
+            // einem Rutsch über das Ziel bewegen. Ein Absturz mitten im Schreiben
+            // hinterlässt so die alte, gültige Datei statt einer halben.
+            // Der Dateiname enthält die Prozess-ID: zwei parallel laufende Instanzen
+            // (durch das Tray-Verhalten leicht möglich) würden sich sonst
+            // gegenseitig in dieselbe .tmp schreiben.
+            var tmp = $"{Path}.{Environment.ProcessId}.tmp";
             File.WriteAllText(tmp, json);
             File.Move(tmp, Path, overwrite: true);
         }

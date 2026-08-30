@@ -134,18 +134,20 @@ public class SettingsServiceTests
     public void Save_LeavesNoTempFileBehind()
     {
         var path = Tmp();
+        var dir = Path.GetDirectoryName(path)!;
+        var pattern = Path.GetFileName(path) + ".*.tmp";
         try
         {
             new SettingsService(path).Save(new AppSettings { SortKey = "Size" });
 
             Assert.True(File.Exists(path));
-            Assert.False(File.Exists(path + ".tmp"));
+            Assert.Empty(Directory.GetFiles(dir, pattern));
             Assert.Equal("Size", new SettingsService(path).Load().SortKey);
         }
         finally
         {
             if (File.Exists(path)) File.Delete(path);
-            if (File.Exists(path + ".tmp")) File.Delete(path + ".tmp");
+            foreach (var leftover in Directory.GetFiles(dir, pattern)) File.Delete(leftover);
         }
     }
 }

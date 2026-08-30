@@ -4,6 +4,7 @@ using Allpaca.Services;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
+using Microsoft.Extensions.DependencyInjection;
 using NLog;
 
 namespace Allpaca.Views;
@@ -15,7 +16,10 @@ public partial class InfoWindow : ChromeWindow
     private readonly UpdateService _updates;
     private UpdateRelease? _pending;
 
-    public InfoWindow() : this(new UpdateService()) { }
+    /// <summary>Avalonia erzeugt Fenster parameterlos -- den UpdateService holt sich
+    /// das Fenster deshalb aus dem DI-Container (DoD-Punkt 9). Der <c>new</c>-Fallback
+    /// greift nur im XAML-Designer, wo keine App-Instanz läuft.</summary>
+    public InfoWindow() : this(App.Services?.GetService<UpdateService>() ?? new UpdateService()) { }
 
     public InfoWindow(UpdateService updates)
     {
@@ -40,14 +44,23 @@ public partial class InfoWindow : ChromeWindow
 
         try
         {
-            var release = await _updates.CheckAsync();
-            if (release is null)
+            var result = await _updates.CheckAsync();
+            _pending = null;
+
+            if (result.IsError)
             {
-                status.Text = $"Allpaca {AppInfo.Version} ist aktuell.";
-                _pending = null;
+                // Nicht als "du bist aktuell" verkaufen: geprüft wurde gar nichts.
+                status.Text = $"Update-Check nicht möglich: {result.Error}";
                 return;
             }
 
+            if (!result.HasUpdate)
+            {
+                status.Text = $"Allpaca {AppInfo.Version} ist aktuell.";
+                return;
+            }
+
+            var release = result.Release!;
             _pending = release;
             var asset = UpdateService.SelectAsset(release);
             if (asset is null)

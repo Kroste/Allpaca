@@ -96,3 +96,20 @@ public static class UpdateReleaseParser
               ?? assets.FirstOrDefault(a => a.Name.EndsWith(".tar.gz", StringComparison.OrdinalIgnoreCase));
     }
 }
+
+/// <summary>
+/// Ergebnis eines Update-Checks. Trennt "kein Update" sauber von "Check nicht
+/// möglich" -- die UI muss dem Nutzer beides unterschiedlich sagen können.
+/// </summary>
+public sealed record UpdateCheckResult(UpdateRelease? Release, string? Error)
+{
+    /// <summary>True, wenn ein neueres Release vorliegt.</summary>
+    public bool HasUpdate => Release is not null;
+
+    /// <summary>True, wenn der Check selbst fehlgeschlagen ist (offline, Rate-Limit, …).</summary>
+    public bool IsError => Error is not null;
+
+    public static UpdateCheckResult Available(UpdateRelease release) => new(release, null);
+    public static UpdateCheckResult UpToDate() => new(null, null);
+    public static UpdateCheckResult Failed(string message) => new(null, message);
+}

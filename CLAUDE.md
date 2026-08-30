@@ -229,6 +229,23 @@ Nebenwirkung: auf der 3.119er Linie gibt es `SKPathBuilder` noch nicht, und die
 `SKPath`-Bau-Methoden sind dort auch nicht deprecated — `AppIcon` baut die Pfade
 also direkt über `SKPath`.
 
+### 3.13 TrayIcon wirft NICHT, wenn niemand es anzeigen kann
+`new TrayIcon(...)` ist unter Linux **kein** verlässlicher Test: gibt es keinen
+StatusNotifier-Host auf dem Session-Bus (GNOME ohne AppIndicator-Extension,
+headless, kaputtes DBus), legt Avalonia das Icon trotzdem an — es erscheint nur
+nirgends. Ein `try/catch` um die Erzeugung fängt also nichts.
+
+Wer dann beim Minimieren `Window.Hide()` ruft, schiebt das Fenster in einen Tray,
+den es nicht gibt: kein Taskleisten-Eintrag, kein Alt-Tab, die App ist nur noch
+per `kill` erreichbar. Deshalb prüft `StatusNotifierProbe` vor dem Anlegen per
+`gdbus … NameHasOwner org.kde.StatusNotifierWatcher` (plus den
+freedesktop-Namen), ob überhaupt jemand zuhört — und antwortet im Zweifel mit
+`false`. Ohne Host bleibt Minimieren normales Minimieren.
+
+⚠️ Diese Probe ist die **einzige** Stelle, die `Process.Start` direkt statt über
+den `ProcessRunner` nutzt (§4). Das ist Absicht: gefragt ist der Session-Bus
+*dieses* Prozesses, `flatpak-spawn --host` würde den des Hosts befragen.
+
 ### 3.12 DataGrid (falls je gebraucht)
 - Eigenes Paket `Avalonia.Controls.DataGrid` **plus** Theme-Include:
   `<StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>`.
@@ -252,6 +269,7 @@ GlobalExceptionHandler ── AppDomain + TaskScheduler + Dispatcher → NLog Fa
 MaskingLayoutRenderer ── NLog ${masked}: entfernt API-Keys aus jeder Log-Zeile
 UpdateService   ── GitHub-Release-Check + echtes Self-Update (AppImage/tar.gz)
 TrayController  ── Minimieren → Tray, Menü Anzeigen/Beenden
+StatusNotifierProbe ── prüft per gdbus, ob ein Tray-Host existiert (siehe §3.13)
 ProcessRunner   ── zentrale, sandbox-bewusste Prozessausführung
 SandboxDetector ── erkennt Flatpak/Container → flatpak-spawn --host
 PackageAggregator ── lädt jede Quelle parallel & fehlertolerant
@@ -317,6 +335,10 @@ VS-Code-Tasks: `build` (Default), `test`, `clean`, `clean-hard`, `rebuild`, `rel
 - **Secret-Masking ist Pflicht und aktiv:** das Layout nutzt `${masked}` aus
   `Allpaca.Logging.MaskingLayoutRenderer` (Provider-Keyformate `sk-…`/`sk-ant-…`/
   `AIza…`, dazu `api_key=`, `x-api-key:`, `Authorization: Bearer`, `?key=`).
+  ⚠️ Der Renderer ist ein **`WrapperLayoutRendererBase`**, das Layout schreibt
+  `${masked:inner=${message}}` **und** `${masked:inner=${exception:format=tostring}}`.
+  Ein ungefiltertes `${exception}` daneben wäre ein Leck: Gemini hängt seinen Key
+  als `?key=…` an die URL, und die URL steht in der `HttpRequestException`.
   ⚠️ **Der Renderer registriert sich über einen `[ModuleInitializer]`, nicht in
   `Program.Main`.** Kennt NLog das `${masked}` nicht, verschluckt es den Rest der
   Zeile und im Log steht eine **leere Message**. Genau das ist passiert, als die

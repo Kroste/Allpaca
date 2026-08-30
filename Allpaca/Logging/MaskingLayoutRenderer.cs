@@ -1,24 +1,26 @@
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Text.RegularExpressions;
 using NLog;
 using NLog.LayoutRenderers;
+using NLog.LayoutRenderers.Wrappers;
 
 namespace Allpaca.Logging;
 
 /// <summary>
-/// NLog-Layout-Renderer <c>${masked:...}</c>: schreibt die Log-Message, ersetzt aber
-/// vorher alles, was nach Secret aussieht. Allpaca redet mit vier KI-Providern und
-/// reicht deren API-Keys durch HTTP-Header und URLs -- ohne diesen Filter landet ein
-/// Key beim ersten Fehler im Klartext im Logfile.
+/// NLog-Wrapper-Renderer <c>${masked:inner=...}</c>: gibt den eingebetteten Layout-Teil
+/// aus, ersetzt aber vorher alles, was nach Secret aussieht. Allpaca redet mit vier
+/// KI-Providern und reicht deren API-Keys durch HTTP-Header und URLs -- ohne diesen
+/// Filter landet ein Key beim ersten Fehler im Klartext im Logfile.
 /// </summary>
 /// <remarks>
-/// Muss über <c>LogManager.Setup().SetupExtensions(...)</c> registriert werden, BEVOR
-/// der erste Logger benutzt wird. Sonst greift der Renderer nicht und NLog schluckt
-/// das Message-Ende -- im Log steht dann nur noch die schließende Klammer.
+/// Bewusst ein <see cref="WrapperLayoutRendererBase"/> und kein einfacher Renderer für
+/// die Message: der Exception-Text braucht dieselbe Behandlung. Gemini hängt seinen Key
+/// als <c>?key=…</c> an die URL, und die URL steht in <c>HttpRequestException</c>. Ein
+/// <c>${masked}</c> neben einem ungefilterten <c>${exception}</c> hätte den Key also
+/// weiterhin ins Log geschrieben.
 /// </remarks>
 [LayoutRenderer("masked")]
-public sealed class MaskingLayoutRenderer : LayoutRenderer
+public sealed class MaskingLayoutRenderer : WrapperLayoutRendererBase
 {
     private const string Mask = "***";
 
@@ -50,8 +52,7 @@ public sealed class MaskingLayoutRenderer : LayoutRenderer
     internal static void Register()
         => LogManager.Setup().SetupExtensions(s => s.RegisterLayoutRenderer<MaskingLayoutRenderer>("masked"));
 
-    protected override void Append(StringBuilder builder, LogEventInfo logEvent)
-        => builder.Append(Mask_(logEvent.FormattedMessage));
+    protected override string Transform(string text) => Mask_(text);
 
     /// <summary>Maskiert alle bekannten Secret-Formen. Intern für Tests sichtbar.</summary>
     internal static string Mask_(string? input)

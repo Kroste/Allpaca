@@ -10,12 +10,17 @@ namespace Allpaca.Views;
 /// die App weiterhin regulär -- dafür ist kein Umbau des ShutdownMode nötig.
 /// </summary>
 /// <remarks>
-/// Vier Absicherungen, die der Kroste-Standard verlangt und die alle schon einmal
-/// weh getan haben: die Instanz wird von der App als Feld gehalten (sonst holt der
-/// GC das TrayIcon weg), das Wiederherstellen läuft über ein Guard-Flag plus
-/// <see cref="Dispatcher.UIThread"/>, und der ganze Aufbau steht in einem try/catch --
-/// auf einem headless Server oder mit kaputtem DBus gibt es keinen Tray, dann bleibt
-/// es beim normalen Minimieren.
+/// Absicherungen, die der Kroste-Standard verlangt und die alle schon einmal weh
+/// getan haben: die Instanz wird von der App als Feld gehalten (sonst holt der GC
+/// das TrayIcon weg), das Wiederherstellen läuft über ein Guard-Flag plus
+/// <see cref="Dispatcher.UIThread"/>, und der ganze Aufbau steht in einem try/catch.
+/// <para>
+/// Dazu die <see cref="StatusNotifierProbe"/> VOR dem Anlegen des Icons: unter Linux
+/// wirft <c>new TrayIcon(...)</c> nicht, wenn niemand das Icon anzeigen kann -- es
+/// entsteht einfach und bleibt unsichtbar. Ohne die Probe würde
+/// <see cref="Window.Hide"/> das Fenster in einen Tray schieben, den es nicht gibt,
+/// und der Nutzer käme nur noch per <c>kill</c> an die App.
+/// </para>
 /// </remarks>
 public sealed class TrayController : IDisposable
 {
@@ -28,6 +33,14 @@ public sealed class TrayController : IDisposable
     public TrayController(Window window)
     {
         _window = window;
+
+        if (!StatusNotifierProbe.IsAvailable())
+        {
+            // Kein Tray-Host: Minimieren bleibt normales Minimieren. Kein Hide.
+            Log.Info("Kein Tray-Host erreichbar - Minimieren bleibt Standardverhalten");
+            _tray = null;
+            return;
+        }
 
         try
         {
